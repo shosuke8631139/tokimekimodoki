@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ときめきモドキ 〜ずっとズレてるDays〜</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ========== タイトル画面 ========== -->
+<div id="title-screen" class="screen">
+  <div class="title-box">
+    <div class="title-deco">💘 💣 💘</div>
+    <h1 class="game-title">ときめき<span class="title-modoki">モドキ</span></h1>
+    <p class="game-subtitle">〜ずっとズレてるDays〜</p>
+    <p class="title-desc">
+      ここは私立きらめき暮第(モドキ)高校。<br>
+      3年間で誰かと結ばれろ。<br>
+      ただし、まともな相手は一人もいない。
+    </p>
+    <div class="name-entry">
+      <label for="player-name">きみの名前</label>
+      <input id="player-name" type="text" maxlength="10" value="主人公" autocomplete="off">
+    </div>
+    <button id="start-btn" class="big-btn">入学する</button>
+  </div>
+</div>
+
+<!-- ========== ゲーム画面 ========== -->
+<div id="game-screen" class="screen hidden">
+  <header id="hud-top">
+    <div id="date-display">1年生 4月</div>
+    <div id="turn-display">ターン 1 / 36</div>
+    <div id="player-display"></div>
+  </header>
+
+  <main id="game-main">
+    <section id="stats-panel" class="panel">
+      <h2>ステータス</h2>
+      <div id="stats-list"></div>
+    </section>
+
+    <section id="chars-panel" class="panel">
+      <h2>気になるあの人たち</h2>
+      <div id="chars-list"></div>
+    </section>
+
+    <section id="log-panel" class="panel">
+      <h2>今週のできごと</h2>
+      <div id="log-area"></div>
+    </section>
+  </main>
+
+  <footer id="command-panel" class="panel">
+    <h2>今月はどうする?</h2>
+    <div id="command-buttons">
+      <button class="cmd-btn" data-cmd="study">📖 勉強</button>
+      <button class="cmd-btn" data-cmd="sport">🏃 運動</button>
+      <button class="cmd-btn" data-cmd="looks">✨ おしゃれ</button>
+      <button class="cmd-btn" data-cmd="trivia">🧠 読書</button>
+      <button class="cmd-btn" data-cmd="rest">😴 休む</button>
+      <button class="cmd-btn" data-cmd="date">💌 遊びに誘う</button>
+    </div>
+    <div id="date-target" class="hidden">
+      <p>誰を誘う?</p>
+      <div id="date-target-buttons"></div>
+      <button id="date-cancel" class="small-btn">やっぱりやめる</button>
+    </div>
+  </footer>
+</div>
+
+<!-- ========== イベントモーダル ========== -->
+<div id="event-modal" class="modal hidden">
+  <div class="modal-box">
+    <div id="event-portrait"></div>
+    <div id="event-text"></div>
+    <div id="event-choices"></div>
+  </div>
+</div>
+
+<!-- ========== エンディング画面 ========== -->
+<div id="ending-screen" class="screen hidden">
+  <div class="ending-box">
+    <div id="ending-type"></div>
+    <h1 id="ending-title"></h1>
+    <div id="ending-text"></div>
+    <div id="ending-result"></div>
+    <button id="restart-btn" class="big-btn">もう一度入学する</button>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/game.js"></script>
+<script src="js/ui.js"></script>
+</body>
+</html>

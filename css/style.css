@@ -1,0 +1,361 @@
+/* ====== ベース ====== */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --pink: #ff6fa5;
+  --pink-dark: #e0457f;
+  --purple: #8a5cf5;
+  --cream: #fff8fb;
+  --ink: #3a2a3a;
+  --danger: #e23b3b;
+}
+
+body {
+  font-family: "DotGothic16", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+  background: linear-gradient(160deg, #ffd3e8 0%, #ffe9f3 35%, #d9d2ff 100%);
+  color: var(--ink);
+  min-height: 100vh;
+  line-height: 1.7;
+}
+
+.hidden { display: none !important; }
+
+.screen {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.panel {
+  background: var(--cream);
+  border: 3px solid var(--pink);
+  border-radius: 14px;
+  padding: 12px 16px;
+  box-shadow: 0 4px 0 rgba(224, 69, 127, 0.25);
+}
+
+.panel h2 {
+  font-size: 0.85rem;
+  color: var(--pink-dark);
+  border-bottom: 2px dotted var(--pink);
+  margin-bottom: 8px;
+  letter-spacing: 2px;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* ====== タイトル画面 ====== */
+#title-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.title-box {
+  text-align: center;
+  background: var(--cream);
+  border: 4px solid var(--pink);
+  border-radius: 20px;
+  padding: 40px 48px;
+  box-shadow: 0 8px 0 rgba(224, 69, 127, 0.3);
+  max-width: 560px;
+}
+
+.title-deco { font-size: 1.6rem; letter-spacing: 8px; }
+
+.game-title {
+  font-size: 3rem;
+  color: var(--pink-dark);
+  text-shadow: 3px 3px 0 #ffd3e8;
+  margin: 8px 0 0;
+}
+
+.title-modoki {
+  color: var(--purple);
+  display: inline-block;
+  transform: rotate(-4deg);
+}
+
+.game-subtitle {
+  color: var(--purple);
+  margin-bottom: 20px;
+  letter-spacing: 3px;
+}
+
+.title-desc {
+  font-size: 0.9rem;
+  margin-bottom: 24px;
+}
+
+.name-entry { margin-bottom: 20px; }
+.name-entry label { display: block; font-size: 0.8rem; color: var(--pink-dark); }
+.name-entry input {
+  font-family: inherit;
+  font-size: 1.2rem;
+  text-align: center;
+  border: 3px solid var(--pink);
+  border-radius: 10px;
+  padding: 6px 12px;
+  background: white;
+  width: 220px;
+}
+
+.big-btn {
+  font-size: 1.3rem;
+  background: var(--pink);
+  color: white;
+  border: none;
+  border-radius: 999px;
+  padding: 12px 48px;
+  box-shadow: 0 5px 0 var(--pink-dark);
+  transition: transform 0.05s;
+}
+.big-btn:hover { transform: translateY(2px); box-shadow: 0 3px 0 var(--pink-dark); }
+
+.small-btn {
+  font-size: 0.8rem;
+  background: #ccc;
+  border: none;
+  border-radius: 999px;
+  padding: 4px 16px;
+  margin-top: 6px;
+}
+
+/* ====== ゲーム画面 ====== */
+#hud-top {
+  display: flex;
+  justify-content: space-between;
+  background: var(--pink-dark);
+  color: white;
+  border-radius: 12px;
+  padding: 8px 18px;
+  margin-bottom: 12px;
+  font-size: 0.95rem;
+}
+
+#game-main {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  grid-template-rows: auto 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+#stats-panel { grid-column: 1; grid-row: 1 / 3; }
+#chars-panel { grid-column: 2; grid-row: 1; }
+#log-panel   { grid-column: 2; grid-row: 2; }
+
+/* ステータスバー */
+.stat-row { margin-bottom: 10px; font-size: 0.85rem; }
+.stat-label { display: flex; justify-content: space-between; }
+.stat-bar {
+  height: 12px;
+  background: #f0e2ec;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid #e3c4d6;
+}
+.stat-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--purple), var(--pink));
+  border-radius: 999px;
+  transition: width 0.4s;
+}
+.stat-fill.stress-low { background: #7ec97e; }
+.stat-fill.stress-mid { background: #e8b93c; }
+.stat-fill.stress-high { background: var(--danger); }
+
+/* キャラカード */
+#chars-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.char-card {
+  background: white;
+  border: 2px solid var(--purple);
+  border-radius: 12px;
+  padding: 8px;
+  text-align: center;
+  font-size: 0.8rem;
+  position: relative;
+}
+.char-card.unmet { filter: grayscale(1); opacity: 0.5; }
+.char-emoji { font-size: 2rem; }
+.char-name { font-weight: bold; }
+.char-title { color: var(--purple); font-size: 0.7rem; }
+.char-hearts { color: var(--pink-dark); letter-spacing: 1px; font-size: 0.75rem; min-height: 1.2em; }
+
+.char-bomb {
+  position: absolute;
+  top: -10px;
+  right: -6px;
+  font-size: 1.3rem;
+  animation: bomb-shake 0.5s infinite;
+}
+@keyframes bomb-shake {
+  0%, 100% { transform: rotate(-12deg); }
+  50% { transform: rotate(12deg); }
+}
+.bomb-count { font-size: 0.7rem; color: var(--danger); font-weight: bold; }
+
+/* ログ */
+#log-area {
+  height: 220px;
+  overflow-y: auto;
+  font-size: 0.9rem;
+  background: white;
+  border-radius: 8px;
+  padding: 8px 12px;
+  border: 1px solid #eecade;
+}
+#log-area p { margin-bottom: 8px; }
+#log-area p.log-warn { color: var(--danger); font-weight: bold; }
+#log-area p.log-sys { color: var(--purple); }
+
+/* コマンド */
+#command-buttons {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+}
+
+.cmd-btn {
+  font-size: 0.95rem;
+  background: white;
+  border: 2px solid var(--pink);
+  border-radius: 10px;
+  padding: 10px 4px;
+  box-shadow: 0 3px 0 rgba(224, 69, 127, 0.3);
+  transition: transform 0.05s;
+}
+.cmd-btn:hover:not(:disabled) { background: #ffe9f3; transform: translateY(1px); }
+.cmd-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+#date-target { text-align: center; margin-top: 10px; }
+#date-target-buttons { display: flex; gap: 8px; justify-content: center; }
+#date-target-buttons button {
+  background: white;
+  border: 2px solid var(--purple);
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 0.9rem;
+}
+#date-target-buttons button:hover { background: #efe8ff; }
+
+/* ====== イベントモーダル ====== */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(58, 42, 58, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 10;
+}
+
+.modal-box {
+  background: var(--cream);
+  border: 4px solid var(--pink);
+  border-radius: 16px;
+  padding: 24px;
+  max-width: 640px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+#event-portrait { font-size: 2.4rem; text-align: center; min-height: 1em; }
+#event-text {
+  font-size: 0.95rem;
+  margin: 12px 0 18px;
+  white-space: pre-wrap;
+}
+
+#event-choices { display: flex; flex-direction: column; gap: 8px; }
+#event-choices button {
+  font-size: 0.95rem;
+  text-align: left;
+  background: white;
+  border: 2px solid var(--purple);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+#event-choices button:hover { background: #efe8ff; }
+#event-choices button.ok-btn {
+  text-align: center;
+  border-color: var(--pink);
+  background: var(--pink);
+  color: white;
+}
+
+.event-result-meta {
+  display: block;
+  margin-top: 10px;
+  font-size: 0.8rem;
+  color: var(--purple);
+}
+
+/* ====== エンディング ====== */
+#ending-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.ending-box {
+  background: var(--cream);
+  border: 4px solid var(--pink);
+  border-radius: 20px;
+  padding: 36px 44px;
+  max-width: 680px;
+  text-align: center;
+  box-shadow: 0 8px 0 rgba(224, 69, 127, 0.3);
+}
+
+#ending-type {
+  font-size: 1rem;
+  letter-spacing: 6px;
+  color: var(--purple);
+}
+#ending-type.bad { color: var(--danger); }
+
+#ending-title {
+  color: var(--pink-dark);
+  font-size: 1.7rem;
+  margin: 8px 0 20px;
+  text-shadow: 2px 2px 0 #ffd3e8;
+}
+
+#ending-text {
+  text-align: left;
+  font-size: 0.95rem;
+  margin-bottom: 20px;
+}
+#ending-text p { margin-bottom: 12px; }
+
+#ending-result {
+  font-size: 0.85rem;
+  background: white;
+  border: 2px dotted var(--pink);
+  border-radius: 12px;
+  padding: 10px;
+  margin-bottom: 24px;
+}
+
+/* ====== レスポンシブ ====== */
+@media (max-width: 720px) {
+  #game-main { grid-template-columns: 1fr; }
+  #stats-panel, #chars-panel, #log-panel { grid-column: 1; grid-row: auto; }
+  #command-buttons { grid-template-columns: repeat(3, 1fr); }
+  #chars-list { grid-template-columns: repeat(3, 1fr); }
+  .title-box { padding: 28px 20px; }
+  .game-title { font-size: 2.2rem; }
+}
