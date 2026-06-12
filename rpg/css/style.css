@@ -1,0 +1,195 @@
+/* モドキクエストII レトロRPG風UI */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: "DotGothic16", "Hiragino Kaku Gothic ProN", monospace, sans-serif;
+  background: #0c0c14;
+  color: #fff;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.6;
+}
+
+.hidden { display: none !important; }
+
+button { font-family: inherit; cursor: pointer; }
+
+/* ---- タイトル/エンディング ---- */
+
+#title-screen, #ending-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+}
+
+.title-inner h1 {
+  font-size: 3rem;
+  letter-spacing: 4px;
+  color: #ffd23b;
+  text-shadow: 4px 4px 0 #7a3a9c;
+  margin: 10px 0;
+}
+.title-ii { color: #fff; font-style: italic; }
+.title-sub { color: #8a95a8; letter-spacing: 6px; font-size: 0.8rem; }
+.title-sub2 { color: #8ab8d4; margin-bottom: 28px; letter-spacing: 2px; }
+.ending-fin { font-size: 4rem; }
+
+.title-menu { display: flex; flex-direction: column; gap: 10px; align-items: center; margin-bottom: 28px; }
+.title-menu button {
+  font-size: 1.1rem;
+  background: #15151c;
+  color: #fff;
+  border: 3px solid #fff;
+  border-radius: 6px;
+  padding: 10px 60px;
+}
+.title-menu button:hover { background: #2a2a3a; border-color: #ffd23b; color: #ffd23b; }
+
+.title-help { font-size: 0.75rem; color: #8a95a8; }
+
+/* ---- ゲーム画面 ---- */
+
+#game-ui {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px;
+  gap: 6px;
+}
+
+#hud-top {
+  width: 480px;
+  max-width: 100%;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: #8ab8d4;
+}
+
+#screen-wrap { position: relative; }
+
+#screen {
+  display: block;
+  border: 4px solid #fff;
+  border-radius: 4px;
+  background: #000;
+  image-rendering: pixelated;
+  max-width: 100%;
+}
+
+/* パーティステータス(右上) */
+#party-status {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 4px;
+}
+.member {
+  background: rgba(0, 0, 30, 0.82);
+  border: 2px solid #fff;
+  border-radius: 4px;
+  padding: 3px 7px;
+  font-size: 0.68rem;
+  min-width: 78px;
+}
+.member.danger { border-color: #ff9a3c; color: #ffce9a; }
+.member.dead { border-color: #e23b3b; color: #e23b3b; }
+.m-name { color: #ffd23b; }
+.member.dead .m-name { color: #e23b3b; }
+
+/* メッセージウィンドウ */
+#msg-window {
+  position: absolute;
+  left: 8px; right: 8px; bottom: 8px;
+  background: rgba(0, 0, 30, 0.92);
+  border: 3px solid #fff;
+  border-radius: 6px;
+  padding: 10px 14px 18px;
+  font-size: 0.95rem;
+  min-height: 74px;
+  cursor: pointer;
+  white-space: pre-wrap;
+}
+.msg-next {
+  position: absolute;
+  bottom: 2px; right: 12px;
+  animation: blink 0.8s infinite;
+  font-size: 0.8rem;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+/* リスト選択ウィンドウ */
+#list-window {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  background: rgba(0, 0, 30, 0.92);
+  border: 3px solid #fff;
+  border-radius: 6px;
+  padding: 8px 12px;
+  min-width: 230px;
+  max-width: 90%;
+  font-size: 0.85rem;
+}
+#list-title { color: #ffd23b; border-bottom: 1px solid #5a6478; margin-bottom: 6px; padding-bottom: 2px; }
+.list-item { padding: 2px 0; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.list-item.sel { color: #ffd23b; }
+.list-item:hover { color: #8ab8d4; }
+
+#hud-objective {
+  width: 480px;
+  max-width: 100%;
+  font-size: 0.8rem;
+  color: #ffd23b;
+  background: #15151c;
+  border: 2px solid #5a6478;
+  border-radius: 6px;
+  padding: 4px 10px;
+}
+
+/* ---- タッチパッド ---- */
+
+#touch-pad {
+  width: 480px;
+  max-width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.pad-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 44px);
+  grid-template-rows: repeat(3, 44px);
+}
+.pad-grid button, .pad-ab button {
+  background: #15151c;
+  color: #fff;
+  border: 2px solid #5a6478;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+.pad-grid button:active, .pad-ab button:active { background: #3a3a52; }
+
+.pad-ab { display: flex; gap: 10px; }
+.pad-ab button {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.pad-ab small { font-size: 0.55rem; color: #8a95a8; }
+
+@media (min-width: 720px) {
+  #touch-pad { display: none; } /* PCではキーボード操作 */
+}
