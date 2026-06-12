@@ -57,9 +57,11 @@ const Game = {
     }
   },
 
-  /* 選択肢の効果を適用し、結果メッセージと数値変化の表示用文字列を返す */
+  /* 選択肢の効果を適用し、結果メッセージと数値変化の表示用文字列を返す。
+     affGain は表情切り替え用(コンテキストキャラの好感度増減量) */
   applyEffect(eff, ctxCharId) {
     const deltas = [];
+    let affGain = 0;
     if (eff.stats) {
       for (const [k, v] of Object.entries(eff.stats)) {
         this.addStat(k, v);
@@ -68,19 +70,22 @@ const Game = {
     }
     if (eff.self && ctxCharId) {
       this.addAff(ctxCharId, eff.self);
+      affGain += eff.self;
       deltas.push(`${this.charById(ctxCharId).name}の好感度+${eff.self}`);
     }
     if (eff.aff) {
       for (const [id, v] of Object.entries(eff.aff)) {
         this.addAff(id, v);
+        if (id === ctxCharId) affGain += v;
         deltas.push(`${this.charById(id).name}の好感度${v > 0 ? "+" : ""}${v}`);
       }
     }
     if (eff.all) {
       for (const c of CHARACTERS) this.addAff(c.id, eff.all);
+      if (ctxCharId) affGain += eff.all;
       deltas.push(`全員の好感度+${eff.all}`);
     }
-    return { msg: eff.msg, deltas };
+    return { msg: eff.msg, deltas, affGain };
   },
 
   /* 選択肢を解決(ステータスチェック分岐込み) */

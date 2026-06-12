@@ -56,8 +56,9 @@
       const bomb = ch.bomb > 0
         ? `<div class="char-bomb">💣</div><div class="bomb-count">爆発まで${ch.bomb}ターン!</div>`
         : "";
+      const expr = ch.bomb > 0 ? "serious" : ch.aff >= 70 ? "happy" : "normal";
       card.innerHTML =
-        `${bomb}<div class="char-emoji">${c.emoji}</div>` +
+        `${bomb}<div class="char-portrait">${Portraits.svg(c.id, expr, 64)}</div>` +
         `<div class="char-name">${ch.met ? c.name : "???"}</div>` +
         `<div class="char-title">${ch.met ? c.title : "未遭遇"}</div>` +
         `<div class="char-hearts">${ch.met ? heartGauge(ch.aff) : ""}</div>`;
@@ -103,8 +104,12 @@
   }
 
   function showEvent(ev) {
-    const portrait = ev.charId ? Game.charById(ev.charId).emoji : "🏫";
-    $("#event-portrait").textContent = portrait;
+    const pbox = $("#event-portrait");
+    if (ev.charId) {
+      pbox.innerHTML = Portraits.svg(ev.charId, "normal", 110);
+    } else {
+      pbox.textContent = "🏫";
+    }
     $("#event-text").textContent = ev.text;
 
     const box = $("#event-choices");
@@ -114,7 +119,7 @@
       btn.textContent = choice.label;
       btn.addEventListener("click", () => {
         const result = Game.resolveChoice(choice, ev.charId);
-        showEventResult(result);
+        showEventResult(result, ev.charId);
         renderAll();
       });
       box.appendChild(btn);
@@ -122,7 +127,14 @@
     modal.classList.remove("hidden");
   }
 
-  function showEventResult(result) {
+  function showEventResult(result, charId) {
+    if (charId) {
+      const expr =
+        result.affGain >= 9 ? "blush" :
+        result.affGain >= 4 ? "happy" :
+        result.affGain < 0 ? "shock" : "normal";
+      $("#event-portrait").innerHTML = Portraits.svg(charId, expr, 110);
+    }
     const textEl = $("#event-text");
     textEl.textContent = result.msg;
     if (result.deltas.length) {
@@ -183,6 +195,19 @@
     const typeEl = $("#ending-type");
     typeEl.textContent = `〜 ${e.type} 〜`;
     typeEl.classList.toggle("bad", e.bad);
+
+    const pbox = $("#ending-portrait");
+    if (ENDINGS[key] && Game.charById(key)) {
+      pbox.innerHTML = Portraits.svg(key, "blush", 110);
+    } else if (key === "harem") {
+      pbox.innerHTML = CHARACTERS.map((c) => Portraits.svg(c.id, "shock", 80)).join("");
+    } else if (key === "friend") {
+      pbox.innerHTML = CHARACTERS.map((c) => Portraits.svg(c.id, "happy", 80)).join("");
+    } else if (key === "bad") {
+      pbox.innerHTML = Portraits.svg("hikari", "normal", 110);
+    } else {
+      pbox.innerHTML = "🌳";
+    }
     $("#ending-title").textContent = e.title;
 
     const textBox = $("#ending-text");
@@ -213,7 +238,7 @@
       if (!Game.state.chars[c.id].met) continue;
       any = true;
       const btn = document.createElement("button");
-      btn.textContent = `${c.emoji} ${c.name}`;
+      btn.innerHTML = `${Portraits.svg(c.id, "normal", 28)}<span>${c.name}</span>`;
       btn.addEventListener("click", () => doCommand("date", c.id));
       box.appendChild(btn);
     }
@@ -240,6 +265,11 @@
     setCommandsEnabled(true);
     renderAll();
   }
+
+  // タイトル画面に3人の立ち絵を並べる
+  $("#title-portraits").innerHTML = CHARACTERS
+    .map((c) => Portraits.svg(c.id, "normal", 80))
+    .join("");
 
   $("#start-btn").addEventListener("click", startGame);
   $("#restart-btn").addEventListener("click", () => {
