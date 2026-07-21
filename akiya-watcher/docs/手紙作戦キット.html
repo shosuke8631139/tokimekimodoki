@@ -47,10 +47,12 @@ th { background:rgba(138,109,29,.08); }
 
 <div class="sheet">
 <h1>✉️ 手紙作戦キット — 全体の流れ</h1>
-<div class="sub">まだ売りに出ていない蔵・旧家の空き家を、持ち主への手紙で発掘する。一方通行・低労力・郵送だけ。</div>
+<div class="sub">自宅から通える近場の、まだ売りに出ていない蔵・旧家の空き家を、持ち主への手紙で発掘する。一方通行・低労力・郵送だけ・月2〜3通。</div>
 
-<div class="step"><b class="n">1</b><div><b>候補を見つける</b><br>
-車で走っていて・散歩していて「蔵のある空き家」を見つけたら住所を控える。ウォッチャーの通知圏(対象24市町)の集落・旧街道沿いが狙い目。</div></div>
+<div class="step"><b class="n">0</b><div><b>先に「自分の陣地」を決める</b><br>
+自宅から<b>車で30分の円</b>が本命、遠くても60分まで。買った後に風を通しに通える距離でないと、残置物の整理も家の活用もできない。遠くの好物件より近くのまあまあ、が この作戦の合言葉。</div></div>
+<div class="step"><b class="n">1</b><div><b>候補を見つける(家から出なくてOK)</b><br>
+まず<b>Googleマップの航空写真</b>で陣地内の集落を眺め、大きな瓦屋根+蔵らしき建物に印を付ける。ストリートビューで雨戸・庭の様子を確認。現地は買い物や仕事の<b>ついで</b>に前を通って見るだけ。</div></div>
 <div class="step"><b class="n">2</b><div><b>現地メモを付ける</b><br>
 下の「現地メモシート」で点数を付ける。<b>点数の高い家から</b>手紙を送る(全部に送らない。絞るのは最後、決めるのはあなた)。</div></div>
 <div class="step"><b class="n">3</b><div><b>登記簿で持ち主を調べる</b><br>
@@ -60,7 +62,7 @@ th { background:rgba(138,109,29,.08); }
 <div class="step"><b class="n">5</b><div><b>返事が来たら</b><br>
 喜びすぎず、まず内見のお願い。話が進みそうなら地元の不動産屋(宅建業者)に仲介を頼むと安全。</div></div>
 
-<div class="tip">💡 <b>正直な見込み:</b> この種の手紙の返信率は一般に数%です(100通で数件)。ただしこの作戦は「蔵のある家だけに厳選して送る」ので、1通あたりの当たりの価値が大きい。月に5〜10通、良い候補にだけ送るペースで十分です。</div>
+<div class="tip">💡 <b>正直な見込み:</b> この種の手紙の返信率は一般に数%です(100通で数件)。ただしこの作戦は「近場の・蔵のある家だけに厳選して送る」ので、1通あたりの当たりの価値が大きい。<b>月2〜3通で十分</b>。数を打つ作戦ではなく、良い1軒を待ち伏せる作戦です。しかも近所の個人からの手紙は、遠くの業者のDMよりずっと読んでもらえます。</div>
 </div>
 
 <div class="sheet">
@@ -70,9 +72,15 @@ th { background:rgba(138,109,29,.08); }
 <h2>基本情報(書き込む)</h2>
 <div class="field"><span class="k">見つけた日</span><input type="text"></div>
 <div class="field"><span class="k">住所(だいたいでOK)</span><input type="text"></div>
+<div class="field"><span class="k">自宅から車で何分</span><input type="text" placeholder="Googleマップの経路で調べる"></div>
 <div class="field"><span class="k">目印・行き方メモ</span><input type="text"></div>
 <div class="field"><span class="k">写真を撮ったか</span><input type="text" placeholder="スマホで外観・蔵・表札を道路から"></div>
 <div class="field"><span class="k">表札の名字</span><input type="text" placeholder="読めたら。登記簿と照合できる"></div>
+
+<h2>近さ(どれか1つにチェック)</h2>
+<label class="imp"><input type="checkbox" data-pt="3"><span class="txt">自宅から車で30分以内(通える。ここが本命の陣地)</span><span class="pt">+3</span></label>
+<label><input type="checkbox" data-pt="1"><span class="txt">30分〜60分(良い家なら候補)</span><span class="pt">+1</span></label>
+<label><input type="checkbox" data-pt="-4"><span class="txt">60分超(よほどの物件でない限り見送り)</span><span class="pt">−4</span></label>
 
 <h2>お宝度(裕福だった家系のサイン)</h2>
 <label><input type="checkbox" data-pt="4"><span class="txt">土蔵・石蔵がある</span><span class="pt">+4</span></label>
@@ -91,13 +99,19 @@ th { background:rgba(138,109,29,.08); }
 <label><input type="checkbox" data-pt="1"><span class="txt">夜に通っても明かりがつかない</span><span class="pt">+1</span></label>
 <label><input type="checkbox" data-pt="1"><span class="txt">近所の人の話で「もう誰も住んどらん」</span><span class="pt">+1</span></label>
 
+<h2>使いやすさ(買った後に活用できるか)</h2>
+<label><input type="checkbox" data-pt="2"><span class="txt">屋根・柱がしっかりしていて、そのまま使えそうに見える</span><span class="pt">+2</span></label>
+<label><input type="checkbox" data-pt="2"><span class="txt">車が敷地(または目の前)まで入れる</span><span class="pt">+2</span></label>
+<label><input type="checkbox" data-pt="1"><span class="txt">集落に人が住んでいて活気がある(隣近所に生活の気配)</span><span class="pt">+1</span></label>
+<label><input type="checkbox" data-pt="1"><span class="txt">スーパー・幹線道路まで車で15分以内</span><span class="pt">+1</span></label>
+
 <h2>減点(手を出しにくいサイン)</h2>
 <label><input type="checkbox" data-pt="-3"><span class="txt">屋根が落ちている・傾きが目で分かる(家より土地の値段になる)</span><span class="pt">−3</span></label>
 <label><input type="checkbox" data-pt="-2"><span class="txt">裏がすぐ崖・高い擁壁(シラス崩れの心配)</span><span class="pt">−2</span></label>
 <label><input type="checkbox" data-pt="-2"><span class="txt">車が入れない細い道の奥</span><span class="pt">−2</span></label>
 
 <div id="total">合計 0点</div>
-<div class="note">目安: <b>8点以上</b>=登記簿を取って手紙を送る価値あり / 4〜7点=保留リスト / 3点以下=見送り。あくまで並べるための点数。最後に決めるのはあなたです。</div>
+<div class="note">目安: <b>12点以上</b>=登記簿を取って手紙を送る / 7〜11点=保留リスト(陣地内で他に候補がなければ送る) / 6点以下・60分超=見送り。あくまで並べるための点数。最後に決めるのはあなたです。</div>
 </div>
 
 <div class="sheet">
@@ -179,7 +193,7 @@ const total = document.getElementById('total');
 function tally(){
   let s = 0;
   boxes.forEach(b => { if (b.checked) s += Number(b.dataset.pt); });
-  total.textContent = '合計 ' + s + '点' + (s >= 8 ? ' — 手紙を送る価値あり!' : '');
+  total.textContent = '合計 ' + s + '点' + (s >= 12 ? ' — 手紙を送る価値あり!' : '');
 }
 boxes.forEach(b => b.addEventListener('change', tally));
 </script>
