@@ -115,6 +115,21 @@ pytest
 0 8 * * 0 cd /path/to/akiya-watcher && ./.venv/bin/python -m akiya_watcher.main --config config.yaml --digest >> data/watch.log 2>&1
 ```
 
+## クラウド常駐モード (パソコン不要・推奨)
+
+`.github/workflows/akiya-patrol.yml` / `akiya-digest.yml` により、GitHub Actions が
+JST 9/12/15/18時の巡回と日曜朝のダイジェストを自動実行する。PCの電源は不要。
+
+有効化の3条件:
+1. このブランチを main にマージする (スケジュール実行は既定ブランチのみ)
+2. リポジトリ Settings > Secrets and variables > Actions に
+   `GMAIL_APP_PASSWORD` を登録する
+3. `config.yaml` の `notify.email` と `gmail_portal_mail` を自分のGmailに設定する
+
+巡回結果 (listings.db / report.html) はリポジトリにコミットされ履歴が残る。
+クラウドIPがブロックされるソースが出た場合は、そのソースだけ自宅PC実行に
+切り替える (同じDBを共有できるので併用可)。
+
 ## Gmail連携のセットアップ (楽待・アットホーム・SUUMO等のカバー)
 
 スクレイピング禁止のポータルは、公式の通知メールを解析する方式でカバーする。
