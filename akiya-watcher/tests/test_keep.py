@@ -33,6 +33,21 @@ def test_is_keep_requires_zanchi_and_location():
     assert not is_keep(scorer.score(
         make(price_yen=1_500_000, address="鹿児島県薩摩川内市",
              description="きれいな家"), ctx))
+    # 残置物 × 蔵・旧家 → 立地がなくてもキープ (本丸シグナル)
+    assert is_keep(scorer.score(
+        make(price_yen=1_500_000, description="残置物あり 土蔵・納屋付きの旧家"), ctx))
+
+
+def test_wealth_signal_scoring():
+    scorer = Scorer(CRITERIA)
+    ctx = ListingContext(is_new=False)
+    s = scorer.score(make(price_yen=2_000_000,
+                          description="母屋と離れ、土蔵付きの屋敷。残置物あり"), ctx)
+    assert "🏺蔵・旧家" in s.badges
+    assert "土蔵" in s.matched_keywords
+    # 「冷蔵庫」には誤反応しない
+    s2 = scorer.score(make(price_yen=2_000_000, description="冷蔵庫・洗濯機あり"), ctx)
+    assert "🏺蔵・旧家" not in s2.badges
 
 
 def _config(tmp_path, demo):
