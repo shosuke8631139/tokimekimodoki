@@ -20,6 +20,7 @@ import yaml
 
 from .alerts import decide, offer_candidate_reason
 from .criteria import Scorer, is_keep
+from .kanpo import digest_lines as kanpo_digest_lines
 from .models import ListingContext, Score
 from .notify import Notifier
 from .report import render_report
@@ -143,8 +144,9 @@ def collect(config: dict, dry_run: bool = False,
     return items, delisted, deals, deal_history, keep_gone
 
 
-def build_digest(items: list[tuple[Diff, Score]], offer_min_age_days: int) -> str:
-    """週次ダイジェスト: 上位物件と指値候補のまとめ。"""
+def build_digest(items: list[tuple[Diff, Score]], offer_min_age_days: int,
+                 kanpo_enabled: bool = True) -> str:
+    """週次ダイジェスト: 上位物件と指値候補のまとめ + 官報チェック便。"""
     ranked = sorted(items, key=lambda x: x[1].total, reverse=True)
     lines = [f"📊 週次ダイジェスト (監視 {len(items)}件)", ""]
 
@@ -168,6 +170,9 @@ def build_digest(items: list[tuple[Diff, Score]], offer_min_age_days: int) -> st
         lines.append(f"  [{badges}]")
         lines.append(f"  {d.listing.url}")
     lines.append("")
+    if kanpo_enabled:
+        lines.extend(kanpo_digest_lines())
+        lines.append("")
     lines.append("※ 点数の内訳は添付レポートの「スコア内訳」で確認できます。")
     return "\n".join(lines)
 
@@ -265,7 +270,9 @@ def run(config_path: str, dry_run: bool = False, report_path: str | None = None,
     notified = suppressed = 0
     if digest:
         if not dry_run:
-            notifier.send_text(build_digest(items, offer_age),
+            kanpo_on = config.get("kanpo", {}).get("enabled", True)
+            notifier.send_text(build_digest(items, offer_age,
+                                            kanpo_enabled=kanpo_on),
                                attachment=report_path)
             notified = 1
     else:

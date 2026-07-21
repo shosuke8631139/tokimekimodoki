@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>官報チェック手順書 — 相続人がいない家を週5分で見つける</title>
+<style>
+:root { --bg:#f6f4ef; --card:#fff; --ink:#2b2926; --sub:#6f6a62;
+        --accent:#b0413e; --gold:#8a6d1d; --line:#e5e0d6; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#191713; --card:#232019; --ink:#e8e4da; --sub:#a39c8e;
+          --accent:#e07570; --gold:#d4b45a; --line:#3a352c; }
+}
+* { box-sizing:border-box; margin:0; }
+body { font-family:'Hiragino Sans','Noto Sans JP',sans-serif; background:var(--bg);
+       color:var(--ink); line-height:1.7; padding:16px; max-width:720px; margin:0 auto; }
+.sheet { background:var(--card); border:1px solid var(--line); border-radius:12px;
+         padding:20px 22px; margin-bottom:24px; }
+h1 { font-size:1.3rem; margin-bottom:2px; }
+.sub { color:var(--sub); font-size:.85rem; margin-bottom:14px; }
+h2 { font-size:1rem; margin:20px 0 8px; padding-left:8px; border-left:4px solid var(--gold); }
+.step { display:flex; gap:12px; padding:8px 4px; border-bottom:1px dashed var(--line); }
+.step b.n { flex:none; width:2em; height:2em; border-radius:50%; background:var(--gold);
+            color:#fff; display:flex; align-items:center; justify-content:center; }
+.warn { background:rgba(176,65,62,.08); border:1px solid var(--accent); border-radius:8px;
+        padding:10px 14px; font-size:.9rem; margin:10px 0; }
+.tip  { background:rgba(138,109,29,.08); border:1px solid var(--gold); border-radius:8px;
+        padding:10px 14px; font-size:.9rem; margin:10px 0; }
+table { border-collapse:collapse; width:100%; font-size:.88rem; margin:8px 0; }
+th,td { border:1px solid var(--line); padding:6px 8px; text-align:left; vertical-align:top; }
+th { background:rgba(138,109,29,.08); }
+@media print { body { background:#fff; } .sheet { border:none; page-break-after:always; } }
+</style></head><body>
+
+<div class="sheet">
+<h1>📜 官報チェック手順書</h1>
+<div class="sub">狙い: 相続人がいない家。裁判所が選んだ「清算人」(弁護士)が家と家財を換金する案件は、形見分けが起きておらず<b>家財が手つかず</b>の可能性が高い、このプロジェクトの本命筋。</div>
+
+<h2>なぜ「半自動」なのか(正直な経緯)</h2>
+<div class="warn">官報サイトは利用ルールで「ロボット・クローラによるデータ収集」を明確に禁止しており、個人名の載る記事はわざと機械が読めない画像になっています(90日で非公開)。だから<b>機械が読むのは不可能・読んではいけない</b>。その代わり、目次ページの住所(URL)は日付から計算できるので、<b>毎週日曜のダイジェストメールに先週分の目次への直行リンクが自動で載ります</b>。開いて見るのだけが、あなたの仕事です。</div>
+
+<h2>毎週日曜・5分の手順</h2>
+<div class="step"><b class="n">1</b><div>日曜朝のダイジェストメールの「📜 官報チェック便」のリンクを順に開く(スマホでOK。祝日分は開けなくて正常=発行なし)。</div></div>
+<div class="step"><b class="n">2</b><div>目次ページの下の方にある「<b>公告</b>」の中の「<b>裁判所</b>」を探し、そのページ番号のリンクを開く。</div></div>
+<div class="step"><b class="n">3</b><div>裁判所公告のページ(PDF)で「<b>鹿児島家庭裁判所</b>」「<b>宮崎家庭裁判所</b>」の文字を探す。見るのは「<b>相続財産清算人選任</b>」または「相続人捜索」の公告だけ。文字コピーできない画像のことが多いので目で。</div></div>
+<div class="step"><b class="n">4</b><div>見つけたら<b>その場でスクリーンショット</b>(90日で見られなくなるため)。下の記録表に書き写す。</div></div>
+<div class="step"><b class="n">5</b><div>被相続人(亡くなった方)の最後の住所が対象24市町——特に車で60分圏——なら、<b>清算人打診レター.docx</b>(このフォルダ)の【 】を埋めて、清算人の事務所へ郵送。</div></div>
+
+<h2>記録表(印刷して使う)</h2>
+<table>
+<tr><th>官報の日付</th><th>被相続人の氏名</th><th>最後の住所</th><th>清算人・事務所</th><th>手紙送付日</th><th>結果</th></tr>
+<tr><td>　</td><td>　</td><td>　</td><td>　</td><td>　</td><td>　</td></tr>
+<tr><td>　</td><td>　</td><td>　</td><td>　</td><td>　</td><td>　</td></tr>
+<tr><td>　</td><td>　</td><td>　</td><td>　</td><td>　</td><td>　</td></tr>
+</table>
+
+<h2>楽をお金で買う選択肢</h2>
+<div class="tip">💡 国立印刷局の「<b>官報情報検索サービス</b>」(月2,200円・初月無料あり)ならキーワード検索ができるので、月1回「相続財産清算人 鹿児島」で検索するだけ(3分)になります。<b>ただし</b>個人名の記事が検索に引っかかるかは未確認。<b>初月無料で試して、ヒットするようなら週5分→月3分に乗り換え</b>が賢い順番です。これは人がログインして使う契約サービスなので、自動化はしません。</div>
+
+<h2>手紙を送った後の流れ(気長に)</h2>
+<div class="step"><b class="n">1</b><div>清算人は法律のプロ。事務的なやりとりで進みます。返事が来たら、購入希望の意思と内覧希望だけ伝える。</div></div>
+<div class="step"><b class="n">2</b><div>清算人の売却は<b>家庭裁判所の許可や鑑定</b>を経るため、成約まで半年〜1年かかるのが普通。急かさない。</div></div>
+<div class="step"><b class="n">3</b><div>価格は鑑定額が基準になりやすく、極端な激安にはなりにくい。それでも「家財ごと・現状のまま買う相手」は清算人にとってありがたい存在(換金が仕事なので)。</div></div>
+<div class="step"><b class="n">4</b><div>契約時は通常どおり宅建業者を挟み、「残置物(動産)を含めて買い受ける」ことを契約書で明確に。</div></div>
+
+<h2>守ること</h2>
+<div class="warn">・官報で知った氏名・住所は<b>手紙にだけ</b>使う。ネットに書かない・人に見せない(個人情報保護法に触れる可能性が官報サイトにも明記されています)<br>
+・清算人への手紙は1案件1通。返事がなければ深追いしない<br>
+・自動でのダウンロード・巡回はしない(このツールもリンク生成しかしていません)</div>
+</div>
+</body></html>
