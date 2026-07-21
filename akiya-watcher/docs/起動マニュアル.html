@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>空き家ウォッチャー 起動マニュアル</title></head><body>
+<style>
+:root { --bg:#f3f1ea; --card:#fdfcf8; --ink:#2b2926; --sub:#6f6a62;
+        --accent:#a8433f; --gold:#7c6a2c; --line:#e2ddd0; --done:#3d6b35; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#1a1814; --card:#24211b; --ink:#e8e4da; --sub:#a39c8e;
+          --accent:#e07570; --gold:#cdb15b; --line:#3a352c; --done:#8fbf85; }
+}
+:root[data-theme="dark"] { --bg:#1a1814; --card:#24211b; --ink:#e8e4da;
+  --sub:#a39c8e; --accent:#e07570; --gold:#cdb15b; --line:#3a352c; --done:#8fbf85; }
+:root[data-theme="light"] { --bg:#f3f1ea; --card:#fdfcf8; --ink:#2b2926;
+  --sub:#6f6a62; --accent:#a8433f; --gold:#7c6a2c; --line:#e2ddd0; --done:#3d6b35; }
+body { font-family:'Hiragino Sans','Noto Sans JP',sans-serif; background:var(--bg);
+       color:var(--ink); line-height:1.75; padding:16px; }
+.wrap { max-width:680px; margin:0 auto; }
+h1 { font-size:1.35rem; margin:8px 0 4px; text-wrap:balance; }
+.lead { color:var(--sub); font-size:.9rem; margin-bottom:18px; }
+.goal { background:var(--card); border:1px solid var(--line); border-radius:12px;
+        padding:14px 18px; margin-bottom:22px; font-size:.92rem; }
+.goal b { color:var(--gold); }
+.step { background:var(--card); border:1px solid var(--line); border-radius:12px;
+        padding:18px 20px; margin-bottom:18px; }
+.step-head { display:flex; align-items:center; gap:12px; margin-bottom:8px; }
+.num { flex:none; width:38px; height:38px; border-radius:50%; background:var(--gold);
+       color:#fff; font-weight:700; font-size:1.1rem; display:flex;
+       align-items:center; justify-content:center; }
+.step h2 { font-size:1.05rem; margin:0; }
+.where { font-size:.78rem; color:var(--sub); }
+ol { padding-left:1.4em; margin:8px 0; }
+ol li { margin-bottom:8px; }
+.copybox { background:var(--bg); border:1px dashed var(--gold); border-radius:8px;
+           padding:10px 14px; font-family:monospace; font-size:.95rem; margin:8px 0;
+           word-break:break-all; user-select:all; }
+.tip { background:var(--bg); border-left:4px solid var(--gold); border-radius:0 8px 8px 0;
+       padding:8px 12px; font-size:.83rem; color:var(--sub); margin:10px 0 0; }
+.warn { border-left-color:var(--accent); }
+.donebox { display:flex; gap:10px; align-items:center; margin-top:12px;
+           padding-top:10px; border-top:1px dashed var(--line);
+           font-weight:700; cursor:pointer; }
+.donebox input { transform:scale(1.4); accent-color:var(--done); }
+.donebox input:checked ~ span { color:var(--done); }
+.donebox input:focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
+a { color:var(--gold); font-weight:700; }
+.after { background:var(--card); border:2px solid var(--gold); border-radius:12px;
+         padding:16px 20px; }
+.after h2 { font-size:1.05rem; margin:0 0 8px; }
+</style>
+
+<div class="wrap">
+<h1>📖 空き家ウォッチャー 起動マニュアル</h1>
+<p class="lead">やることは3ステップ・合計15分です。全部パソコンのChromeでできます。各ステップの最後の「できた!」にチェックを付けながら進んでください。</p>
+
+<div class="goal">
+<b>これが終わると:</b> 値下げや良い新着が出た瞬間、あなたのGmailにお知らせが届くようになります。空き家バンクはツールが勝手に見張るので、あなたの設定はこの3つで全部です。
+</div>
+
+<div class="step">
+<div class="step-head"><div class="num">1</div><div>
+<h2>Gmailに「bukken」という箱(ラベル)を作る</h2>
+<div class="where">場所: パソコンのChromeで gmail.com を開く / 所要3分</div>
+</div></div>
+<ol>
+<li>Gmailの<b>左側のメニュー</b>を一番下までスクロールする</li>
+<li>「<b>もっと見る</b>」を押す(メニューが増えます)</li>
+<li>さらに下の「<b>新しいラベルを作成</b>」を押す</li>
+<li>名前の欄に、下の文字をそのまま入力:</li>
+</ol>
+<div class="copybox">bukken</div>
+<ol start="5"><li>「<b>作成</b>」を押す</li></ol>
+<div class="tip">名前が英語なのはわざとです。日本語の名前だとプログラムとの相性が悪いためです。</div>
+<label class="donebox"><input type="checkbox"><span>できた!</span></label>
+</div>
+
+<div class="step">
+<div class="step-head"><div class="num">2</div><div>
+<h2>不動産サイトからのメールに、自動でbukkenの印が付くようにする</h2>
+<div class="where">場所: 同じくGmail / 所要4分</div>
+</div></div>
+<ol>
+<li>Gmail上部の<b>検索窓の右端</b>にあるアイコン(調整つまみのようなマーク)を押す</li>
+<li>「<b>From</b>」の欄に、下の文字をコピーして貼り付け:</li>
+</ol>
+<div class="copybox">@athome.jp OR @suumo.jp OR @jmty.jp</div>
+<ol start="3">
+<li>右下の「<b>フィルタを作成</b>」を押す(検索ボタンではなく)</li>
+<li>出てきた一覧で「<b>ラベルを付ける</b>」にチェック → 「bukken」を選ぶ</li>
+<li>「<b>一致するスレッドにもフィルタを適用する</b>」にもチェック</li>
+<li>もう一度「<b>フィルタを作成</b>」を押して完了</li>
+</ol>
+<div class="tip">これで、アットホーム・SUUMO・ジモティーからのメールに自動で目印が付きます。あなたの普段のメールの見え方は何も変わりません。</div>
+<label class="donebox"><input type="checkbox"><span>できた!</span></label>
+</div>
+
+<div class="step">
+<div class="step-head"><div class="num">3</div><div>
+<h2>ツール専用の合鍵(アプリパスワード)を作る</h2>
+<div class="where">場所: Googleアカウントの設定ページ / 所要5分</div>
+</div></div>
+<ol>
+<li>まず2段階認証がONか確認: <a href="https://myaccount.google.com/security">myaccount.google.com/security</a> を開き、「<b>2段階認証プロセス</b>」がオンになっているか見る。オフなら画面の案内に沿ってオンにする(電話番号の登録が必要です)</li>
+<li>次に <a href="https://myaccount.google.com/apppasswords">myaccount.google.com/apppasswords</a> を開く</li>
+<li>アプリ名を聞かれたら下を入力して「作成」:</li>
+</ol>
+<div class="copybox">akiya-watcher</div>
+<ol start="4">
+<li>画面に<b>16文字のパスワード</b>(4文字×4組)が表示される</li>
+<li>これを<b>メモ帳などにコピーして保存</b>しておく(この画面を閉じると二度と見られません。その場合は作り直せばOK)</li>
+</ol>
+<div class="tip warn">この16文字は普段のGmailパスワードとは別物で、このツール専用の合鍵です。他人に教えないでください。次のステップで私(Claude)と一緒に使いますが、<b>チャットに貼らず</b>、指定するGitHubの設定画面にだけ貼ります。</div>
+<label class="donebox"><input type="checkbox"><span>できた!</span></label>
+</div>
+
+<div class="after">
+<h2>🎉 3つ終わったら → チャットで「できた」と言ってください</h2>
+そこから先は私(Claude)の出番です。一緒にやるのは2つだけ:
+<ol>
+<li><b>合鍵をGitHubに登録</b> — 私が「このページを開いて、この欄に16文字を貼ってください」と正確な場所を案内します(2分)</li>
+<li><b>スイッチON</b> — 私がクラウドの自動巡回を起動します</li>
+</ol>
+その日のうちに、最初の巡回結果があなたのGmailに届き始めます。
+</div>
+
+</div>
+
+</body></html>
