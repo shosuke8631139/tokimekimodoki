@@ -12,7 +12,7 @@ from datetime import date
 from urllib.parse import quote
 
 from .alerts import offer_candidate_reason
-from .criteria import estimate_disposal_cost_yen, suggest_offer_yen
+from .criteria import estimate_disposal_cost_yen, is_keep, suggest_offer_yen
 from .models import Listing, Score
 from .storage import Diff
 
@@ -176,6 +176,12 @@ def render_report(items: list[tuple[Diff, Score]], report_date: date | None = No
                        for i, (d, s) in enumerate(hot)) \
         or '<p class="sub">本日は緊急案件なし。</p>'
 
+    # ⭐キープ: 理想条件(残置物×立地)の常設コーナー
+    keeps = [(d, s) for d, s in items if is_keep(s)]
+    keep_html = "".join(_card(i + 1, d, s, deal=deal_of(d))
+                        for i, (d, s) in enumerate(keeps)) \
+        or '<p class="sub">現在、理想条件に合う物件なし。出たら自動でここに載ります。</p>'
+
     def _offer_line(d: Diff, reason: str) -> str:
         offer = suggest_offer_yen(
             d.listing.price_yen, d.context.age_days,
@@ -234,6 +240,10 @@ def render_report(items: list[tuple[Diff, Score]], report_date: date | None = No
  if hot else '<div class="conclusion">きょうは大きな動きなし。指値候補だけ眺めてください。</div>'}
 <h2>🚨 今すぐ自分の目で見る ({len(hot)}件)</h2>
 {hot_html}
+<h2>⭐ キープ — 理想条件: 残置物 × 立地 ({len(keeps)}件)</h2>
+<p class="sub">この条件の物件は常時ここに載ります。値下げ・記載変更・掲載終了が
+あれば、通常なら知らせない小さな変化でも即通知します。</p>
+{keep_html}
 <h2>🎯 指値候補 — 待たずに攻める ({len(offers)}件)</h2>
 <p class="sub">長期掲載・値下げ履歴 = 売主が譲歩し始めているサイン。
 値下げを待つのではなく、こちらから大幅指値を入れる候補。</p>

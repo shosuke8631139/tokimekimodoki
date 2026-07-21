@@ -63,10 +63,14 @@ class Store:
         self.conn = sqlite3.connect(str(path))
         self.conn.executescript(SCHEMA)
         # 既存DBへの後付けマイグレーション
-        try:
-            self.conn.execute("ALTER TABLE listings ADD COLUMN delisted_at INTEGER")
-        except sqlite3.OperationalError:
-            pass  # 既にある
+        for migration in (
+            "ALTER TABLE listings ADD COLUMN delisted_at INTEGER",
+            "ALTER TABLE listings ADD COLUMN is_keep INTEGER DEFAULT 0",
+        ):
+            try:
+                self.conn.execute(migration)
+            except sqlite3.OperationalError:
+                pass  # 既にある
         self.conn.commit()
         self._now = now  # テスト用に固定時刻を注入できる
 
@@ -132,11 +136,12 @@ class Store:
         kind = "changed" if old_hash != new_hash else "unchanged"
         return Diff(kind=kind, listing=ls, context=ctx)
 
-    def finalize_crawl(self, source: str, seen_uids: set[str]) -> int:
+    def finalize_crawl(self, source: str, seen_uids: set[str]) -> list[str]:
         """一覧型ソースの巡回後に呼ぶ。今回見えなかった物件を掲載終了とみなす。
 
         掲載終了 ≒ 売れた(または取り下げ)。市場のスピード感を学ぶ材料になる。
         メール型ソース(メールに出ない=終了ではない)には使わないこと。
+        戻り値は今回掲載終了になった uid のリスト。
         """
         now = self.now()
         rows = self.conn.execute(
@@ -148,7 +153,22 @@ class Store:
             self.conn.execute(
                 "UPDATE listings SET delisted_at=? WHERE uid=?", (now, uid))
         self.conn.commit()
-        return len(gone)
+        return gone
+
+    def set_keep(self, uid: str, keep: bool) -> None:
+        """⭐キープ(理想条件合致)の印を付ける。掲載終了通知の判定に使う。"""
+        self.conn.execute("UPDATE listings SET is_keep=? WHERE uid=?",
+                          (1 if keep else 0, uid))
+        self.conn.commit()
+
+    def listing_info(self, uid: str) -> dict | None:
+        row = self.conn.execute(
+            "SELECT title, url, price_yen, is_keep FROM listings WHERE uid=?",
+            (uid,)).fetchone()
+        if row is None:
+            return None
+        return {"title": row[0], "url": row[1], "price_yen": row[2],
+                "is_keep": bool(row[3])}
 
     def set_deal(self, uid: str, status: str, offer_yen: int | None = None,
                  note: str = "") -> None:
