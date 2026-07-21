@@ -87,6 +87,39 @@ sources:
       - "https://akiya.sumai.biz/feed"
       - "https://akiya.sumai.biz/feed?paged=2"   # 少し過去まで遡って取りこぼし防止
 
+  # ── 自治体空き家バンク: アットホーム共通システム (2026-07 構造確認済み) ──
+  # 対象地域では鹿児島市・宮崎市の2自治体が本システムで稼働。
+  # must_include: "売" で賃貸掲載を除外(売買のみ通知対象)。
+  - id: kagoshima_city_akiya_bank
+    type: generic_html
+    enabled: true
+    list_url: "https://kagoshima-c46201.akiya-athome.jp/"
+    item_selector: "ul.property-simple > li"
+    must_include: "売"
+    fields:
+      title:       {selector: ".property-name a", attr: "text"}
+      url:         {selector: ".property-name a", attr: "href"}
+      price:       {selector: "dl.bukken-info dd.price-strong", attr: "text"}
+      layout:      {selector: "dl.bukken-info dd:nth-of-type(2)", attr: "text"}
+      land_area:   {selector: "dl.bukken-info dd:nth-of-type(3)", attr: "text"}
+      address:     {selector: "dl.bukken-info dd:nth-of-type(4)", attr: "text"}
+      description: {selector: "dl.bukken-info", attr: "text"}
+
+  - id: miyazaki_city_akiya_bank
+    type: generic_html
+    enabled: true
+    list_url: "https://miyazaki-c45201.akiya-athome.jp/"
+    item_selector: "ul.property-simple > li"
+    must_include: "売"
+    fields:
+      title:       {selector: ".property-name a", attr: "text"}
+      url:         {selector: ".property-name a", attr: "href"}
+      price:       {selector: "dl.bukken-info dd.price-strong", attr: "text"}
+      layout:      {selector: "dl.bukken-info dd:nth-of-type(2)", attr: "text"}
+      land_area:   {selector: "dl.bukken-info dd:nth-of-type(3)", attr: "text"}
+      address:     {selector: "dl.bukken-info dd:nth-of-type(4)", attr: "text"}
+      description: {selector: "dl.bukken-info", attr: "text"}
+
   # ── Gmailメール解析(楽待・アットホーム・SUUMO等のポータルを規約違反なしにカバー) ──
   # アドレスは環境変数 GMAIL_USERNAME、パスワードは GMAIL_APP_PASSWORD から読む。
   - id: gmail_portal_mail
