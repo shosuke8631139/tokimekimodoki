@@ -1,41 +1,52 @@
-"""Sumai空き家 接続テスト (GitHub Actionsから手動実行)。
+"""Sumai空き家 接続テスト 第2弾 (GitHub Actionsから手動実行)。
 
-やること:
-  1. robots.txt を取得して内容を表示 (自動アクセスが許可されているか)
-  2. 鹿児島・宮崎の一覧ページ候補を1回ずつ取得し、物件タイトルが
-     解析できるかを表示 (DBも通知も使わない読み取りテストのみ)
-
-このテストの結果を見て、config.yaml の sumai_akiya ソースを
-有効化するかを判断する。
+第1弾の結果: robots.txt は /wp-admin/ 以外を許可。RSS(sitemap.rss)の存在を確認。
+今回はRSSフィードの中身と、市町村ページの物件解析を確認する。
 """
 import sys
+import xml.etree.ElementTree as ET
 
 sys.path.insert(0, ".")
 
 import requests
 
-from akiya_watcher.scrapers.sumai_akiya import SumaiAkiyaScraper
+from akiya_watcher.scrapers.sumai_akiya import SumaiAkiyaScraper, parse_listing_title
 
-ROBOTS = "https://akiya.sumai.biz/robots.txt"
-CANDIDATE_URLS = [
-    "https://akiya.sumai.biz/kyushu-kagoshima-akiyabank",
-    "https://akiya.sumai.biz/kagoshima-akiya",
-    "https://akiya.sumai.biz/kyushu-miyazaki-akiyabank",
-    "https://akiya.sumai.biz/miyazaki-akiya",
+UA = {"User-Agent": "akiya-watcher/0.1 (personal use)"}
+
+FEEDS = [
+    "https://akiya.sumai.biz/sitemap.rss",
+    "https://akiya.sumai.biz/feed",
 ]
 
-print("===== 1. robots.txt =====")
-try:
-    r = requests.get(ROBOTS, timeout=20,
-                     headers={"User-Agent": "akiya-watcher/0.1 (personal use)"})
-    print(f"status: {r.status_code}")
-    print(r.text[:1500] or "(空)")
-except Exception as e:
-    print(f"取得失敗: {e}")
+print("===== 1. RSSフィードの中身 =====")
+for feed_url in FEEDS:
+    print(f"\n--- {feed_url}")
+    try:
+        r = requests.get(feed_url, timeout=20, headers=UA)
+        print(f"status: {r.status_code}, bytes: {len(r.content)}")
+        if r.status_code != 200:
+            continue
+        root = ET.fromstring(r.content)
+        items = root.findall(".//item")
+        print(f"item数: {len(items)}")
+        for item in items[:12]:
+            title = (item.findtext("title") or "").strip()
+            link = (item.findtext("link") or "").strip()
+            pub = (item.findtext("pubDate") or "").strip()
+            parsed = parse_listing_title(title)
+            mark = "◎物件" if parsed else "  --"
+            drop = ""
+            if parsed and parsed.get("advertised_previous_price_yen"):
+                drop = " 🔻値下げ検知可"
+            print(f"  {mark}{drop} [{pub[:16]}] {title[:80]}")
+            if parsed:
+                print(f"        → 価格:{parsed['price_yen']} 住所:{parsed['address']}")
+    except Exception as e:
+        print(f"取得失敗: {type(e).__name__}: {e}")
 
-print()
-print("===== 2. 一覧ページの読み取りテスト =====")
-for url in CANDIDATE_URLS:
+print("\n===== 2. 市町村ページの物件解析 =====")
+for url in ["https://akiya.sumai.biz/kagoshima-akiya/kagoshima-satsuma"]:
     print(f"\n--- {url}")
     try:
         scraper = SumaiAkiyaScraper({"id": "sumai_test", "list_urls": [url]})
@@ -43,11 +54,7 @@ for url in CANDIDATE_URLS:
         print(f"物件として解析できた件数: {len(listings)}")
         for ls in listings[:5]:
             price = f"{ls.price_yen:,}円" if ls.price_yen is not None else "価格不明"
-            drop = (f" (変更前 {ls.advertised_previous_price_yen:,}円)"
-                    if ls.advertised_previous_price_yen else "")
-            print(f"  ・{price}{drop} {ls.title[:70]}")
-    except PermissionError as e:
-        print(f"robots.txt により取得禁止: {e}")
+            print(f"  ・{price} {ls.title[:70]}")
     except Exception as e:
         print(f"取得失敗: {type(e).__name__}: {e}")
 
