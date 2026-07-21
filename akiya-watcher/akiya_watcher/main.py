@@ -59,10 +59,13 @@ def collect(config: dict, dry_run: bool = False,
     # リサーチ範囲: 指定があれば範囲外の市町村は収集しない。
     # 住所が読み取れない物件は落としすぎ防止のため残す。
     target_areas = criteria.get("target_areas", [])
+    # 価格の足切り (2026-07 ユーザー判断: 高額物件と「応相談」は時間の無駄なので外す)
+    max_price = criteria.get("max_price_yen")
+    include_unknown_price = criteria.get("include_price_unknown", True)
     store = None if dry_run else Store(config.get("db_path", "data/listings.db"))
 
     items: list[tuple[Diff, Score]] = []
-    out_of_area = 0
+    out_of_area = over_price = unknown_price = 0
     for source_cfg in config.get("sources", []):
         if not source_cfg.get("enabled", True):
             continue
@@ -79,6 +82,12 @@ def collect(config: dict, dry_run: bool = False,
             if (target_areas and ls.address
                     and not any(area in ls.address for area in target_areas)):
                 out_of_area += 1
+                continue
+            if ls.price_yen is None and not include_unknown_price:
+                unknown_price += 1
+                continue
+            if max_price and ls.price_yen and ls.price_yen > max_price:
+                over_price += 1
                 continue
             if store:
                 diff = store.upsert(ls)
@@ -108,6 +117,10 @@ def collect(config: dict, dry_run: bool = False,
         store.close()
     if out_of_area:
         print(f"[info] リサーチ範囲外のためスキップ: {out_of_area}件")
+    if over_price:
+        print(f"[info] 価格上限({max_price:,}円)超のためスキップ: {over_price}件")
+    if unknown_price:
+        print(f"[info] 価格応相談のためスキップ: {unknown_price}件")
     return items, delisted, deals, deal_history
 
 
