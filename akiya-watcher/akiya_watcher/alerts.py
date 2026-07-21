@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 import re
+import unicodedata
 from dataclasses import dataclass
 
 from .models import Listing, Score
@@ -22,14 +23,20 @@ from .storage import Diff
 # 建物が無い(またはほぼ無い)ことを示す表現。通知対象外の判定に使う。
 LAND_ONLY_PAT = re.compile(r"土地のみ|売地|更地|山林|原野|農地|田畑|雑種地")
 
+# 建物が有ることを示す表現。「山林付きの家」(家+山)を土地のみと誤判定しない。
+BUILDING_PAT = re.compile(
+    r"平屋|[0-9]階建|階建て|戸建|一戸建|住宅|古民家|家屋"
+    r"|[0-9]S?LDK|[0-9]LDK|[0-9]DK|[0-9]K(?![0-9])")
+
 # 建て直し前提レベルの損壊。除外はしないが通知ハードルを上げる。
 RUIN_PAT = re.compile(r"倒壊|全壊|半壊|崩落|廃屋|住居利用不可")
 
 
 def looks_land_only(ls: Listing) -> bool:
     """建物情報が無く、土地系キーワードだけの掲載か。"""
-    blob = f"{ls.title} {ls.description}"
-    has_building_signal = bool(ls.floor_area_sqm or ls.layout)
+    blob = unicodedata.normalize("NFKC", f"{ls.title} {ls.description}")
+    has_building_signal = bool(ls.floor_area_sqm or ls.layout
+                               or BUILDING_PAT.search(blob))
     return bool(LAND_ONLY_PAT.search(blob)) and not has_building_signal
 
 
