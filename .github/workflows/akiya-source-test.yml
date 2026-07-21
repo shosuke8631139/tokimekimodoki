@@ -13,7 +13,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: 依存インストール
-        run: pip install -r akiya-watcher/requirements.txt
-      - name: Sumai空き家 接続テスト
+        run: pip install -r akiya-watcher/requirements.txt pypdf
+      - name: 官報 構造偵察
         working-directory: akiya-watcher
-        run: python scripts/test_sumai_source.py
+        run: python scripts/test_kanpo_source.py
