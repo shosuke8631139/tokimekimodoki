@@ -10,14 +10,28 @@ LINE Notify は 2025年3月末でサービス終了したため対応しない�
 """
 from __future__ import annotations
 
+import html as html_escape
 import json
 import os
+import re
 import smtplib
 import urllib.request
 from email.message import EmailMessage
 
 from .models import Score
 from .storage import Diff
+
+_URL_RE = re.compile(r"https?://[^\s<>\"]+")
+
+
+def text_to_html(text: str) -> str:
+    """通知文をHTMLメール本文に変換する。URLはタップできるリンクにする。"""
+    escaped = html_escape.escape(text)
+    linked = _URL_RE.sub(
+        lambda m: f'<a href="{m.group(0)}">{m.group(0)}</a>', escaped)
+    body = linked.replace("\n", "<br>\n")
+    return (f'<div style="font-family:sans-serif; line-height:1.7; '
+            f'font-size:15px;">{body}</div>')
 
 
 def format_message(diff: Diff, score: Score) -> str:
@@ -65,13 +79,13 @@ class Notifier:
     def send(self, diff: Diff, score: Score) -> None:
         self.send_text(format_message(diff, score))
 
-    def send_text(self, text: str) -> None:
+    def send_text(self, text: str, attachment: str | None = None) -> None:
         sent = False
         if self.webhook:
             self._send_slack(text)
             sent = True
         if self.email:
-            self._send_mail(text)
+            self._send_mail(text, attachment=attachment)
             sent = True
         if not sent:
             print("---- 通知 (通知先未設定のため標準出力) ----")
@@ -104,6 +118,8 @@ class Notifier:
         msg["From"] = username
         msg["To"] = self.email.get("to", username)
         msg.set_content(text)
+        # HTML版を併送: リンクをタップできる形にする (テキスト版はフォールバック)
+        msg.add_alternative(text_to_html(text), subtype="html")
         if attachment:
             from pathlib import Path
             p = Path(attachment)
