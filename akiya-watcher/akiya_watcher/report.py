@@ -19,6 +19,19 @@ from .storage import Diff
 CSS = """
 :root { --bg:#f6f4ef; --card:#fff; --ink:#2b2926; --sub:#6f6a62;
         --accent:#b0413e; --gold:#8a6d1d; --line:#e5e0d6; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#191713; --card:#232019; --ink:#e8e4da; --sub:#a39c8e;
+          --accent:#e07570; --gold:#d4b45a; --line:#3a352c; }
+  .badge { background:#322d22; }
+  .badge.alert { background:#4a2422; }
+  .unknown { background:#2c2921; }
+  .copy { background:var(--card); color:var(--ink); }
+  .inq { background:var(--card); color:var(--ink); }
+}
+.conclusion { font-size:1.02rem; font-weight:700; background:var(--card);
+              border:1px solid var(--line); border-radius:10px;
+              padding:12px 16px; margin-bottom:8px; }
+.conclusion.urgent { border:2px solid var(--accent); color:var(--accent); }
 * { box-sizing:border-box; margin:0; }
 body { font-family:'Hiragino Sans','Noto Sans JP',sans-serif; background:var(--bg);
        color:var(--ink); line-height:1.6; padding:16px; max-width:720px; margin:0 auto; }
@@ -186,6 +199,8 @@ def render_report(items: list[tuple[Diff, Score]], report_date: date | None = No
 <h1>🏚 物件台帳レポート</h1>
 <div class="sub">{report_date.isoformat()} | 監視 {len(items)}件 |
 🔻本日の値下げ {drops}件 | 🆕新着 {news}件 | 🎯指値候補 {len(offers)}件</div>
+{f'<div class="conclusion urgent">🚨 今すぐ見るべき物件が {len(hot)}件 あります</div>'
+ if hot else '<div class="conclusion">きょうは大きな動きなし。指値候補だけ眺めてください。</div>'}
 <h2>🚨 今すぐ自分の目で見る ({len(hot)}件)</h2>
 {hot_html}
 <h2>🎯 指値候補 — 待たずに攻める ({len(offers)}件)</h2>

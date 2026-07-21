@@ -27,6 +27,30 @@ from .scrapers import build_scraper
 from .storage import Diff, Store
 
 
+class ConfigError(Exception):
+    """設定ファイルの問題。日本語の説明メッセージを持つ。"""
+
+
+def load_config(config_path: str) -> dict:
+    """config.yaml を読み、間違いがあれば日本語で説明して止まる。"""
+    p = Path(config_path)
+    if not p.exists():
+        raise ConfigError(f"設定ファイルが見つかりません: {p}\n"
+                          "config.yaml と同じ場所で実行しているか確認してください。")
+    try:
+        config = yaml.safe_load(p.read_text(encoding="utf-8"))
+    except yaml.YAMLError as e:
+        mark = getattr(e, "problem_mark", None)
+        line = f"(だいたい {mark.line + 1} 行目)" if mark else ""
+        raise ConfigError(
+            f"設定ファイルの書き方に間違いがあります {line}。\n"
+            "よくある原因: 行頭の空白の数がずれている / コロン(:)の後の空白がない。\n"
+            "直し方が分からなければ、そのままの内容を相談してください。") from e
+    if not isinstance(config, dict):
+        raise ConfigError("設定ファイルが空、または形式が違います。")
+    return config
+
+
 def collect(config: dict, dry_run: bool = False,
             ) -> tuple[list[tuple[Diff, Score]], list[dict]]:
     """全ソースから収集し、((Diff, Score) のリスト, 掲載終了リスト) を返す。"""
@@ -106,9 +130,73 @@ def build_digest(items: list[tuple[Diff, Score]], offer_min_age_days: int) -> st
     return "\n".join(lines)
 
 
+def self_check(config_path: str) -> int:
+    """設定の健康診断。何が出来ていて何が足りないかを日本語で報告する。"""
+    import os
+    ok = True
+
+    def good(msg): print(f"  ✅ {msg}")
+
+    def bad(msg):
+        nonlocal ok
+        ok = False
+        print(f"  ❌ {msg}")
+
+    print("===== 設定の健康診断 =====")
+    try:
+        config = load_config(config_path)
+        good("設定ファイルは正しく読めます")
+    except ConfigError as e:
+        print(f"  ❌ {e}")
+        print("===== 診断結果: 設定ファイルを直してください =====")
+        return 1
+
+    areas = config.get("criteria", {}).get("target_areas", [])
+    if areas:
+        good(f"リサーチ範囲: {len(areas)}市町村 (例: {'、'.join(areas[:3])} …)")
+    else:
+        print("  ⚠️ リサーチ範囲が未設定 (全地域が対象になります)")
+
+    enabled = [s for s in config.get("sources", []) if s.get("enabled", True)]
+    if enabled:
+        good("監視する情報源: " + "、".join(s.get("id", "?") for s in enabled))
+    else:
+        bad("有効な情報源がひとつもありません (sources の enabled を確認)")
+
+    for s in enabled:
+        if s.get("type") != "gmail_imap":
+            continue
+        user = s.get("username", "")
+        if not user or "your-address" in user:
+            bad(f"[{s.get('id')}] Gmailアドレスがまだ設定されていません "
+                "(config.yaml の username を自分のアドレスに)")
+            continue
+        good(f"[{s.get('id')}] Gmailアドレス: {user}")
+        env = s.get("password_env", "GMAIL_APP_PASSWORD")
+        if os.environ.get(env):
+            good("アプリパスワードは設定済み")
+        else:
+            bad(f"アプリパスワードが未設定です (環境変数 {env}。"
+                "windows/set_gmail_password.bat で設定できます)")
+
+    email = config.get("notify", {}).get("email")
+    if email and email.get("username") and "your-address" not in email["username"]:
+        good(f"通知メールの宛先: {email['username']}")
+        if not os.environ.get(email.get("password_env", "GMAIL_APP_PASSWORD")):
+            bad("通知メール用のアプリパスワードが未設定です")
+    elif os.environ.get("SLACK_WEBHOOK_URL") or config.get("slack_webhook_url"):
+        good("通知先: Slack")
+    else:
+        print("  ⚠️ 通知先が未設定 (当面は画面とレポートだけで動きます)")
+
+    print("===== 診断結果: " + ("すべてOKです!" if ok else "❌の項目を直してください")
+          + " =====")
+    return 0 if ok else 1
+
+
 def run(config_path: str, dry_run: bool = False, report_path: str | None = None,
         digest: bool = False) -> int:
-    config = yaml.safe_load(Path(config_path).read_text(encoding="utf-8"))
+    config = load_config(config_path)
     notify_cfg = config.get("notify", {})
     min_score = notify_cfg.get("min_score", 8)
     ruin_extra = notify_cfg.get("ruin_extra_score", 5)
@@ -154,11 +242,19 @@ def main() -> None:
     ap.add_argument("--report", help="台帳レポートHTMLの出力先パス")
     ap.add_argument("--digest", action="store_true",
                     help="即時通知の代わりに週次ダイジェストを送る")
+    ap.add_argument("--check", action="store_true",
+                    help="設定の健康診断 (何が足りないかを日本語で表示)")
     ap.add_argument("--dry-run", action="store_true",
                     help="DB更新・通知をせずスコア順位を表示する")
     args = ap.parse_args()
-    sys.exit(run(args.config, dry_run=args.dry_run, report_path=args.report,
-                 digest=args.digest))
+    if args.check:
+        sys.exit(self_check(args.config))
+    try:
+        sys.exit(run(args.config, dry_run=args.dry_run, report_path=args.report,
+                     digest=args.digest))
+    except ConfigError as e:
+        print(f"[設定エラー] {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

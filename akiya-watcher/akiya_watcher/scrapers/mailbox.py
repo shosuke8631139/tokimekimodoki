@@ -49,6 +49,10 @@ DEFAULT_PORTAL_DOMAINS = {
 URL_PAT = re.compile(r"https?://[^\s<>\"']+")
 # 価格らしい文字列だけを対象にする(郵便番号や年数の誤検出を防ぐ)
 PRICE_PAT = re.compile(r"[0-9,.]+\s*(?:億[0-9,.]*万?|万)\s*円|[0-9]{1,3}(?:,[0-9]{3})+円")
+# 値下げ表記「300万円→100万円」: 右側が現在価格
+ARROW_PAT = re.compile(
+    r"([0-9,.]+\s*(?:億[0-9,.]*万?|万)\s*円)\s*(?:→|⇒)\s*"
+    r"([0-9,.]+\s*(?:億[0-9,.]*万?|万)\s*円)")
 
 
 def _portal_of(url: str, domains: dict[str, str]) -> str | None:
@@ -65,9 +69,13 @@ def _canonical(url: str) -> str:
     return urlunparse((p.scheme, p.netloc, p.path, "", "", ""))
 
 
-def _price_in(text: str) -> int | None:
+def _price_in(text: str) -> tuple[int | None, int | None]:
+    """(現在価格, 変更前価格) を返す。「300万円→100万円」は右が現在価格。"""
+    m = ARROW_PAT.search(text)
+    if m:
+        return parse_price_yen(m.group(2)), parse_price_yen(m.group(1))
     m = PRICE_PAT.search(text)
-    return parse_price_yen(m.group(0)) if m else None
+    return (parse_price_yen(m.group(0)) if m else None), None
 
 
 def _walk_bodies(msg: email.message.Message):
@@ -131,7 +139,7 @@ def _add(found: dict[str, Listing], portal: str, url: str,
          title: str, context: str) -> None:
     canon = _canonical(url)
     listing_id = hashlib.sha256(canon.encode("utf-8")).hexdigest()[:16]
-    price = _price_in(context)
+    price, prev_price = _price_in(context)
     prev = found.get(canon)
     # 同じ物件が複数箇所でリンクされる場合、価格が取れている方を優先
     if prev is not None and (prev.price_yen is not None or price is None):
@@ -143,6 +151,7 @@ def _add(found: dict[str, Listing], portal: str, url: str,
         url=url,
         price_yen=price,
         description=context,
+        advertised_previous_price_yen=prev_price,
         raw={"canonical_url": canon},
     )
 
