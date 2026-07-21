@@ -172,6 +172,38 @@ def test_target_areas_scope(tmp_path, capsys):
     assert "住所不明の家" in html   # 住所が読めない物件は落とさない
 
 
+def test_price_ceiling_and_unknown_price_filter(tmp_path, capsys):
+    """高額物件と「応相談」は収集段階で外れる(2026-07 ユーザー判断)。"""
+    from akiya_watcher.main import run
+    demo = tmp_path / "demo.json"
+    rows = [
+        {"id": "ok", "title": "買える物件", "url": "u1", "price": "150万円",
+         "layout": "4DK", "description": "残置物あり"},
+        {"id": "exp", "title": "高すぎる物件", "url": "u2", "price": "700万円",
+         "layout": "5LDK"},
+        {"id": "unk", "title": "応相談の物件", "url": "u3", "price": "応相談",
+         "layout": "4DK"},
+    ]
+    demo.write_text(json.dumps(rows, ensure_ascii=False), encoding="utf-8")
+    report = tmp_path / "report.html"
+    config = {
+        "db_path": str(tmp_path / "db.sqlite"),
+        "criteria": {"max_price_yen": 5_000_000, "include_price_unknown": False},
+        "sources": [{"id": "demo", "type": "demo", "path": str(demo)}],
+    }
+    cfg = tmp_path / "config.yaml"
+    cfg.write_text(yaml.safe_dump(config, allow_unicode=True), encoding="utf-8")
+
+    run(str(cfg), report_path=str(report))
+    out = capsys.readouterr().out
+    assert "価格上限(5,000,000円)超のためスキップ: 1件" in out
+    assert "価格応相談のためスキップ: 1件" in out
+    html = report.read_text(encoding="utf-8")
+    assert "買える物件" in html
+    assert "高すぎる物件" not in html
+    assert "応相談の物件" not in html
+
+
 def test_low_score_new_listing_stays_silent(tmp_path, capsys):
     """低スコア新着は通知されないが台帳レポートには載る(二層構造の回帰テスト)。"""
     from akiya_watcher.main import run
