@@ -122,13 +122,19 @@ def build_digest(items: list[tuple[Diff, Score]], offer_min_age_days: int) -> st
     lines.append(f"🎯 指値候補 {len(offers)}件 — 待たずに攻める:")
     for d, s, r in offers[:5]:
         price = f"{d.listing.price_yen:,}円" if d.listing.price_yen else "価格応談"
-        lines.append(f"  ・{d.listing.title} {price} ({r}) {d.listing.url}")
+        lines.append(f"・{d.listing.title} {price} ({r})")
+        lines.append(f"  {d.listing.url}")
     lines.append("")
 
     lines.append("🏆 スコア上位:")
     for d, s in ranked[:5]:
         price = f"{d.listing.price_yen:,}円" if d.listing.price_yen else "価格応談"
-        lines.append(f"  ・{s.total}点 {d.listing.title} {price} {d.listing.url}")
+        badges = " ".join(s.badges) or "情報少・要確認"
+        lines.append(f"・{s.total}点 {d.listing.title} {price}")
+        lines.append(f"  [{badges}]")
+        lines.append(f"  {d.listing.url}")
+    lines.append("")
+    lines.append("※ 点数の内訳は添付レポートの「スコア内訳」で確認できます。")
     return "\n".join(lines)
 
 
@@ -213,10 +219,20 @@ def run(config_path: str, dry_run: bool = False, report_path: str | None = None,
     notifier = Notifier(config.get("slack_webhook_url"),
                         email=notify_cfg.get("email"))
 
+    # レポートは通知より先に生成する (ダイジェストに添付するため)
+    if report_path:
+        Path(report_path).parent.mkdir(parents=True, exist_ok=True)
+        Path(report_path).write_text(
+            render_report(items, offer_min_age_days=offer_age, delisted=delisted,
+                          deals=deals, deal_history=deal_history),
+            encoding="utf-8")
+        print(f"[info] 台帳レポート生成: {report_path}")
+
     notified = suppressed = 0
     if digest:
         if not dry_run:
-            notifier.send_text(build_digest(items, offer_age))
+            notifier.send_text(build_digest(items, offer_age),
+                               attachment=report_path)
             notified = 1
     else:
         # 通常巡回: 通知ゲートを通った物件だけ即時通知 (沈黙デフォルト)
@@ -229,17 +245,11 @@ def run(config_path: str, dry_run: bool = False, report_path: str | None = None,
                 suppressed += 1
                 print(f"[silent] {diff.listing.title}: {d.reason}")
 
-    if report_path:
-        Path(report_path).parent.mkdir(parents=True, exist_ok=True)
-        Path(report_path).write_text(
-            render_report(items, offer_min_age_days=offer_age, delisted=delisted,
-                          deals=deals, deal_history=deal_history),
-            encoding="utf-8")
-        print(f"[info] 台帳レポート生成: {report_path}")
-        # 通知が出た巡回とダイジェストでは、レポート本体もメール添付で届ける
-        # (スマホのGmailから添付を開けばブラウザで見られる)
+    # 通知が出た巡回では、レポート本体もメール添付で届ける
+    # (スマホのGmailから添付を開けばブラウザで見られる)
+    if report_path and not digest:
         attach = notify_cfg.get("email", {}).get("attach_report", True) \
-            if notify_cfg.get("email") else False
+            if notify_cfg.get("email") is not None else False
         if attach and not dry_run and (notified > 0):
             notifier.send_report(
                 report_path,

@@ -32,4 +32,4 @@ jobs:
         env:
           GMAIL_USERNAME: ${{ secrets.GMAIL_USERNAME }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
-        run: python -m akiya_watcher.main --config config.yaml --digest
+        run: python -m akiya_watcher.main --config config.yaml --digest --report data/report.html

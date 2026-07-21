@@ -31,3 +31,14 @@ def test_subject_defaults_to_first_line():
 def test_send_report_without_email_config_is_noop(tmp_path):
     n = Notifier()  # 通知先なし
     n.send_report(str(tmp_path / "r.html"))  # 例外にならないこと
+
+
+def test_mail_has_html_alternative_with_clickable_links():
+    """メールにはHTML版が併送され、URLがタップできるリンクになる。"""
+    n = Notifier(email={"username": "test@gmail.com"})
+    msg = n._build_mail("物件です\nhttps://example.com/bukken/1?a=1&b=2")
+    html_part = msg.get_body(preferencelist=("html",))
+    assert html_part is not None
+    content = html_part.get_content()
+    assert '<a href="https://example.com/bukken/1?a=1&amp;b=2">' in content
+    assert "<br>" in content
