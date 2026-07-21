@@ -1,0 +1,19 @@
+# 新しい情報源の接続テスト (手動実行のみ。DB・通知は使わない読み取りテスト)
+name: akiya-source-test
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: 依存インストール
+        run: pip install -r akiya-watcher/requirements.txt
+      - name: Sumai空き家 接続テスト
+        working-directory: akiya-watcher
+        run: python scripts/test_sumai_source.py
