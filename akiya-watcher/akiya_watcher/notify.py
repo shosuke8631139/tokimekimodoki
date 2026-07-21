@@ -102,7 +102,8 @@ class Notifier:
             from pathlib import Path
             p = Path(attachment)
             if p.exists():
-                msg.add_attachment(p.read_bytes(), maintype="text",
+                # 文字列で渡すことで charset=utf-8 が正しく付く(日本語の文字化け防止)
+                msg.add_attachment(p.read_text(encoding="utf-8"),
                                    subtype="html", filename="report.html")
         return msg
 
