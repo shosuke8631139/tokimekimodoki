@@ -42,6 +42,8 @@ class GenericHtmlScraper(BaseScraper):
         self.list_url = config["list_url"]
         self.item_selector = config["item_selector"]
         self.fields: dict = config.get("fields", {})
+        # この文字列を含む物件だけ採用 (例: "売" で賃貸を除外)
+        self.must_include: str = config.get("must_include", "")
 
     def _extract(self, node, spec: dict) -> str:
         el = node.select_one(spec["selector"]) if spec.get("selector") else node
@@ -58,6 +60,8 @@ class GenericHtmlScraper(BaseScraper):
         listings: list[Listing] = []
         for node in soup.select(self.item_selector):
             f = {name: self._extract(node, spec) for name, spec in self.fields.items()}
+            if self.must_include and self.must_include not in node.get_text(" "):
+                continue
             url = urljoin(self.list_url, f.get("url", ""))
             # ID列がないサイトが多いのでURL(なければ内容)から安定IDを作る
             id_basis = url or (f.get("title", "") + f.get("address", ""))
