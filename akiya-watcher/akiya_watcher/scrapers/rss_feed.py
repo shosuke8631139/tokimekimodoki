@@ -21,6 +21,9 @@ from .sumai_akiya import parse_listing_title
 
 class RssScraper(BaseScraper):
     source_id = "rss"
+    # RSSは「最新の投稿だけ」が流れる窓。古い物件がフィードから消えても
+    # 掲載終了ではないので、消えた=売れた の判定には使わない
+    full_snapshot = False
 
     def __init__(self, config: dict):
         super().__init__(config)
