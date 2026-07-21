@@ -231,6 +231,15 @@ def run(config_path: str, dry_run: bool = False, report_path: str | None = None,
                           deals=deals, deal_history=deal_history),
             encoding="utf-8")
         print(f"[info] 台帳レポート生成: {report_path}")
+        # 通知が出た巡回とダイジェストでは、レポート本体もメール添付で届ける
+        # (スマホのGmailから添付を開けばブラウザで見られる)
+        attach = notify_cfg.get("email", {}).get("attach_report", True) \
+            if notify_cfg.get("email") else False
+        if attach and not dry_run and (notified > 0):
+            notifier.send_report(
+                report_path,
+                note=("通知した物件の全体像はこのレポートで確認できます。"
+                      "添付の report.html を開いてください。"))
 
     print(f"[info] 監視 {len(items)}件 / 通知 {notified}件 / 抑制 {suppressed}件")
     if dry_run:

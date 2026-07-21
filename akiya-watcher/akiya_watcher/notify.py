@@ -80,20 +80,41 @@ class Notifier:
         with urllib.request.urlopen(req, timeout=15) as res:
             res.read()
 
-    def _send_mail(self, text: str) -> None:
+    def send_report(self, report_path: str, note: str = "") -> None:
+        """台帳レポートHTMLをメール添付で送る。Gmailの添付を開けばブラウザで見られる。"""
+        if not self.email:
+            return
+        body = (note or "最新の物件台帳レポートを添付します。"
+                "添付の report.html を開くとブラウザで表示されます。")
+        self._send_mail(body, subject="📋 物件台帳レポート",
+                        attachment=report_path)
+
+    def _build_mail(self, text: str, subject: str | None = None,
+                    attachment: str | None = None) -> EmailMessage:
         username = self.email["username"]
+        msg = EmailMessage()
+        # 件名 = 指定がなければ本文の1行目 (例: "🔻 値下げ検知 (▼67%) [score 29]")
+        msg["Subject"] = (subject or text.splitlines()[0])[:80]
+        msg["From"] = username
+        msg["To"] = self.email.get("to", username)
+        msg.set_content(text)
+        if attachment:
+            from pathlib import Path
+            p = Path(attachment)
+            if p.exists():
+                msg.add_attachment(p.read_bytes(), maintype="text",
+                                   subtype="html", filename="report.html")
+        return msg
+
+    def _send_mail(self, text: str, subject: str | None = None,
+                   attachment: str | None = None) -> None:
         password = os.environ.get(self.email.get("password_env", "GMAIL_APP_PASSWORD"))
         if not password:
             print("[warn] メール通知: アプリパスワード未設定のためスキップ")
             return
-        msg = EmailMessage()
-        # 件名 = 本文の1行目 (例: "🔻 値下げ検知 (▼67%) [score 29]")
-        msg["Subject"] = text.splitlines()[0][:80]
-        msg["From"] = username
-        msg["To"] = self.email.get("to", username)
-        msg.set_content(text)
+        msg = self._build_mail(text, subject, attachment)
         host = self.email.get("smtp_host", "smtp.gmail.com")
         with smtplib.SMTP_SSL(host, self.email.get("smtp_port", 465),
                               timeout=20) as smtp:
-            smtp.login(username, password)
+            smtp.login(self.email["username"], password)
             smtp.send_message(msg)
