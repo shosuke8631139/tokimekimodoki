@@ -30,7 +30,24 @@ CREATE TABLE IF NOT EXISTS price_history (
     price_yen INTEGER,
     seen_at   INTEGER NOT NULL
 );
+CREATE TABLE IF NOT EXISTS deals (
+    uid        TEXT PRIMARY KEY,
+    status     TEXT NOT NULL,
+    offer_yen  INTEGER,
+    note       TEXT,
+    updated_at INTEGER
+);
+CREATE TABLE IF NOT EXISTS deal_log (
+    uid       TEXT NOT NULL,
+    status    TEXT NOT NULL,
+    offer_yen INTEGER,
+    note      TEXT,
+    at        INTEGER NOT NULL
+);
 """
+
+# 商談ステータス (番号は deals CLI の選択肢)
+DEAL_STATUSES = ["気になる", "問い合わせ済", "内見済", "指値中", "成約", "見送り"]
 
 
 @dataclass
@@ -132,6 +149,49 @@ class Store:
                 "UPDATE listings SET delisted_at=? WHERE uid=?", (now, uid))
         self.conn.commit()
         return len(gone)
+
+    def set_deal(self, uid: str, status: str, offer_yen: int | None = None,
+                 note: str = "") -> None:
+        """商談状態を更新し、履歴(実戦データ)にも積む。"""
+        now = self.now()
+        self.conn.execute(
+            "INSERT INTO deals (uid, status, offer_yen, note, updated_at)"
+            " VALUES (?, ?, ?, ?, ?)"
+            " ON CONFLICT(uid) DO UPDATE SET status=excluded.status,"
+            " offer_yen=excluded.offer_yen, note=excluded.note,"
+            " updated_at=excluded.updated_at",
+            (uid, status, offer_yen, note, now))
+        self.conn.execute(
+            "INSERT INTO deal_log (uid, status, offer_yen, note, at)"
+            " VALUES (?, ?, ?, ?, ?)", (uid, status, offer_yen, note, now))
+        self.conn.commit()
+
+    def deals(self) -> dict[str, dict]:
+        """uid → 商談状態。レポートのバッジ表示に使う。"""
+        rows = self.conn.execute(
+            "SELECT uid, status, offer_yen, note FROM deals").fetchall()
+        return {u: {"status": s, "offer_yen": o, "note": n}
+                for u, s, o, n in rows}
+
+    def deal_history(self) -> list[dict]:
+        """実戦データ: 指値・成約・見送りの全履歴 (物件情報つき・新しい順)。"""
+        rows = self.conn.execute(
+            "SELECT g.uid, g.status, g.offer_yen, g.note, g.at,"
+            " l.title, l.price_yen, l.url"
+            " FROM deal_log g LEFT JOIN listings l ON l.uid = g.uid"
+            " ORDER BY g.at DESC, g.rowid DESC").fetchall()
+        return [{"uid": u, "status": s, "offer_yen": o, "note": n, "at": a,
+                 "title": t or u, "price_yen": p, "url": url or ""}
+                for u, s, o, n, a, t, p, url in rows]
+
+    def recent_listings(self, limit: int = 40) -> list[dict]:
+        """商談ノートCLIで選ぶための物件一覧 (掲載中を新しい順)。"""
+        rows = self.conn.execute(
+            "SELECT uid, title, price_yen, url FROM listings"
+            " WHERE delisted_at IS NULL ORDER BY last_seen DESC, first_seen DESC"
+            " LIMIT ?", (limit,)).fetchall()
+        return [{"uid": u, "title": t, "price_yen": p, "url": url}
+                for u, t, p, url in rows]
 
     def recent_delisted(self, within_days: int = 30) -> list[dict]:
         """最近掲載終了した物件 (売れた実績データ)。新しい順。"""

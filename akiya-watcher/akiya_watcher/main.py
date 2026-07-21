@@ -102,11 +102,13 @@ def collect(config: dict, dry_run: bool = False,
                 print(f"[info] {source_cfg['id']}: 掲載終了 {gone}件")
 
     delisted = store.recent_delisted(within_days=30) if store else []
+    deals = store.deals() if store else {}
+    deal_history = store.deal_history() if store else []
     if store:
         store.close()
     if out_of_area:
         print(f"[info] リサーチ範囲外のためスキップ: {out_of_area}件")
-    return items, delisted
+    return items, delisted, deals, deal_history
 
 
 def build_digest(items: list[tuple[Diff, Score]], offer_min_age_days: int) -> str:
@@ -202,7 +204,7 @@ def run(config_path: str, dry_run: bool = False, report_path: str | None = None,
     ruin_extra = notify_cfg.get("ruin_extra_score", 5)
     offer_age = config.get("offer_list", {}).get("min_age_days", 90)
 
-    items, delisted = collect(config, dry_run=dry_run)
+    items, delisted, deals, deal_history = collect(config, dry_run=dry_run)
     notifier = Notifier(config.get("slack_webhook_url"),
                         email=notify_cfg.get("email"))
 
@@ -225,7 +227,8 @@ def run(config_path: str, dry_run: bool = False, report_path: str | None = None,
     if report_path:
         Path(report_path).parent.mkdir(parents=True, exist_ok=True)
         Path(report_path).write_text(
-            render_report(items, offer_min_age_days=offer_age, delisted=delisted),
+            render_report(items, offer_min_age_days=offer_age, delisted=delisted,
+                          deals=deals, deal_history=deal_history),
             encoding="utf-8")
         print(f"[info] 台帳レポート生成: {report_path}")
 

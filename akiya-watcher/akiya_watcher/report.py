@@ -54,6 +54,7 @@ h2 { font-size:1rem; margin:24px 0 8px; padding-left:8px;
 .badge { display:inline-block; background:#f0ece2; border-radius:999px;
          padding:2px 10px; font-size:.78rem; margin:2px 4px 2px 0; }
 .badge.alert { background:#fbe4e3; color:var(--accent); font-weight:700; }
+.badge.deal { background:#e2ecdf; color:#3d6b35; font-weight:700; }
 .unknown { display:inline-block; background:#eee; color:var(--sub);
            border-radius:4px; padding:1px 8px; font-size:.75rem; margin:2px 4px 2px 0; }
 details { margin-top:6px; }
@@ -103,8 +104,13 @@ def _inquiry_html(ls: Listing) -> str:
             f'コピー</button></details>')
 
 
-def _card(rank: int, diff: Diff, score: Score, hot: bool = False) -> str:
+def _card(rank: int, diff: Diff, score: Score, hot: bool = False,
+          deal: dict | None = None) -> str:
     ls = diff.listing
+    deal_chip = ""
+    if deal:
+        offer = (f" {deal['offer_yen'] / 10_000:,.0f}万" if deal.get("offer_yen") else "")
+        deal_chip = f'<span class="badge deal">🤝{html.escape(deal["status"])}{offer}</span>'
     badges = "".join(
         f'<span class="badge{" alert" if b.startswith(("🔻", "🆕")) else ""}">{html.escape(b)}</span>'
         for b in score.badges)
@@ -133,7 +139,7 @@ def _card(rank: int, diff: Diff, score: Score, hot: bool = False) -> str:
   {_price_html(diff)}
   {real_price}
   <div class="addr">{html.escape(ls.address or '所在地不明')}</div>
-  <div class="badges">{badges}</div>
+  <div class="badges">{deal_chip}{badges}</div>
   <div>{unknowns}</div>
   <details><summary>スコア内訳</summary><ul class="reasons">{reasons}</ul></details>
   {_inquiry_html(ls)}
@@ -143,7 +149,9 @@ def _card(rank: int, diff: Diff, score: Score, hot: bool = False) -> str:
 
 def render_report(items: list[tuple[Diff, Score]], report_date: date | None = None,
                   offer_min_age_days: int = 90,
-                  delisted: list[dict] | None = None) -> str:
+                  delisted: list[dict] | None = None,
+                  deals: dict[str, dict] | None = None,
+                  deal_history: list[dict] | None = None) -> str:
     """(Diff, Score) のリストから台帳レポートHTMLを生成する。"""
     report_date = report_date or date.today()
     items = sorted(items, key=lambda x: x[1].total, reverse=True)
@@ -158,7 +166,13 @@ def render_report(items: list[tuple[Diff, Score]], report_date: date | None = No
     offers = [(d, s, offer_candidate_reason(d, offer_min_age_days)) for d, s in items]
     offers = [(d, s, r) for d, s, r in offers if r]
 
-    hot_html = "".join(_card(i + 1, d, s, hot=True) for i, (d, s) in enumerate(hot)) \
+    deals = deals or {}
+
+    def deal_of(d: Diff) -> dict | None:
+        return deals.get(d.listing.uid)
+
+    hot_html = "".join(_card(i + 1, d, s, hot=True, deal=deal_of(d))
+                       for i, (d, s) in enumerate(hot)) \
         or '<p class="sub">本日は緊急案件なし。</p>'
 
     def _offer_line(d: Diff, reason: str) -> str:
@@ -169,11 +183,27 @@ def render_report(items: list[tuple[Diff, Score]], report_date: date | None = No
         return f'<div class="offer-reason">🎯 {html.escape(reason)}{tip}</div>'
 
     offer_html = "".join(
-        _offer_line(d, r) + _card(i + 1, d, s)
+        _offer_line(d, r) + _card(i + 1, d, s, deal=deal_of(d))
         for i, (d, s, r) in enumerate(offers)) \
         or '<p class="sub">現在、指値候補なし。</p>'
-    all_html = "".join(_card(i + 1, d, s, hot=d.listing.uid in hot_uids)
+    all_html = "".join(_card(i + 1, d, s, hot=d.listing.uid in hot_uids,
+                             deal=deal_of(d))
                        for i, (d, s) in enumerate(items))
+
+    # 実戦データ: 指値・成約・見送りの記録 (通る指値を学ぶ)
+    battle_html = ""
+    if deal_history:
+        rows = []
+        for h in deal_history[:15]:
+            offer = (f' 指値 {h["offer_yen"] / 10_000:,.0f}万円'
+                     if h.get("offer_yen") else "")
+            note = f' — {html.escape(h["note"])}' if h.get("note") else ""
+            rows.append(f'<div class="sold-row">[{html.escape(h["status"])}]{offer} '
+                        f'{html.escape((h["title"] or "")[:50])}{note}</div>')
+        battle_html = (f'<h2>📓 実戦データ — あなたの商談記録 ({len(deal_history)}件)</h2>'
+                       f'<p class="sub">通った指値・断られた指値の記録。'
+                       f'貯まるほど「この地域で通る値段」が見えてくる。</p>'
+                       + "".join(rows))
 
     # 掲載終了 (売れた?) — 相場観を貯める記録
     sold_html = ""
@@ -210,5 +240,6 @@ def render_report(items: list[tuple[Diff, Score]], report_date: date | None = No
 <h2>📋 全物件ランキング (落とさず有望順)</h2>
 {all_html}
 {sold_html}
+{battle_html}
 <footer>akiya-watcher — 除外しない。並べて、人間が決める。</footer>
 </body></html>"""
