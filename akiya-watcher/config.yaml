@@ -66,9 +66,10 @@ criteria:
 
 sources:
   # ── 動作確認用デモソース(ローカルJSON・ネットワーク不要) ──
+  # 本番運用ではOFF。判定ロジックの動作確認をしたいときだけtrueに戻す
   - id: demo
     type: demo
-    enabled: true
+    enabled: false
     path: sample_data/demo_listings.json
 
   # ── 実サイトの追加例(セレクタは各自治体サイトの開発者ツールで確認して設定) ──
