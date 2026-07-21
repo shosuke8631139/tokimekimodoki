@@ -141,6 +141,37 @@ def test_digest_mode(tmp_path, capsys):
     assert "🆕 新着物件" not in out  # 個別通知は出ない
 
 
+def test_target_areas_scope(tmp_path, capsys):
+    """リサーチ範囲外の市町村は収集されず、住所不明の物件は残る。"""
+    from akiya_watcher.main import run
+    demo = tmp_path / "demo.json"
+    rows = [
+        {"id": "in-1", "title": "範囲内の家", "url": "u1", "price": "150万円",
+         "address": "鹿児島県薩摩川内市", "layout": "4DK"},
+        {"id": "out-1", "title": "離島の家", "url": "u2", "price": "100万円",
+         "address": "鹿児島県奄美市", "layout": "4DK"},
+        {"id": "na-1", "title": "住所不明の家", "url": "u3", "price": "120万円",
+         "layout": "4DK"},
+    ]
+    demo.write_text(json.dumps(rows, ensure_ascii=False), encoding="utf-8")
+    report = tmp_path / "report.html"
+    config = {
+        "db_path": str(tmp_path / "db.sqlite"),
+        "criteria": {"target_areas": ["薩摩川内市", "鹿屋市"]},
+        "sources": [{"id": "demo", "type": "demo", "path": str(demo)}],
+    }
+    cfg = tmp_path / "config.yaml"
+    cfg.write_text(yaml.safe_dump(config, allow_unicode=True), encoding="utf-8")
+
+    run(str(cfg), report_path=str(report))
+    out = capsys.readouterr().out
+    assert "リサーチ範囲外のためスキップ: 1件" in out
+    html = report.read_text(encoding="utf-8")
+    assert "範囲内の家" in html
+    assert "離島の家" not in html
+    assert "住所不明の家" in html   # 住所が読めない物件は落とさない
+
+
 def test_low_score_new_listing_stays_silent(tmp_path, capsys):
     """低スコア新着は通知されないが台帳レポートには載る(二層構造の回帰テスト)。"""
     from akiya_watcher.main import run

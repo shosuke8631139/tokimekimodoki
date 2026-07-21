@@ -29,10 +29,15 @@ from .storage import Diff, Store
 
 def collect(config: dict, dry_run: bool = False) -> list[tuple[Diff, Score]]:
     """全ソースから収集し、(Diff, Score) のリストを返す。"""
-    scorer = Scorer(config.get("criteria", {}))
+    criteria = config.get("criteria", {})
+    scorer = Scorer(criteria)
+    # リサーチ範囲: 指定があれば範囲外の市町村は収集しない。
+    # 住所が読み取れない物件は落としすぎ防止のため残す。
+    target_areas = criteria.get("target_areas", [])
     store = None if dry_run else Store(config.get("db_path", "data/listings.db"))
 
     items: list[tuple[Diff, Score]] = []
+    out_of_area = 0
     for source_cfg in config.get("sources", []):
         if not source_cfg.get("enabled", True):
             continue
@@ -45,6 +50,10 @@ def collect(config: dict, dry_run: bool = False) -> list[tuple[Diff, Score]]:
         print(f"[info] {source_cfg.get('id')}: {len(listings)}件取得")
 
         for ls in listings:
+            if (target_areas and ls.address
+                    and not any(area in ls.address for area in target_areas)):
+                out_of_area += 1
+                continue
             if store:
                 diff = store.upsert(ls)
             else:
@@ -54,6 +63,8 @@ def collect(config: dict, dry_run: bool = False) -> list[tuple[Diff, Score]]:
 
     if store:
         store.close()
+    if out_of_area:
+        print(f"[info] リサーチ範囲外のためスキップ: {out_of_area}件")
     return items
 
 
