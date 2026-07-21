@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>現地キット — 宝探しチェックリスト & 内見安全確認シート</title>
+<style>
+:root { --bg:#f6f4ef; --card:#fff; --ink:#2b2926; --sub:#6f6a62;
+        --accent:#b0413e; --gold:#8a6d1d; --line:#e5e0d6; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#191713; --card:#232019; --ink:#e8e4da; --sub:#a39c8e;
+          --accent:#e07570; --gold:#d4b45a; --line:#3a352c; }
+}
+* { box-sizing:border-box; margin:0; }
+body { font-family:'Hiragino Sans','Noto Sans JP',sans-serif; background:var(--bg);
+       color:var(--ink); line-height:1.7; padding:16px; max-width:720px; margin:0 auto; }
+.sheet { background:var(--card); border:1px solid var(--line); border-radius:12px;
+         padding:20px 22px; margin-bottom:24px; }
+h1 { font-size:1.3rem; margin-bottom:2px; }
+.sub { color:var(--sub); font-size:.85rem; margin-bottom:14px; }
+h2 { font-size:1rem; margin:20px 0 8px; padding-left:8px;
+     border-left:4px solid var(--gold); }
+label { display:flex; gap:10px; align-items:flex-start; padding:7px 4px;
+        border-bottom:1px dashed var(--line); font-size:.95rem; cursor:pointer; }
+label input { margin-top:5px; transform:scale(1.3); accent-color:var(--gold); }
+label.imp { font-weight:700; }
+label.imp .txt::after { content:" ★最重要"; color:var(--accent); font-size:.8rem; }
+.note { color:var(--sub); font-size:.8rem; padding:4px 4px 8px 34px; }
+input:checked ~ .txt { color:var(--sub); text-decoration:line-through; }
+@media print { body { background:#fff; } .sheet { border:none; page-break-after:always; } }
+</style></head><body>
+
+<div class="sheet">
+<h1>🔍 残置物 宝探しチェックリスト</h1>
+<div class="sub">物件を買えたら、この画面を見ながら現地で1つずつチェック(タップで✔が付きます)</div>
+
+<h2>その前に — 契約のときの大事な1行</h2>
+<label class="imp"><input type="checkbox"><span class="txt">契約書に「残置物の所有権は引渡しと同時に買主に移り、買主が自由に処分できる」という意味の条項があるか確認した</span></label>
+<div class="note">この一文がないと、価値ある品が出てきたときの権利がグレーになります。仲介業者に「残置物の所有権も引き継ぐ形で」と伝えればOK。</div>
+
+<h2>探す場所 (見つかりやすい順)</h2>
+<label><input type="checkbox"><span class="txt">仏壇まわり — 引き出し・位牌の下・仏具の中 (現金・通帳が多い)</span></label>
+<label><input type="checkbox"><span class="txt">タンス — 引き出しの奥・裏側・一番下の底板・着物の帯や襟の中</span></label>
+<label><input type="checkbox"><span class="txt">天袋・押入れの上段 — 奥の箱・風呂敷包み</span></label>
+<label><input type="checkbox"><span class="txt">台所 — 茶筒・お菓子の缶・米びつの底 (へそくりの定番)</span></label>
+<label><input type="checkbox"><span class="txt">書斎・机 — 引き出しの二重底・本の間</span></label>
+<label><input type="checkbox"><span class="txt">床下収納・畳の下</span></label>
+<label><input type="checkbox"><span class="txt">金庫・手提げ金庫 (開かなくても鍵屋で開けられる。捨てない)</span></label>
+<label><input type="checkbox"><span class="txt">納屋・蔵・農機具小屋 — 工具・農機具は地方で高く売れる</span></label>
+
+<h2>価値が出やすい品</h2>
+<label><input type="checkbox"><span class="txt">貴金属・宝石・金歯 (指輪1つでも数万円になることがある)</span></label>
+<label><input type="checkbox"><span class="txt">記念硬貨・古銭・古紙幣・切手シート</span></label>
+<label><input type="checkbox"><span class="txt">カメラ・レンズ・時計 (古くても人気機種は高値)</span></label>
+<label><input type="checkbox"><span class="txt">工具・チェーンソー・耕運機・発電機 (ジモティーで即売れ)</span></label>
+<label><input type="checkbox"><span class="txt">骨董・掛け軸・茶道具・未開封の古酒</span></label>
+
+<h2>扱いに気をつけるもの</h2>
+<label class="imp"><input type="checkbox"><span class="txt">現金・通帳・印鑑・権利書・保険証書 → 仲介業者経由で売主に連絡するのが筋</span></label>
+<label><input type="checkbox"><span class="txt">遺影・位牌・仏壇 → 供養処分が慣習 (お寺・仏壇店で数千円〜)</span></label>
+<label><input type="checkbox"><span class="txt">手紙・写真 → 判断に迷ったら一旦保管</span></label>
+
+<h2>売り先の使い分け</h2>
+<label><input type="checkbox"><span class="txt">貴金属 → 買取店を2〜3軒回って相見積もり (1軒目で即決しない)</span></label>
+<label><input type="checkbox"><span class="txt">工具・農機具・家電 → ジモティー/フリマ</span></label>
+<label><input type="checkbox"><span class="txt">骨董・掛け軸 → 骨董商の出張査定</span></label>
+<label><input type="checkbox"><span class="txt">残り全部 → 遺品整理業者で相見積もり</span></label>
+</div>
+
+<div class="sheet">
+<h1>🏠 内見 安全確認シート</h1>
+<div class="sub">舞い上がって買って後悔しないための、現地での15分</div>
+
+<h2>建物 — 直せない欠陥がないか</h2>
+<label class="imp"><input type="checkbox"><span class="txt">傾き: ビー玉を床に置く/スマホの水平器アプリ (大きな傾き=基礎の問題=高額)</span></label>
+<label><input type="checkbox"><span class="txt">基礎のひび: 幅5mm以上・斜めのひびは要注意</span></label>
+<label><input type="checkbox"><span class="txt">雨漏り跡: 天井のシミ・天袋の中・押入れの奥の壁</span></label>
+<label><input type="checkbox"><span class="txt">シロアリ: 羽アリの死骸・土の筋(蟻道)・柱を叩いて空洞音</span></label>
+<label><input type="checkbox"><span class="txt">床: 歩いてブヨブヨする場所がないか</span></label>
+
+<h2>水回り</h2>
+<label><input type="checkbox"><span class="txt">トイレ: 水洗(下水or浄化槽)か汲み取りか。浄化槽なら点検記録の有無</span></label>
+<label><input type="checkbox"><span class="txt">水道: 開栓してもらい実際に出す。給湯器の年式</span></label>
+<label><input type="checkbox"><span class="txt">排水: 流れ・臭い</span></label>
+
+<h2>土地 — 鹿児島で特に大事</h2>
+<label class="imp"><input type="checkbox"><span class="txt">接道: 幅4m以上の道路に2m以上接しているか (ダメだと建て替え不可)</span></label>
+<label class="imp"><input type="checkbox"><span class="txt">崖・擁壁: 裏山や高い擁壁が近くにないか (シラス土壌の崖崩れ)</span></label>
+<label><input type="checkbox"><span class="txt">ハザードマップ: 「(市町村名) ハザードマップ」で検索して土砂・浸水を確認</span></label>
+<label><input type="checkbox"><span class="txt">境界: 境界杭があるか。隣地との塀は誰のものか</span></label>
+<label><input type="checkbox"><span class="txt">桜島の降灰: 雨樋の詰まり具合</span></label>
+
+<h2>周辺・暮らし</h2>
+<label><input type="checkbox"><span class="txt">スーパー・小中学校まで実際に車で走ってみる</span></label>
+<label><input type="checkbox"><span class="txt">隣の家の様子・ゴミステーションの場所</span></label>
+<label><input type="checkbox"><span class="txt">携帯の電波</span></label>
+
+<h2>お金の見積もり</h2>
+<label><input type="checkbox"><span class="txt">残置物の量: 軽トラ何台分か (1台あたり2〜3万円が目安)</span></label>
+<label><input type="checkbox"><span class="txt">屋根・外壁・畳襖・水回りで、すぐ直す必要があるもの</span></label>
+
+<h2>その場で聞く質問</h2>
+<label><input type="checkbox"><span class="txt">「いつから空き家ですか?」 (長いほど指値が効く)</span></label>
+<label><input type="checkbox"><span class="txt">「売主さんはどういうご事情で?」</span></label>
+<label><input type="checkbox"><span class="txt">「価格はご相談できますか?」</span></label>
+<label><input type="checkbox"><span class="txt">「雨漏りやシロアリの履歴は?」</span></label>
+<label><input type="checkbox"><span class="txt">「境界やご近所で揉め事は?」</span></label>
+</div>
+
+</body></html>
