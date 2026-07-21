@@ -1,0 +1,125 @@
+# 鹿児島お宝再生物件ウォッチャー 設定
+#
+# 設計思想: 条件で落とさない。スコア化して並べ、人間が決める。
+# slack_webhook_url は環境変数 SLACK_WEBHOOK_URL でも指定可能(環境変数推奨)。
+
+db_path: data/listings.db
+
+# 通知ゲート: 「何もない日は何も来ない」。値下げは原則即通知、
+# 新着はスコア閾値以上のみ。土地のみ掲載は通知しない(台帳には残る)。
+notify:
+  min_score: 8          # 新着を即時通知する最低スコア
+  ruin_extra_score: 5   # 倒壊級の記載がある物件に上乗せする閾値
+  # メール通知(自分宛てGmail)。アドレスは環境変数 GMAIL_USERNAME、
+  # パスワードは環境変数 GMAIL_APP_PASSWORD から読む(公開リポジトリに
+  # 個人情報を書かないため。GitHub Actions では Secrets で渡す)。
+  email:
+    username_env: GMAIL_USERNAME
+
+# 指値候補リスト: 値下げを「待つ」のではなく「起こす」ための攻めのリスト
+offer_list:
+  min_age_days: 90      # この日数以上の長期掲載を指値候補とみなす
+
+criteria:
+  # リサーチ範囲 (2026-07 ユーザー指定: アットホームのチェック地域と同じ)
+  # ここに無い市町村(離島・枕崎・阿久根・指宿など)の物件は収集時に外す。
+  # 住所が読み取れない物件は念のため残す(落としすぎ防止)。
+  target_areas:
+    - 鹿児島市
+    - 鹿屋市
+    - 出水市
+    - 垂水市
+    - 薩摩川内市
+    - 日置市
+    - 曽於市
+    - 霧島市
+    - いちき串木野市
+    - 南さつま市
+    - 志布志市
+    - 南九州市
+    - 伊佐市
+    - 姶良市
+    - さつま町
+    - 湧水町
+    - 大崎町
+    - 東串良町
+    - 南大隅町
+    - 肝付町
+    # 宮崎県側 (2026-07 アットホーム登録に合わせる)
+    - 宮崎市
+    - 都城市
+    - 小林市
+    - えびの市
+
+  # 注力エリア (範囲内でもさらに点数を上乗せする市)
+  priority_cities:
+    - 薩摩川内市
+    - 鹿屋市
+    - 出水市
+    - 都城市
+    - 霧島市
+    - 鹿児島市
+  # キーワード群は criteria.py にデフォルトあり。上書きしたい場合のみ記述:
+  # zanchi_keywords: [残置物, 家財, ...]
+  # motive_keywords: [相続, 空き家, ...]
+  # convenience_keywords: [スーパー, 小学校, ...]
+
+sources:
+  # ── 動作確認用デモソース(ローカルJSON・ネットワーク不要) ──
+  # 本番運用ではOFF。判定ロジックの動作確認をしたいときだけtrueに戻す
+  - id: demo
+    type: demo
+    enabled: false
+    path: sample_data/demo_listings.json
+
+  # ── 実サイトの追加例(セレクタは各自治体サイトの開発者ツールで確認して設定) ──
+  # 追加前に必ず対象サイトの利用規約と robots.txt を確認すること。
+  # 商用ポータル(楽待・健美家・アットホーム等)は規約でスクレイピングを
+  # 禁止しているため対象にしない。公式の新着メール通知+保存検索を使うこと。
+  #
+  # ── Sumai空き家 (全国の空き家バンク集約サイト。値下げがタイトルに明示される) ──
+  # 有効化する前に https://akiya.sumai.biz/ の利用規約を確認すること
+  # (robots.txt はツールが自動チェックする)。list_urls は初回実行時に
+  # 実際のページ構成を見て調整する。
+  - id: sumai_akiya
+    type: sumai_akiya
+    enabled: false
+    list_urls:
+      - "https://akiya.sumai.biz/kyushu-kagoshima-akiyabank"
+      - "https://akiya.sumai.biz/kyushu-miyazaki-akiyabank"
+
+  # ── Gmailメール解析(楽待・アットホーム・SUUMO等のポータルを規約違反なしにカバー) ──
+  # アドレスは環境変数 GMAIL_USERNAME、パスワードは GMAIL_APP_PASSWORD から読む。
+  - id: gmail_portal_mail
+    type: gmail_imap
+    enabled: true
+    username_env: GMAIL_USERNAME
+    folder: "bukken"        # 通知メールを振り分けるGmailラベル
+    lookback_days: 3        # 直近何日分のメールを読むか(差分検知が重複を吸収する)
+
+  # ── ジモティー(個人間の格安・0円物件) ──
+  # 有効化する前に必ず https://jmty.jp/robots.txt と利用規約を確認すること。
+  # 規約が自動取得を禁じている場合は有効化せず、サイト内の検索条件保存や
+  # 公式のメール通知機能を使う(メール解析方式で合流させる)。
+  # - id: jimoty_kagoshima_estate
+  #   type: generic_html
+  #   enabled: false
+  #   list_url: "https://jmty.jp/kagoshima/est-sal"
+  #   item_selector: "確認して設定"
+  #   fields: {}
+
+  # - id: satsumasendai_akiya_bank
+  #   type: generic_html
+  #   enabled: false
+  #   list_url: "https://www.example.lg.jp/akiya-bank/list.html"
+  #   item_selector: "div.property-card"
+  #   fields:
+  #     title:       {selector: "h3 a", attr: "text"}
+  #     url:         {selector: "h3 a", attr: "href"}
+  #     price:       {selector: ".price", attr: "text"}
+  #     address:     {selector: ".address", attr: "text"}
+  #     layout:      {selector: ".layout", attr: "text"}
+  #     floor_area:  {selector: ".floor-area", attr: "text"}
+  #     land_area:   {selector: ".land-area", attr: "text"}
+  #     toilet:      {selector: ".equipment", attr: "text"}
+  #     description: {selector: ".note", attr: "text"}

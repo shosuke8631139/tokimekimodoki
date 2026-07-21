@@ -1,0 +1,54 @@
+# 空き家ウォッチャー: クラウド巡回 (JST 9時・12時・15時・18時)
+#
+# 有効化に必要なこと:
+#   1. このワークフローが既定ブランチ(main)に入っていること
+#   2. リポジトリの Settings > Secrets and variables > Actions に登録:
+#        GMAIL_USERNAME      … 自分のGmailアドレス
+#        GMAIL_APP_PASSWORD  … Gmailのアプリパスワード(空白なしの16文字)
+#
+# 巡回データ(listings.db)は Actions のキャッシュに保存する。
+# 公開リポジトリに個人の物件データ・レポートをコミットしないため。
+# レポートは通知メールに添付されて届く。
+#
+# 注意: クラウドのIPは一部サイトにブロックされることがある。
+# その場合そのソースは自宅PC実行に切り替える(併用可)。
+name: akiya-patrol
+
+on:
+  schedule:
+    - cron: '0 0,3,6,9 * * *'   # UTC 0,3,6,9 = 日本時間 9,12,15,18時
+  workflow_dispatch: {}          # 手動実行も可能
+
+concurrency:
+  group: akiya-watcher-db
+  cancel-in-progress: false
+
+jobs:
+  patrol:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: 依存インストール
+        run: pip install -r akiya-watcher/requirements.txt
+      - name: 前回までの巡回データを復元
+        uses: actions/cache/restore@v4
+        with:
+          path: akiya-watcher/data
+          key: akiya-db-${{ github.run_id }}
+          restore-keys: |
+            akiya-db-
+      - name: 巡回実行
+        working-directory: akiya-watcher
+        env:
+          GMAIL_USERNAME: ${{ secrets.GMAIL_USERNAME }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+        run: python -m akiya_watcher.main --config config.yaml --report data/report.html
+      - name: 巡回データを保存 (値下げ検知は履歴が命)
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: akiya-watcher/data
+          key: akiya-db-${{ github.run_id }}

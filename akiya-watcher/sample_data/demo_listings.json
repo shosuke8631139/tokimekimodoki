@@ -1,0 +1,71 @@
+[
+  {
+    "id": "demo-001",
+    "title": "薩摩川内市 相続空き家・残置物あり戸建て",
+    "url": "https://example.com/bukken/001",
+    "price": "300万円",
+    "address": "鹿児島県薩摩川内市",
+    "floor_area": "98.5㎡",
+    "land_area": "350㎡",
+    "layout": "5DK",
+    "parking": "駐車場:5台可",
+    "toilet": "水洗(浄化槽)",
+    "description": "相続のため売却。家財・残置物はそのまま現状渡し。スーパー徒歩8分、小学校近く。"
+  },
+  {
+    "id": "demo-002",
+    "title": "出水市 家財残置の平屋(汲み取り)",
+    "url": "https://example.com/bukken/002",
+    "price": "150万円",
+    "address": "鹿児島県出水市",
+    "floor_area": "85㎡",
+    "layout": "4DK",
+    "parking": "並列2台",
+    "toilet": "汲み取り式",
+    "description": "現状渡し。残置物あり。所有者は遠方在住のため早期処分希望。"
+  },
+  {
+    "id": "demo-003",
+    "title": "都城市 郊外の広い庭付き住宅",
+    "url": "https://example.com/bukken/003",
+    "price": "280万円",
+    "address": "宮崎県都城市",
+    "floor_area": "120㎡",
+    "land_area": "420㎡",
+    "layout": "6DK",
+    "toilet": "水洗(公共下水)",
+    "description": "家具・家財残置。現状有姿での引き渡し。中学校・コンビニ近く。"
+  },
+  {
+    "id": "demo-004",
+    "title": "鹿屋市 情報の少ない小さな家",
+    "url": "https://example.com/bukken/004",
+    "price": "100万円",
+    "address": "鹿児島県鹿屋市",
+    "floor_area": "60㎡",
+    "layout": "3K",
+    "description": "現状渡し。"
+  },
+  {
+    "id": "demo-005",
+    "title": "霧島市 長期掲載の空き家バンク物件",
+    "url": "https://example.com/bukken/005",
+    "price": "350万円",
+    "address": "鹿児島県霧島市",
+    "floor_area": "90㎡",
+    "layout": "4LDK",
+    "parking": "駐車2台",
+    "toilet": "水洗",
+    "description": "空き家バンク登録物件。管理が困難なため売却。"
+  },
+  {
+    "id": "demo-006",
+    "title": "南九州市 価格応相談の古民家",
+    "url": "https://example.com/bukken/006",
+    "price": "応相談",
+    "address": "鹿児島県南九州市",
+    "land_area": "500㎡",
+    "layout": "7DK",
+    "description": "古家。残置物多数あり、片付けにお困りの売主様。要修繕。"
+  }
+]
