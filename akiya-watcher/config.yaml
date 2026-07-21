@@ -42,6 +42,17 @@ sources:
   # 商用ポータル(楽待・健美家・アットホーム等)は規約でスクレイピングを
   # 禁止しているため対象にしない。公式の新着メール通知+保存検索を使うこと。
   #
+  # ── Gmailメール解析(楽待・アットホーム・SUUMO等のポータルを規約違反なしにカバー) ──
+  # 使い方: READMEの「Gmail連携のセットアップ」参照。
+  # username を自分のGmailに変えて enabled: true にする。
+  # パスワードは環境変数 GMAIL_APP_PASSWORD (アプリパスワード。configに書かない)
+  - id: gmail_portal_mail
+    type: gmail_imap
+    enabled: false
+    username: "your-address@gmail.com"
+    folder: "bukken"        # 通知メールを振り分けるGmailラベル(半角英数推奨)
+    lookback_days: 3        # 直近何日分のメールを読むか(差分検知が重複を吸収する)
+
   # ── ジモティー(個人間の格安・0円物件) ──
   # 有効化する前に必ず https://jmty.jp/robots.txt と利用規約を確認すること。
   # 規約が自動取得を禁じている場合は有効化せず、サイト内の検索条件保存や

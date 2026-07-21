@@ -4,10 +4,12 @@ from __future__ import annotations
 from .base import BaseScraper
 from .demo import DemoScraper
 from .generic_html import GenericHtmlScraper
+from .mailbox import GmailImapScraper
 
 REGISTRY: dict[str, type[BaseScraper]] = {
     "demo": DemoScraper,
     "generic_html": GenericHtmlScraper,
+    "gmail_imap": GmailImapScraper,
 }
 
 
