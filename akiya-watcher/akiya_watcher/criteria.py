@@ -133,17 +133,28 @@ CONVENIENCE_KEYWORDS = [
 # 再生コスト系: 除外はしないが把握しておきたい表現。
 REPAIR_KEYWORDS = ["要補修", "要修繕", "要リフォーム", "古家", "解体前提", "雨漏り", "傾き"]
 
+# 蔵・旧家系: 裕福な家系の物件を示す表現。貴金属・骨董・古道具が残置物に
+# 含まれる期待値が最も高い、このプロジェクトの本丸シグナル。
+# 注意: 「蔵」単体は「冷蔵庫」に誤反応するため、必ず複合語で書くこと。
+WEALTH_KEYWORDS = [
+    "土蔵", "蔵付", "蔵あり", "蔵有",
+    "納屋", "母屋", "離れ", "旧家", "屋敷", "豪邸",
+    "庭園", "庭石", "書院", "床の間", "欄間", "茶室",
+]
+
 # ---------------------------------------------------------------- キープ判定
 
 
 def is_keep(score: "Score") -> bool:
-    """ユーザーの理想条件: 残置物あり × 立地が良い(生活利便または注力エリア)。
+    """ユーザーの理想条件: 残置物あり × (立地が良い または 蔵・旧家)。
 
-    該当物件はレポートの⭐キープ欄に常設され、値下げ・記載変更・掲載終了が
-    あれば(通常なら沈黙するケースでも)即時通知される。
+    本当の狙いは裕福な家系の残置物(貴金属・骨董)。蔵・旧家シグナルは
+    立地と同格のキープ条件とする。該当物件はレポートの⭐キープ欄に常設され、
+    値下げ・記載変更・掲載終了があれば即時通知される。
     """
     return ("🪑残置物" in score.badges
-            and ("🏪利便" in score.badges or "📍注力" in score.badges))
+            and ("🏺蔵・旧家" in score.badges
+                 or "🏪利便" in score.badges or "📍注力" in score.badges))
 
 
 # ---------------------------------------------------------------- 判断支援
@@ -199,6 +210,7 @@ class Scorer:
         criteria = criteria or {}
         self.priority_cities = criteria.get("priority_cities", [])
         self.zanchi_kw = criteria.get("zanchi_keywords", ZANCHI_KEYWORDS)
+        self.wealth_kw = criteria.get("wealth_keywords", WEALTH_KEYWORDS)
         self.motive_kw = criteria.get("motive_keywords", MOTIVE_KEYWORDS)
         self.convenience_kw = criteria.get("convenience_keywords", CONVENIENCE_KEYWORDS)
         self.repair_kw = criteria.get("repair_keywords", REPAIR_KEYWORDS)
@@ -231,6 +243,12 @@ class Scorer:
         if zanchi:
             s.matched_keywords += zanchi
             s.add(4 + min(len(zanchi) - 1, 2), "残置物系: " + "、".join(zanchi), "🪑残置物")
+
+        # --- 2.5. 蔵・旧家 (裕福な家系 = 残置物の期待値が最も高い本丸) -----
+        wealth = [kw for kw in self.wealth_kw if kw in blob]
+        if wealth:
+            s.matched_keywords += wealth
+            s.add(4, "蔵・旧家系: " + "、".join(wealth), "🏺蔵・旧家")
 
         # --- 3. 売主事情 ------------------------------------------------
         motive = [kw for kw in self.motive_kw if kw in blob]
