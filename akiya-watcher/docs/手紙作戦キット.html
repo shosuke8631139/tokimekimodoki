@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>手紙作戦キット — 蔵・旧家の空き家に買取打診レターを送る</title>
+<style>
+:root { --bg:#f6f4ef; --card:#fff; --ink:#2b2926; --sub:#6f6a62;
+        --accent:#b0413e; --gold:#8a6d1d; --line:#e5e0d6; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#191713; --card:#232019; --ink:#e8e4da; --sub:#a39c8e;
+          --accent:#e07570; --gold:#d4b45a; --line:#3a352c; }
+}
+* { box-sizing:border-box; margin:0; }
+body { font-family:'Hiragino Sans','Noto Sans JP',sans-serif; background:var(--bg);
+       color:var(--ink); line-height:1.7; padding:16px; max-width:720px; margin:0 auto; }
+.sheet { background:var(--card); border:1px solid var(--line); border-radius:12px;
+         padding:20px 22px; margin-bottom:24px; }
+h1 { font-size:1.3rem; margin-bottom:2px; }
+.sub { color:var(--sub); font-size:.85rem; margin-bottom:14px; }
+h2 { font-size:1rem; margin:20px 0 8px; padding-left:8px;
+     border-left:4px solid var(--gold); }
+label { display:flex; gap:10px; align-items:flex-start; padding:7px 4px;
+        border-bottom:1px dashed var(--line); font-size:.95rem; cursor:pointer; }
+label input[type=checkbox] { margin-top:5px; transform:scale(1.3); accent-color:var(--gold); }
+label.imp { font-weight:700; }
+label.imp .txt::after { content:" ★最重要"; color:var(--accent); font-size:.8rem; }
+.note { color:var(--sub); font-size:.8rem; padding:4px 4px 8px 34px; }
+.step { display:flex; gap:12px; padding:8px 4px; border-bottom:1px dashed var(--line); }
+.step b.n { flex:none; width:2em; height:2em; border-radius:50%; background:var(--gold);
+            color:#fff; display:flex; align-items:center; justify-content:center; }
+.pt { color:var(--gold); font-weight:700; font-size:.85rem; white-space:nowrap; margin-left:auto; }
+.field { display:flex; gap:8px; align-items:center; padding:6px 4px;
+         border-bottom:1px dashed var(--line); font-size:.95rem; }
+.field span.k { flex:none; width:9em; color:var(--sub); font-size:.85rem; }
+.field input[type=text] { flex:1; border:none; border-bottom:1px solid var(--line);
+        background:transparent; color:var(--ink); font-size:.95rem; padding:2px 4px; outline:none; }
+#total { font-size:1.15rem; font-weight:700; color:var(--accent);
+         padding:10px 4px 2px; text-align:right; }
+.warn { background:rgba(176,65,62,.08); border:1px solid var(--accent); border-radius:8px;
+        padding:10px 14px; font-size:.9rem; margin:10px 0; }
+.tip  { background:rgba(138,109,29,.08); border:1px solid var(--gold); border-radius:8px;
+        padding:10px 14px; font-size:.9rem; margin:10px 0; }
+table { border-collapse:collapse; width:100%; font-size:.9rem; margin:8px 0; }
+th,td { border:1px solid var(--line); padding:6px 8px; text-align:left; vertical-align:top; }
+th { background:rgba(138,109,29,.08); }
+@media print { body { background:#fff; } .sheet { border:none; page-break-after:always; } }
+</style></head><body>
+
+<div class="sheet">
+<h1>✉️ 手紙作戦キット — 全体の流れ</h1>
+<div class="sub">まだ売りに出ていない蔵・旧家の空き家を、持ち主への手紙で発掘する。一方通行・低労力・郵送だけ。</div>
+
+<div class="step"><b class="n">1</b><div><b>候補を見つける</b><br>
+車で走っていて・散歩していて「蔵のある空き家」を見つけたら住所を控える。ウォッチャーの通知圏(対象24市町)の集落・旧街道沿いが狙い目。</div></div>
+<div class="step"><b class="n">2</b><div><b>現地メモを付ける</b><br>
+下の「現地メモシート」で点数を付ける。<b>点数の高い家から</b>手紙を送る(全部に送らない。絞るのは最後、決めるのはあなた)。</div></div>
+<div class="step"><b class="n">3</b><div><b>登記簿で持ち主を調べる</b><br>
+法務局の記録(誰でも取れる公的な書類)で、持ち主の氏名と住所が分かる。下のガイド参照。</div></div>
+<div class="step"><b class="n">4</b><div><b>手紙を送る</b><br>
+<b>買取打診レター.docx</b>(このフォルダにあります)の【 】を埋めて印刷。返信用はがきを同封して郵送。</div></div>
+<div class="step"><b class="n">5</b><div><b>返事が来たら</b><br>
+喜びすぎず、まず内見のお願い。話が進みそうなら地元の不動産屋(宅建業者)に仲介を頼むと安全。</div></div>
+
+<div class="tip">💡 <b>正直な見込み:</b> この種の手紙の返信率は一般に数%です(100通で数件)。ただしこの作戦は「蔵のある家だけに厳選して送る」ので、1通あたりの当たりの価値が大きい。月に5〜10通、良い候補にだけ送るペースで十分です。</div>
+</div>
+
+<div class="sheet">
+<h1>🏺 現地メモシート</h1>
+<div class="sub">候補の家1軒につきこのシート1枚。チェックすると下に合計点が出ます。印刷して手書きでもOK。</div>
+
+<h2>基本情報(書き込む)</h2>
+<div class="field"><span class="k">見つけた日</span><input type="text"></div>
+<div class="field"><span class="k">住所(だいたいでOK)</span><input type="text"></div>
+<div class="field"><span class="k">目印・行き方メモ</span><input type="text"></div>
+<div class="field"><span class="k">写真を撮ったか</span><input type="text" placeholder="スマホで外観・蔵・表札を道路から"></div>
+<div class="field"><span class="k">表札の名字</span><input type="text" placeholder="読めたら。登記簿と照合できる"></div>
+
+<h2>お宝度(裕福だった家系のサイン)</h2>
+<label><input type="checkbox" data-pt="4"><span class="txt">土蔵・石蔵がある</span><span class="pt">+4</span></label>
+<label><input type="checkbox" data-pt="3"><span class="txt">立派な門・塀・生垣(屋敷構え)</span><span class="pt">+3</span></label>
+<label><input type="checkbox" data-pt="2"><span class="txt">母屋のほかに離れ・納屋がある</span><span class="pt">+2</span></label>
+<label><input type="checkbox" data-pt="2"><span class="txt">敷地が広い(車が数台置けるくらい以上)</span><span class="pt">+2</span></label>
+<label><input type="checkbox" data-pt="2"><span class="txt">瓦屋根が本格的(鬼瓦・家紋入り)</span><span class="pt">+2</span></label>
+<label><input type="checkbox" data-pt="1"><span class="txt">庭に石灯籠・池・松などの造園</span><span class="pt">+1</span></label>
+<label><input type="checkbox" data-pt="1"><span class="txt">集落の中心・旧街道沿い・お寺の近く</span><span class="pt">+1</span></label>
+
+<h2>空き家度(住んでいないサイン)</h2>
+<label><input type="checkbox" data-pt="2"><span class="txt">雨戸が全部閉まったまま</span><span class="pt">+2</span></label>
+<label><input type="checkbox" data-pt="2"><span class="txt">ポストにチラシがあふれている・ガムテープで塞がれている</span><span class="pt">+2</span></label>
+<label><input type="checkbox" data-pt="2"><span class="txt">庭の草が伸び放題・木が屋根にかかっている</span><span class="pt">+2</span></label>
+<label><input type="checkbox" data-pt="1"><span class="txt">電気メーターが回っていない・外されている</span><span class="pt">+1</span></label>
+<label><input type="checkbox" data-pt="1"><span class="txt">夜に通っても明かりがつかない</span><span class="pt">+1</span></label>
+<label><input type="checkbox" data-pt="1"><span class="txt">近所の人の話で「もう誰も住んどらん」</span><span class="pt">+1</span></label>
+
+<h2>減点(手を出しにくいサイン)</h2>
+<label><input type="checkbox" data-pt="-3"><span class="txt">屋根が落ちている・傾きが目で分かる(家より土地の値段になる)</span><span class="pt">−3</span></label>
+<label><input type="checkbox" data-pt="-2"><span class="txt">裏がすぐ崖・高い擁壁(シラス崩れの心配)</span><span class="pt">−2</span></label>
+<label><input type="checkbox" data-pt="-2"><span class="txt">車が入れない細い道の奥</span><span class="pt">−2</span></label>
+
+<div id="total">合計 0点</div>
+<div class="note">目安: <b>8点以上</b>=登記簿を取って手紙を送る価値あり / 4〜7点=保留リスト / 3点以下=見送り。あくまで並べるための点数。最後に決めるのはあなたです。</div>
+</div>
+
+<div class="sheet">
+<h1>📜 持ち主の調べ方 — 登記簿ガイド</h1>
+<div class="sub">登記簿(正式名: 登記事項証明書)は「この土地・建物は誰のものか」が書いてある公的な記録。<b>誰でも・理由を聞かれずに</b>取れます。</div>
+
+<h2>取り方は2通り</h2>
+<table>
+<tr><th></th><th>A. 法務局の窓口</th><th>B. インターネット(おすすめ)</th></tr>
+<tr><td>場所</td><td>鹿児島地方法務局(鹿児島市鴨池新町)と各支局。どの法務局でも全国の物件の分が取れる</td><td>「登記情報提供サービス」で検索。平日8:30〜23:00利用可</td></tr>
+<tr><td>値段</td><td>1通600円</td><td>1件<b>332円</b>(画面で見る・PDF保存)</td></tr>
+<tr><td>必要なもの</td><td>物件の「地番」(下記参照)。身分証は不要</td><td>初回に利用者登録(クレジットカード)。あとは地番を入れるだけ</td></tr>
+<tr><td>向いている人</td><td>1〜2件だけ調べたい・窓口の人に相談したい</td><td>月に何件も調べる(この作戦はこちら)</td></tr>
+</table>
+
+<h2>つまずきポイント: 「住所」と「地番」は別物</h2>
+<div class="warn">⚠️ 登記簿は普段の住所(住居表示)ではなく「<b>地番</b>」という土地の番号で引きます。多くの田舎では住所≒地番ですが、ずれていることもあります。<br>
+<b>調べ方:</b> ①登記情報提供サービスの「地番検索サービス」(無料で地図から探せる) ②法務局に電話して「〇〇の住所の地番を教えてください」と聞く(教えてくれます) ③窓口ならブルーマップという地図帳で調べてもらえる。</div>
+
+<h2>登記簿のどこを見るか</h2>
+<div class="step"><b class="n">1</b><div><b>「権利部(甲区)」の一番下の行</b> = 今の持ち主。氏名と住所が書いてある。手紙の宛先はこれ。</div></div>
+<div class="step"><b class="n">2</b><div><b>登記の日付が古い(昭和など)</b> = 亡くなった親の名義のままの可能性大。宛名の人はもう居らず、相続人(子ども)が困っているパターン。<b>この作戦の本命。</b></div></div>
+<div class="step"><b class="n">3</b><div><b>持ち主の住所が遠方(関東・関西など)</b> = 相続で受け継いだが管理できていない可能性大。これも狙い目。手紙はその遠方の住所に送る。</div></div>
+<div class="step"><b class="n">4</b><div><b>「相続」を原因とする所有権移転が最近ある</b> = 相続登記を済ませたばかり=手放すか考えている時期。タイミングとして最良。</div></div>
+
+<div class="tip">💡 名義人が亡くなっていそうな場合(登記が昭和のまま等)の宛名は「<b>【名義人氏名】様 ご家族様・ご相続人様</b>」として登記簿の住所に送ればOK。転居していれば郵便局の転送(1年)で届くこともあり、戻ってきたらそれ以上は深追いしない。</div>
+</div>
+
+<div class="sheet">
+<h1>📮 手紙の送り方</h1>
+<div class="sub">レター本体はこのフォルダの <b>買取打診レター.docx</b>。【 】の中を埋めて印刷。</div>
+
+<h2>返信率を上げる小さな工夫</h2>
+<label><input type="checkbox"><span class="txt">封筒の宛名は<b>手書き</b>(業者のDMと間違われて捨てられにくくなる。いちばん効く)</span></label>
+<label><input type="checkbox"><span class="txt">切手も普通の切手を手貼り(料金別納スタンプはDMっぽく見える)</span></label>
+<label><input type="checkbox"><span class="txt"><b>返信用はがき</b>を同封: 表にあなたの住所を書き63円切手を貼る。裏は「□ 話を聞いてみたい □ 検討したい □ 今回は見送る」の3択+お名前・お電話欄だけの簡単なもの</span></label>
+<label><input type="checkbox"><span class="txt">レターの日付・宛名・署名の3か所だけでも手書きにするとさらに良い</span></label>
+<label><input type="checkbox"><span class="txt">送った日・宛先・物件をメモしておく(下の管理表)</span></label>
+
+<h2>送付の管理表(印刷して使う)</h2>
+<table>
+<tr><th>送った日</th><th>物件(住所)</th><th>宛先(氏名・住所)</th><th>点数</th><th>結果</th></tr>
+<tr><td>　</td><td>　</td><td>　</td><td>　</td><td>　</td></tr>
+<tr><td>　</td><td>　</td><td>　</td><td>　</td><td>　</td></tr>
+<tr><td>　</td><td>　</td><td>　</td><td>　</td><td>　</td></tr>
+<tr><td>　</td><td>　</td><td>　</td><td>　</td><td>　</td></tr>
+<tr><td>　</td><td>　</td><td>　</td><td>　</td><td>　</td></tr>
+</table>
+
+<h2>返事が来たら</h2>
+<div class="step"><b class="n">1</b><div>お礼の電話かはがき。<b>金額の話はまだしない。</b>「一度、家と蔵の中を見せていただけませんか」だけ。</div></div>
+<div class="step"><b class="n">2</b><div>内見には<b>現地キット</b>(宝探しチェックリスト・内見安全確認シート)を持っていく。</div></div>
+<div class="step"><b class="n">3</b><div>買う気になったら、地元の不動産屋(宅建業者)に「個人間売買の仲介」を頼む。仲介料はかかるが、契約書に<b>「残置物の所有権は買主に移る」の一文</b>を入れてもらうためにも挟む価値がある。</div></div>
+<div class="step"><b class="n">4</b><div>相手が相続で困っている様子なら「相続登記がまだなら、司法書士さんの紹介もできます」と伝えると話が前に進みやすい(費用は相手持ちが原則)。</div></div>
+</div>
+
+<div class="sheet">
+<h1>⚠️ 守ること(トラブル予防)</h1>
+<div class="sub">この作戦は合法ですが、やり方を間違えると嫌われたり法に触れたりします。ここだけは守る。</div>
+
+<label class="imp"><input type="checkbox"><span class="txt">敷地に入らない。写真は道路から。塀の中をのぞき込まない(住居侵入・迷惑行為になり得る)</span></label>
+<label class="imp"><input type="checkbox"><span class="txt">手紙は1軒につき1回だけ。返事がなければ送り直さない・訪問しない(しつこいと苦情になる)</span></label>
+<label><input type="checkbox"><span class="txt">登記簿で知った氏名・住所は手紙にだけ使う。人に見せない・ネットに書かない</span></label>
+<label><input type="checkbox"><span class="txt">手紙に「業者ではない個人」であることを正直に書く(テンプレに記載済み)</span></label>
+<label><input type="checkbox"><span class="txt">断りの返事が来たら、それで終わり。お礼だけ伝えて連絡先リストから消す</span></label>
+
+<h2>法律の整理(自分の身を守る知識)</h2>
+<div class="warn">
+・<b>自分が買って住む・使う・持つ</b>のは自由。免許は要りません。<br>
+・ただし「安く買ってすぐ転売」を<b>繰り返して商売にする</b>と宅建業免許が必要になります。今の路線(買って残置物を整理し、家は保有・活用)なら問題なし。<br>
+・家の中の品物は、契約書に残置物の所有権移転の一文があれば<b>あなたの物</b>。自分の物を売るのは自由です。<br>
+・迷ったら鹿児島県宅建協会の無料相談へ。
+</div>
+</div>
+
+<script>
+const boxes = document.querySelectorAll('input[data-pt]');
+const total = document.getElementById('total');
+function tally(){
+  let s = 0;
+  boxes.forEach(b => { if (b.checked) s += Number(b.dataset.pt); });
+  total.textContent = '合計 ' + s + '点' + (s >= 8 ? ' — 手紙を送る価値あり!' : '');
+}
+boxes.forEach(b => b.addEventListener('change', tally));
+</script>
+</body></html>
