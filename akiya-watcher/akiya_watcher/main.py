@@ -19,7 +19,7 @@ from pathlib import Path
 import yaml
 
 from .alerts import decide, offer_candidate_reason
-from .criteria import Scorer
+from .criteria import Scorer, is_keep
 from .models import ListingContext, Score
 from .notify import Notifier
 from .report import render_report
@@ -65,6 +65,7 @@ def collect(config: dict, dry_run: bool = False,
     store = None if dry_run else Store(config.get("db_path", "data/listings.db"))
 
     items: list[tuple[Diff, Score]] = []
+    gone_uids: list[str] = []
     out_of_area = over_price = unknown_price = 0
     for source_cfg in config.get("sources", []):
         if not source_cfg.get("enabled", True):
@@ -107,18 +108,28 @@ def collect(config: dict, dry_run: bool = False,
                 diff.context.previous_price_yen = ls.advertised_previous_price_yen
                 if diff.kind == "new":
                     diff.context.price_changed = True
-            items.append((diff, scorer.score(ls, diff.context)))
+            score = scorer.score(ls, diff.context)
+            if store:
+                store.set_keep(ls.uid, is_keep(score))
+            items.append((diff, score))
 
         # 一覧型ソースのみ: 今回見えなかった物件を掲載終了(売れた?)として記録
         if store and scraper.full_snapshot and listings:
             gone = store.finalize_crawl(source_cfg["id"], seen_uids)
             if gone:
-                print(f"[info] {source_cfg['id']}: 掲載終了 {gone}件")
+                print(f"[info] {source_cfg['id']}: 掲載終了 {len(gone)}件")
+                gone_uids.extend(gone)
 
     delisted = store.recent_delisted(within_days=30) if store else []
     deals = store.deals() if store else {}
     deal_history = store.deal_history() if store else []
+    # ⭐キープ物件が今回掲載終了した場合は特別に知らせる (売れた可能性が高い)
+    keep_gone = []
     if store:
+        for uid in gone_uids:
+            info = store.listing_info(uid)
+            if info and info["is_keep"]:
+                keep_gone.append(info)
         store.close()
     if out_of_area:
         print(f"[info] リサーチ範囲外のためスキップ: {out_of_area}件")
@@ -126,7 +137,7 @@ def collect(config: dict, dry_run: bool = False,
         print(f"[info] 価格上限({max_price:,}円)超のためスキップ: {over_price}件")
     if unknown_price:
         print(f"[info] 価格応相談のためスキップ: {unknown_price}件")
-    return items, delisted, deals, deal_history
+    return items, delisted, deals, deal_history, keep_gone
 
 
 def build_digest(items: list[tuple[Diff, Score]], offer_min_age_days: int) -> str:
@@ -235,7 +246,7 @@ def run(config_path: str, dry_run: bool = False, report_path: str | None = None,
     ruin_extra = notify_cfg.get("ruin_extra_score", 5)
     offer_age = config.get("offer_list", {}).get("min_age_days", 90)
 
-    items, delisted, deals, deal_history = collect(config, dry_run=dry_run)
+    items, delisted, deals, deal_history, keep_gone = collect(config, dry_run=dry_run)
     notifier = Notifier(config.get("slack_webhook_url"),
                         email=notify_cfg.get("email"))
 
@@ -258,12 +269,26 @@ def run(config_path: str, dry_run: bool = False, report_path: str | None = None,
         # 通常巡回: 通知ゲートを通った物件だけ即時通知 (沈黙デフォルト)
         for diff, score in items:
             d = decide(diff, score, min_score=min_score, ruin_extra=ruin_extra)
+            keep = is_keep(score)
+            # ⭐キープ物件は通常なら沈黙する「記載変更」でも知らせる
+            if not d.notify and keep and diff.kind == "changed":
+                d = type(d)(True, "keep", "⭐キープ物件に変化あり")
             if d.notify and not dry_run:
                 notifier.send(diff, score)
                 notified += 1
             elif d.kind == "silent" and diff.kind in ("new", "changed"):
                 suppressed += 1
                 print(f"[silent] {diff.listing.title}: {d.reason}")
+
+        # ⭐キープ物件の掲載終了 = 売れた可能性大。逃した事実も速報する
+        for info in keep_gone:
+            if not dry_run:
+                price = (f"{info['price_yen']:,}円" if info["price_yen"] is not None
+                         else "価格不明")
+                notifier.send_text(
+                    f"⭐ キープ物件が掲載終了(売れた可能性)\n"
+                    f"物件名: {info['title']}\n価格: {price}\nURL: {info['url']}")
+                notified += 1
 
     # 通知が出た巡回では、レポート本体もメール添付で届ける
     # (スマホのGmailから添付を開けばブラウザで見られる)
