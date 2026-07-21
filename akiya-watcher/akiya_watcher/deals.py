@@ -17,7 +17,9 @@ from .storage import DEAL_STATUSES, Store
 
 
 def _fmt_price(p: int | None) -> str:
-    return f"{p / 10_000:,.0f}万円" if p else "価格不明"
+    if p is None:
+        return "価格不明"
+    return "0円" if p == 0 else f"{p / 10_000:,.0f}万円"
 
 
 def show_history(store: Store) -> None:

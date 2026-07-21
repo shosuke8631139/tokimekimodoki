@@ -18,11 +18,33 @@ from akiya_watcher.models import Listing, ListingContext
     ("1,980,000円", 1_980_000),
     ("200万", 2_000_000),
     ("1億2,000万円", 120_000_000),
+    ("0円", 0),
+    ("無償譲渡", 0),
+    ("1,000円", 1_000),
     ("応相談", None),
     ("", None),
 ])
 def test_parse_price(text, expected):
     assert parse_price_yen(text) == expected
+
+
+def test_zero_yen_listing_scored_with_badge():
+    ls = make(price_yen=0, layout="4DK", description="無償譲渡・残置物あり")
+    s = Scorer(CRITERIA).score(ls)
+    assert "💴0円" in s.badges
+
+
+def test_out_of_ten_scale():
+    from akiya_watcher.models import Score
+    s = Score()
+    s.total = 29
+    assert s.out_of_ten == 10
+    s.total = 15
+    assert s.out_of_ten == 5
+    s.total = -3
+    assert s.out_of_ten == 0
+    s.total = 99
+    assert s.out_of_ten == 10  # 上限は10
 
 
 @pytest.mark.parametrize("text,expected", [

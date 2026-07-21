@@ -133,7 +133,7 @@ def _card(rank: int, diff: Diff, score: Score, hot: bool = False,
 
     return f"""
 <div class="card{' hot' if hot else ''}">
-  <span class="score">{score.total}点</span>
+  <span class="score">{score.out_of_ten}<small>/10</small></span>
   <div class="rank">#{rank} <small>({html.escape(ls.source)})</small></div>
   <div class="title">{html.escape(ls.title)}</div>
   {_price_html(diff)}
@@ -141,7 +141,8 @@ def _card(rank: int, diff: Diff, score: Score, hot: bool = False,
   <div class="addr">{html.escape(ls.address or '所在地不明')}</div>
   <div class="badges">{deal_chip}{badges}</div>
   <div>{unknowns}</div>
-  <details><summary>スコア内訳</summary><ul class="reasons">{reasons}</ul></details>
+  <details><summary>スコア内訳 (素点{score.total}点を10点満点に換算)</summary>
+  <ul class="reasons">{reasons}</ul></details>
   {_inquiry_html(ls)}
   <a class="link" href="{html.escape(ls.url)}">▶ 掲載ページを見る</a>{map_link}
 </div>"""
