@@ -171,7 +171,8 @@ def _add(found: dict[str, Listing], portal: str, url: str,
 
 class GmailImapScraper(BaseScraper):
     source_id = "gmail_imap"
-    full_snapshot = False  # メールに載らない=掲載終了ではない
+    full_snapshot = False    # メールに載らない=掲載終了ではない
+    prices_reliable = False  # 価格Noneは読み取り失敗の可能性が高い(応相談扱いしない)
 
     def __init__(self, config: dict):
         super().__init__(config)

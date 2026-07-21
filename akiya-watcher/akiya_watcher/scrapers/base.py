@@ -23,6 +23,10 @@ class BaseScraper(ABC):
     # True = 毎回そのソースの全掲載を返す一覧型 (見えなくなった物件 = 掲載終了)。
     # メール型のように断片しか見えないソースは False にすること。
     full_snapshot: bool = True
+    # True = 価格欄が明確なソース (価格Noneは本当に「応相談」)。
+    # メール型は本文から価格を推定するため、None は読み取り失敗の可能性が高く、
+    # 「応相談カット」の対象にしない。
+    prices_reliable: bool = True
 
     def __init__(self, config: dict):
         self.config = config

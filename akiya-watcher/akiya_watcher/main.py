@@ -87,7 +87,10 @@ def collect(config: dict, dry_run: bool = False,
                 out_of_area += 1
                 seen_uids.add(ls.uid)
                 continue
-            if ls.price_yen is None and not include_unknown_price:
+            # 「応相談カット」は価格欄が明確なソースのみ。メール型の価格Noneは
+            # 読み取り失敗の可能性が高いので、要確認として台帳に残す
+            if (ls.price_yen is None and not include_unknown_price
+                    and scraper.prices_reliable):
                 unknown_price += 1
                 seen_uids.add(ls.uid)
                 continue

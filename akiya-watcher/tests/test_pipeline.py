@@ -204,6 +204,33 @@ def test_price_ceiling_and_unknown_price_filter(tmp_path, capsys):
     assert "応相談の物件" not in html
 
 
+def test_mail_unknown_price_survives_unknown_filter(tmp_path):
+    """メール由来の価格不明は「応相談カット」の対象外(読み取り失敗の可能性)。"""
+    from unittest.mock import patch
+    from email.message import EmailMessage
+    from akiya_watcher.main import collect
+    from akiya_watcher.scrapers.mailbox import GmailImapScraper
+
+    msg = EmailMessage()
+    msg["Subject"] = "新着"
+    msg.set_content("鹿児島県薩摩川内市の中古戸建て\n"
+                    "https://www.athome.co.jp/kodate/777/\n詳細はリンク先で")
+
+    def fake_fetch(self):
+        from akiya_watcher.scrapers.mailbox import extract_listings_from_email
+        return extract_listings_from_email(msg)
+
+    config = {
+        "db_path": str(tmp_path / "db.sqlite"),
+        "criteria": {"max_price_yen": 3_000_000, "include_price_unknown": False},
+        "sources": [{"id": "g", "type": "gmail_imap", "username": "t@gmail.com"}],
+    }
+    with patch.object(GmailImapScraper, "fetch_listings", fake_fetch):
+        items, *_ = collect(config)
+    assert len(items) == 1                      # 捨てられずに台帳へ
+    assert items[0][0].listing.price_yen is None
+
+
 def test_filtered_listing_is_not_marked_delisted(tmp_path, capsys):
     """足切りで除外した物件を「掲載終了(売れた)」と誤記録しない。"""
     from akiya_watcher.main import run
