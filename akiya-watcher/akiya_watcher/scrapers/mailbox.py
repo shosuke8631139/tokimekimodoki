@@ -53,6 +53,13 @@ PRICE_PAT = re.compile(r"[0-9,.]+\s*(?:億[0-9,.]*万?|万)\s*円|[0-9]{1,3}(?:,
 ARROW_PAT = re.compile(
     r"([0-9,.]+\s*(?:億[0-9,.]*万?|万)\s*円)\s*(?:→|⇒)\s*"
     r"([0-9,.]+\s*(?:億[0-9,.]*万?|万)\s*円)")
+# 物件ではない定番リンク (実際のアットホームメールで確認した宣伝・案内リンク)
+JUNK_TITLE_PAT = re.compile(
+    r"コチラ|こちら|掲載会社|査定|見積もり|引越し|ライブラリー|新築マンション"
+    r"|すべての|おすすめ.*(?:をみる|情報)|ＰＲ|PR|キャンペーン|配信|停止"
+    r"|unsubscribe|ログイン|お問い合わせ|会員|マイページ|アプリ|規約|ヘルプ")
+# 住所らしさ (物件行の判定補助)
+ADDRESS_HINT_PAT = re.compile(r"[一-龥]{2,4}[都道府県]|[一-龥]{2,8}[市郡町村]")
 
 
 def _portal_of(url: str, domains: dict[str, str]) -> str | None:
@@ -137,9 +144,15 @@ def extract_listings_from_email(msg: email.message.Message,
 
 def _add(found: dict[str, Listing], portal: str, url: str,
          title: str, context: str) -> None:
+    # 宣伝・案内リンクは物件ではないので拾わない
+    if JUNK_TITLE_PAT.search(title or ""):
+        return
+    price, prev_price = _price_in(context)
+    # 価格も住所らしき文字列も無いリンクは物件行とみなさない (誤検出防止)
+    if price is None and not ADDRESS_HINT_PAT.search(context):
+        return
     canon = _canonical(url)
     listing_id = hashlib.sha256(canon.encode("utf-8")).hexdigest()[:16]
-    price, prev_price = _price_in(context)
     prev = found.get(canon)
     # 同じ物件が複数箇所でリンクされる場合、価格が取れている方を優先
     if prev is not None and (prev.price_yen is not None or price is None):

@@ -113,3 +113,32 @@ def test_mail_listing_joins_scoring_and_drop_detection(tmp_path):
 def test_no_portal_links_returns_empty():
     msg = html_mail("関係ないメール", '<a href="https://example.com/x">リンク</a>')
     assert extract_listings_from_email(msg) == []
+
+
+def test_junk_links_are_ignored():
+    """実際のアットホームメールにある宣伝・案内リンクを物件と誤認しない。"""
+    html = """
+    <html><body>
+    <a href="https://www.athome.co.jp/company/123/">掲載会社：(有)アート不動産</a>
+    <a href="https://www.athome.co.jp/assess/">アットホーム売却査定</a>
+    <a href="https://www.athome.co.jp/list/">★すべてのおすすめ物件をみる</a>
+    <a href="https://www.athome.co.jp/detail/999/">詳しい物件情報はコチラ↓</a>
+    <a href="https://www.athome.co.jp/mansion/">＜PR＞おすすめ新築マンション情報！！</a>
+    <table><tr><td>
+      <a href="https://www.athome.co.jp/kodate/555/">鹿児島県出水市 中古一戸建て</a>
+      <br>150万円 4DK 残置物あり
+    </td></tr></table>
+    </body></html>
+    """
+    listings = extract_listings_from_email(html_mail("おすすめ物件", html))
+    assert len(listings) == 1
+    assert "出水市" in listings[0].title
+
+
+def test_link_without_price_or_address_is_ignored():
+    """価格も住所も無いリンクは物件行とみなさない。"""
+    html = ('<div><a href="https://www.athome.co.jp/x/">売事務所</a></div>'
+            '<div><a href="https://www.athome.co.jp/y/">鹿屋市の店舗</a> 250万円</div>')
+    listings = extract_listings_from_email(html_mail("m", html))
+    assert len(listings) == 1
+    assert listings[0].price_yen == 2_500_000
