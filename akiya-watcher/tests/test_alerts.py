@@ -36,6 +36,13 @@ def test_land_only_detection():
     assert not looks_land_only(make(title="普通の中古住宅", layout="4DK"))
 
 
+def test_house_with_forest_is_not_land_only():
+    """実際に誤判定した鹿屋市の物件: 山林付きの家は土地のみではない。"""
+    ls = make(title="空き家バンク【売買】230万円 鹿児島県鹿屋市永野田町　家庭菜園可"
+                    "　山林・３ＤＫ旧宅・物置・駐車場２台付き５ＤＫ平屋　水洗トイレ")
+    assert not looks_land_only(ls)
+
+
 def test_ruin_detection():
     assert looks_ruin(make(description="倒壊の恐れあり"))
     assert not looks_ruin(make(description="要リフォーム・残置物あり"))
