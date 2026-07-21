@@ -128,6 +128,45 @@ CONVENIENCE_KEYWORDS = [
 # 再生コスト系: 除外はしないが把握しておきたい表現。
 REPAIR_KEYWORDS = ["要補修", "要修繕", "要リフォーム", "古家", "解体前提", "雨漏り", "傾き"]
 
+# ---------------------------------------------------------------- 判断支援
+
+
+def estimate_disposal_cost_yen(ls: Listing) -> int | None:
+    """残置物の片付け費のざっくり概算。残置物系の記載がある物件のみ。
+
+    間取りベースの経験則 (1R:10-15万 〜 4LDK:25-50万) の中央付近を取る。
+    表示価格に足して「実質価格」として判断材料にする。あくまで目安。
+    """
+    blob = f"{ls.title} {ls.description}"
+    if not any(kw in blob for kw in ZANCHI_KEYWORDS):
+        return None
+    rooms = parse_layout_rooms(ls.layout)
+    if rooms is None and ls.floor_area_sqm:
+        rooms = max(1, int(ls.floor_area_sqm // 20))
+    rooms = rooms or 3
+    return min(100_000 + 60_000 * rooms, 500_000)
+
+
+def suggest_offer_yen(price_yen: int | None, age_days: int = 0,
+                      has_drop_history: bool = False) -> int | None:
+    """指値の目安。売主の疲弊度(掲載期間・値下げ履歴)が強いほど深く指す。
+
+    経験則: 長期掲載180日超→6割 / 値下げ履歴あり→65% / 90日超→7割。
+    1万円単位に丸める。あくまで交渉の出発点。
+    """
+    if not price_yen:
+        return None
+    if age_days >= 180:
+        factor = 0.60
+    elif has_drop_history:
+        factor = 0.65
+    elif age_days >= 90:
+        factor = 0.70
+    else:
+        return None
+    return int(price_yen * factor) // 10_000 * 10_000
+
+
 # ---------------------------------------------------------------- スコアラー
 
 

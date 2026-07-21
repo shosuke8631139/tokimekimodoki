@@ -10,6 +10,10 @@ db_path: data/listings.db
 notify:
   min_score: 8          # 新着を即時通知する最低スコア
   ruin_extra_score: 5   # 倒壊級の記載がある物件に上乗せする閾値
+  # メール通知(自分宛てGmail)。Gmail連携と同じアプリパスワードを使うので
+  # 追加登録は不要。下2行の井桁(#)を外して自分のアドレスに変えると有効化。
+  # email:
+  #   username: "your-address@gmail.com"
 
 # 指値候補リスト: 値下げを「待つ」のではなく「起こす」ための攻めのリスト
 offer_list:

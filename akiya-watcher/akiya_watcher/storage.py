@@ -22,7 +22,8 @@ CREATE TABLE IF NOT EXISTS listings (
     price_yen    INTEGER,
     content_hash TEXT,
     first_seen   INTEGER,
-    last_seen    INTEGER
+    last_seen    INTEGER,
+    delisted_at  INTEGER
 );
 CREATE TABLE IF NOT EXISTS price_history (
     uid       TEXT NOT NULL,
@@ -44,6 +45,11 @@ class Store:
         Path(path).parent.mkdir(parents=True, exist_ok=True)
         self.conn = sqlite3.connect(str(path))
         self.conn.executescript(SCHEMA)
+        # 既存DBへの後付けマイグレーション
+        try:
+            self.conn.execute("ALTER TABLE listings ADD COLUMN delisted_at INTEGER")
+        except sqlite3.OperationalError:
+            pass  # 既にある
         self.conn.commit()
         self._now = now  # テスト用に固定時刻を注入できる
 
@@ -82,7 +88,7 @@ class Store:
         old_price, old_hash, first_seen = row
         self.conn.execute(
             "UPDATE listings SET url=?, title=?, price_yen=?, content_hash=?,"
-            " last_seen=? WHERE uid=?",
+            " last_seen=?, delisted_at=NULL WHERE uid=?",
             (ls.url, ls.title, ls.price_yen, new_hash, now, ls.uid),
         )
         price_changed = old_price != ls.price_yen
@@ -108,3 +114,36 @@ class Store:
         )
         kind = "changed" if old_hash != new_hash else "unchanged"
         return Diff(kind=kind, listing=ls, context=ctx)
+
+    def finalize_crawl(self, source: str, seen_uids: set[str]) -> int:
+        """一覧型ソースの巡回後に呼ぶ。今回見えなかった物件を掲載終了とみなす。
+
+        掲載終了 ≒ 売れた(または取り下げ)。市場のスピード感を学ぶ材料になる。
+        メール型ソース(メールに出ない=終了ではない)には使わないこと。
+        """
+        now = self.now()
+        rows = self.conn.execute(
+            "SELECT uid FROM listings WHERE source=? AND delisted_at IS NULL",
+            (source,),
+        ).fetchall()
+        gone = [uid for (uid,) in rows if uid not in seen_uids]
+        for uid in gone:
+            self.conn.execute(
+                "UPDATE listings SET delisted_at=? WHERE uid=?", (now, uid))
+        self.conn.commit()
+        return len(gone)
+
+    def recent_delisted(self, within_days: int = 30) -> list[dict]:
+        """最近掲載終了した物件 (売れた実績データ)。新しい順。"""
+        cutoff = self.now() - within_days * 86400
+        rows = self.conn.execute(
+            "SELECT title, url, price_yen, first_seen, delisted_at, source"
+            " FROM listings WHERE delisted_at IS NOT NULL AND delisted_at >= ?"
+            " ORDER BY delisted_at DESC",
+            (cutoff,),
+        ).fetchall()
+        return [{
+            "title": t, "url": u, "price_yen": p,
+            "days_on_market": max(0, (d - f) // 86400),
+            "source": s,
+        } for t, u, p, f, d, s in rows]

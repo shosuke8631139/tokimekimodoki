@@ -20,6 +20,9 @@ MIN_INTERVAL_SEC = 10.0   # 同一ホストへの最短アクセス間隔
 
 class BaseScraper(ABC):
     source_id: str = "base"
+    # True = 毎回そのソースの全掲載を返す一覧型 (見えなくなった物件 = 掲載終了)。
+    # メール型のように断片しか見えないソースは False にすること。
+    full_snapshot: bool = True
 
     def __init__(self, config: dict):
         self.config = config

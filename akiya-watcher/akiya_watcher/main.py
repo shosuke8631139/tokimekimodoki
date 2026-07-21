@@ -27,8 +27,9 @@ from .scrapers import build_scraper
 from .storage import Diff, Store
 
 
-def collect(config: dict, dry_run: bool = False) -> list[tuple[Diff, Score]]:
-    """全ソースから収集し、(Diff, Score) のリストを返す。"""
+def collect(config: dict, dry_run: bool = False,
+            ) -> tuple[list[tuple[Diff, Score]], list[dict]]:
+    """全ソースから収集し、((Diff, Score) のリスト, 掲載終了リスト) を返す。"""
     criteria = config.get("criteria", {})
     scorer = Scorer(criteria)
     # リサーチ範囲: 指定があれば範囲外の市町村は収集しない。
@@ -49,6 +50,7 @@ def collect(config: dict, dry_run: bool = False) -> list[tuple[Diff, Score]]:
             continue
         print(f"[info] {source_cfg.get('id')}: {len(listings)}件取得")
 
+        seen_uids: set[str] = set()
         for ls in listings:
             if (target_areas and ls.address
                     and not any(area in ls.address for area in target_areas)):
@@ -56,6 +58,7 @@ def collect(config: dict, dry_run: bool = False) -> list[tuple[Diff, Score]]:
                 continue
             if store:
                 diff = store.upsert(ls)
+                seen_uids.add(ls.uid)
             else:
                 ctx = ListingContext(is_new=True, current_price_yen=ls.price_yen)
                 diff = Diff(kind="new", listing=ls, context=ctx)
@@ -68,11 +71,18 @@ def collect(config: dict, dry_run: bool = False) -> list[tuple[Diff, Score]]:
                     diff.context.price_changed = True
             items.append((diff, scorer.score(ls, diff.context)))
 
+        # 一覧型ソースのみ: 今回見えなかった物件を掲載終了(売れた?)として記録
+        if store and scraper.full_snapshot and listings:
+            gone = store.finalize_crawl(source_cfg["id"], seen_uids)
+            if gone:
+                print(f"[info] {source_cfg['id']}: 掲載終了 {gone}件")
+
+    delisted = store.recent_delisted(within_days=30) if store else []
     if store:
         store.close()
     if out_of_area:
         print(f"[info] リサーチ範囲外のためスキップ: {out_of_area}件")
-    return items
+    return items, delisted
 
 
 def build_digest(items: list[tuple[Diff, Score]], offer_min_age_days: int) -> str:
@@ -104,8 +114,9 @@ def run(config_path: str, dry_run: bool = False, report_path: str | None = None,
     ruin_extra = notify_cfg.get("ruin_extra_score", 5)
     offer_age = config.get("offer_list", {}).get("min_age_days", 90)
 
-    items = collect(config, dry_run=dry_run)
-    notifier = Notifier(config.get("slack_webhook_url"))
+    items, delisted = collect(config, dry_run=dry_run)
+    notifier = Notifier(config.get("slack_webhook_url"),
+                        email=notify_cfg.get("email"))
 
     notified = suppressed = 0
     if digest:
@@ -126,7 +137,8 @@ def run(config_path: str, dry_run: bool = False, report_path: str | None = None,
     if report_path:
         Path(report_path).parent.mkdir(parents=True, exist_ok=True)
         Path(report_path).write_text(
-            render_report(items, offer_min_age_days=offer_age), encoding="utf-8")
+            render_report(items, offer_min_age_days=offer_age, delisted=delisted),
+            encoding="utf-8")
         print(f"[info] 台帳レポート生成: {report_path}")
 
     print(f"[info] 監視 {len(items)}件 / 通知 {notified}件 / 抑制 {suppressed}件")
