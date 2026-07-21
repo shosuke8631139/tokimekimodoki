@@ -42,6 +42,8 @@ DEFAULT_PORTAL_DOMAINS = {
     "kenbiya.com": "健美家",
     "jmty.jp": "ジモティー",
     "homes.co.jp": "LIFULL HOME'S",
+    "nifty.com": "ニフティ不動産",
+    "ieichiba.com": "家いちば",
 }
 
 URL_PAT = re.compile(r"https?://[^\s<>\"']+")
