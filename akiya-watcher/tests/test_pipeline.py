@@ -204,6 +204,33 @@ def test_price_ceiling_and_unknown_price_filter(tmp_path, capsys):
     assert "応相談の物件" not in html
 
 
+def test_filtered_listing_is_not_marked_delisted(tmp_path, capsys):
+    """足切りで除外した物件を「掲載終了(売れた)」と誤記録しない。"""
+    from akiya_watcher.main import run
+    demo = tmp_path / "demo.json"
+    rows = [{"id": "x", "title": "値上げされた物件", "url": "u1",
+             "price": "300万円", "layout": "4DK"}]
+    demo.write_text(json.dumps(rows, ensure_ascii=False), encoding="utf-8")
+    report = tmp_path / "report.html"
+    config = {
+        "db_path": str(tmp_path / "db.sqlite"),
+        "criteria": {"max_price_yen": 5_000_000},
+        "sources": [{"id": "demo", "type": "demo", "path": str(demo)}],
+    }
+    cfg = tmp_path / "config.yaml"
+    cfg.write_text(yaml.safe_dump(config, allow_unicode=True), encoding="utf-8")
+
+    run(str(cfg), report_path=str(report))          # 1回目: 300万で収録
+    capsys.readouterr()
+
+    rows[0]["price"] = "700万円"                     # 値上げで足切り対象に
+    demo.write_text(json.dumps(rows, ensure_ascii=False), encoding="utf-8")
+    run(str(cfg), report_path=str(report))
+    out = capsys.readouterr().out
+    assert "掲載終了" not in out                     # 売れた扱いにしない
+    assert "最近消えた物件" not in report.read_text(encoding="utf-8")
+
+
 def test_low_score_new_listing_stays_silent(tmp_path, capsys):
     """低スコア新着は通知されないが台帳レポートには載る(二層構造の回帰テスト)。"""
     from akiya_watcher.main import run

@@ -79,15 +79,20 @@ def collect(config: dict, dry_run: bool = False,
 
         seen_uids: set[str] = set()
         for ls in listings:
+            # 足切りで除外しても「サイトにはまだ掲載されている」ので、
+            # 掲載終了(売れた)と誤記録しないよう seen には数えておく
             if (target_areas and ls.address
                     and not any(area in ls.address for area in target_areas)):
                 out_of_area += 1
+                seen_uids.add(ls.uid)
                 continue
             if ls.price_yen is None and not include_unknown_price:
                 unknown_price += 1
+                seen_uids.add(ls.uid)
                 continue
             if max_price and ls.price_yen and ls.price_yen > max_price:
                 over_price += 1
+                seen_uids.add(ls.uid)
                 continue
             if store:
                 diff = store.upsert(ls)
