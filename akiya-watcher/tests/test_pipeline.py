@@ -118,4 +118,46 @@ def test_run_end_to_end(tmp_path, capsys):
     out = capsys.readouterr().out
     assert "🆕 新着物件" in out
     assert report.exists()
-    assert "朝の物件レポート" in report.read_text(encoding="utf-8")
+    assert "物件台帳レポート" in report.read_text(encoding="utf-8")
+
+
+def test_digest_mode(tmp_path, capsys):
+    """--digest は個別通知の代わりに指値候補つきのまとめを送る。"""
+    from akiya_watcher.main import run
+    demo = tmp_path / "demo.json"
+    demo.write_text(json.dumps(_demo_rows(), ensure_ascii=False), encoding="utf-8")
+    config = {
+        "db_path": str(tmp_path / "db.sqlite"),
+        "criteria": {"priority_cities": ["薩摩川内市"]},
+        "sources": [{"id": "demo", "type": "demo", "path": str(demo)}],
+    }
+    cfg = tmp_path / "config.yaml"
+    cfg.write_text(yaml.safe_dump(config, allow_unicode=True), encoding="utf-8")
+
+    run(str(cfg), digest=True)
+    out = capsys.readouterr().out
+    assert "📊 週次ダイジェスト" in out
+    assert "🎯 指値候補" in out
+    assert "🆕 新着物件" not in out  # 個別通知は出ない
+
+
+def test_low_score_new_listing_stays_silent(tmp_path, capsys):
+    """低スコア新着は通知されないが台帳レポートには載る(二層構造の回帰テスト)。"""
+    from akiya_watcher.main import run
+    demo = tmp_path / "demo.json"
+    rows = [{"id": "quiet-1", "title": "情報の少ない家", "url": "https://example.com/q",
+             "price": "600万円", "layout": "3K"}]
+    demo.write_text(json.dumps(rows, ensure_ascii=False), encoding="utf-8")
+    report = tmp_path / "report.html"
+    config = {
+        "db_path": str(tmp_path / "db.sqlite"),
+        "sources": [{"id": "demo", "type": "demo", "path": str(demo)}],
+    }
+    cfg = tmp_path / "config.yaml"
+    cfg.write_text(yaml.safe_dump(config, allow_unicode=True), encoding="utf-8")
+
+    run(str(cfg), report_path=str(report))
+    out = capsys.readouterr().out
+    assert "🆕 新着物件" not in out          # 通知は鳴らない
+    assert "[silent]" in out                 # 抑制ログには残る
+    assert "情報の少ない家" in report.read_text(encoding="utf-8")  # 台帳には載る

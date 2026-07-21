@@ -4,7 +4,16 @@
 # slack_webhook_url は環境変数 SLACK_WEBHOOK_URL でも指定可能(環境変数推奨)。
 
 db_path: data/listings.db
-notify_min_score: 5   # 即時通知(新着・変更)の最低スコア。レポートには全件載る
+
+# 通知ゲート: 「何もない日は何も来ない」。値下げは原則即通知、
+# 新着はスコア閾値以上のみ。土地のみ掲載は通知しない(台帳には残る)。
+notify:
+  min_score: 8          # 新着を即時通知する最低スコア
+  ruin_extra_score: 5   # 倒壊級の記載がある物件に上乗せする閾値
+
+# 指値候補リスト: 値下げを「待つ」のではなく「起こす」ための攻めのリスト
+offer_list:
+  min_age_days: 90      # この日数以上の長期掲載を指値候補とみなす
 
 criteria:
   # 注力エリア (加点のみ。他エリアも除外はしない = 鹿児島県全域が対象)
@@ -33,6 +42,17 @@ sources:
   # 商用ポータル(楽待・健美家・アットホーム等)は規約でスクレイピングを
   # 禁止しているため対象にしない。公式の新着メール通知+保存検索を使うこと。
   #
+  # ── ジモティー(個人間の格安・0円物件) ──
+  # 有効化する前に必ず https://jmty.jp/robots.txt と利用規約を確認すること。
+  # 規約が自動取得を禁じている場合は有効化せず、サイト内の検索条件保存や
+  # 公式のメール通知機能を使う(メール解析方式で合流させる)。
+  # - id: jimoty_kagoshima_estate
+  #   type: generic_html
+  #   enabled: false
+  #   list_url: "https://jmty.jp/kagoshima/est-sal"
+  #   item_selector: "確認して設定"
+  #   fields: {}
+
   # - id: satsumasendai_akiya_bank
   #   type: generic_html
   #   enabled: false

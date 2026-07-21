@@ -44,7 +44,9 @@ class Notifier:
         self.webhook = slack_webhook_url or os.environ.get("SLACK_WEBHOOK_URL")
 
     def send(self, diff: Diff, score: Score) -> None:
-        text = format_message(diff, score)
+        self.send_text(format_message(diff, score))
+
+    def send_text(self, text: str) -> None:
         if not self.webhook:
             print("---- 通知 (SLACK_WEBHOOK_URL 未設定のため標準出力) ----")
             print(text)

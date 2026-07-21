@@ -10,6 +10,7 @@ from __future__ import annotations
 import html
 from datetime import date
 
+from .alerts import offer_candidate_reason
 from .models import Listing, Score
 from .storage import Diff
 
@@ -46,6 +47,7 @@ summary { color:var(--sub); font-size:.8rem; cursor:pointer; }
 a.link { display:inline-block; margin-top:8px; font-size:.85rem; color:#1a5276;
          text-decoration:none; font-weight:700; }
 footer { color:var(--sub); font-size:.75rem; margin:24px 0; text-align:center; }
+.offer-reason { color:var(--gold); font-size:.85rem; font-weight:700; margin:8px 0 -8px; }
 """
 
 
@@ -83,8 +85,9 @@ def _card(rank: int, diff: Diff, score: Score, hot: bool = False) -> str:
 </div>"""
 
 
-def render_report(items: list[tuple[Diff, Score]], report_date: date | None = None) -> str:
-    """(Diff, Score) のリストから朝のレポートHTMLを生成する。"""
+def render_report(items: list[tuple[Diff, Score]], report_date: date | None = None,
+                  offer_min_age_days: int = 90) -> str:
+    """(Diff, Score) のリストから台帳レポートHTMLを生成する。"""
     report_date = report_date or date.today()
     items = sorted(items, key=lambda x: x[1].total, reverse=True)
 
@@ -94,8 +97,16 @@ def render_report(items: list[tuple[Diff, Score]], report_date: date | None = No
            or (d.context.is_new and s.total >= 10)]
     hot_uids = {d.listing.uid for d, _ in hot}
 
+    # 「指値候補」= 長期掲載 or 値下げ履歴あり (売主が譲歩し始めている)
+    offers = [(d, s, offer_candidate_reason(d, offer_min_age_days)) for d, s in items]
+    offers = [(d, s, r) for d, s, r in offers if r]
+
     hot_html = "".join(_card(i + 1, d, s, hot=True) for i, (d, s) in enumerate(hot)) \
         or '<p class="sub">本日は緊急案件なし。</p>'
+    offer_html = "".join(
+        f'<div class="offer-reason">🎯 {html.escape(r)}</div>' + _card(i + 1, d, s)
+        for i, (d, s, r) in enumerate(offers)) \
+        or '<p class="sub">現在、指値候補なし。</p>'
     all_html = "".join(_card(i + 1, d, s, hot=d.listing.uid in hot_uids)
                        for i, (d, s) in enumerate(items))
 
@@ -104,13 +115,17 @@ def render_report(items: list[tuple[Diff, Score]], report_date: date | None = No
     return f"""<!doctype html>
 <html lang="ja"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>朝の物件レポート {report_date.isoformat()}</title>
+<title>物件台帳レポート {report_date.isoformat()}</title>
 <style>{CSS}</style></head><body>
-<h1>🏚 朝の物件レポート</h1>
+<h1>🏚 物件台帳レポート</h1>
 <div class="sub">{report_date.isoformat()} | 監視 {len(items)}件 |
-🔻本日の値下げ {drops}件 | 🆕新着 {news}件</div>
+🔻本日の値下げ {drops}件 | 🆕新着 {news}件 | 🎯指値候補 {len(offers)}件</div>
 <h2>🚨 今すぐ自分の目で見る ({len(hot)}件)</h2>
 {hot_html}
+<h2>🎯 指値候補 — 待たずに攻める ({len(offers)}件)</h2>
+<p class="sub">長期掲載・値下げ履歴 = 売主が譲歩し始めているサイン。
+値下げを待つのではなく、こちらから大幅指値を入れる候補。</p>
+{offer_html}
 <h2>📋 全物件ランキング (落とさず有望順)</h2>
 {all_html}
 <footer>akiya-watcher — 除外しない。並べて、人間が決める。</footer>
