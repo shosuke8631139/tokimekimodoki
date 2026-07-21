@@ -60,11 +60,21 @@ class ListingContext:
 @dataclass
 class Score:
     """スコアリング結果。落とさない——全物件がスコア順に並ぶ。"""
+
+    # 現実的な満点の目安 (値下げ6+残置物6+事情3+価格4+駐車4+水洗1+利便3+
+    # 建物1+エリア1+長期掲載3 ≈ 30点)。10点満点表示への換算に使う。
+    RAW_FULL = 30
+
     total: int = 0
     badges: list[str] = field(default_factory=list)    # レポートに出す短いラベル
     reasons: list[str] = field(default_factory=list)   # 加点・減点の内訳
     unknowns: list[str] = field(default_factory=list)  # 記載がなく要確認の項目
     matched_keywords: list[str] = field(default_factory=list)
+
+    @property
+    def out_of_ten(self) -> int:
+        """10点満点に換算した評価 (表示用。並び替えは total を使う)。"""
+        return max(0, min(10, round(self.total * 10 / self.RAW_FULL)))
 
     def add(self, points: int, reason: str, badge: str | None = None) -> None:
         self.total += points

@@ -30,10 +30,15 @@ def _normalize(text: str) -> str:
 
 
 def parse_price_yen(text: str) -> int | None:
-    """価格表記を円に変換する。例: "198万円"→1980000, "1,980,000円"→1980000。"""
+    """価格表記を円に変換する。例: "198万円"→1980000, "1,980,000円"→1980000。
+
+    0円物件(無償譲渡)は 0 を返す。不明は None (0とNoneは意味が違う)。
+    """
     t = _normalize(text)
     if not t:
         return None
+    if re.search(r"(?<![0-9,.])0円|無償譲渡|無償|0円物件", t):
+        return 0
     m = re.search(r"([0-9,]+(?:\.[0-9]+)?)億", t)
     oku = float(m.group(1).replace(",", "")) if m else 0.0
     rest = t[m.end():] if m else t
@@ -224,6 +229,8 @@ class Scorer:
         p = ls.price_yen
         if p is None:
             s.unknowns.append("価格(応相談? 指値候補)")
+        elif p == 0:
+            s.add(4, "0円(無償譲渡)物件", "💴0円")
         elif p <= 1_000_000:
             s.add(4, f"価格 {p:,}円", "💴100万以下")
         elif p <= 2_000_000:

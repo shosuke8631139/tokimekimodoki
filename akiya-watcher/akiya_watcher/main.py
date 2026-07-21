@@ -121,16 +121,18 @@ def build_digest(items: list[tuple[Diff, Score]], offer_min_age_days: int) -> st
     offers = [(d, s, r) for d, s, r in offers if r]
     lines.append(f"🎯 指値候補 {len(offers)}件 — 待たずに攻める:")
     for d, s, r in offers[:5]:
-        price = f"{d.listing.price_yen:,}円" if d.listing.price_yen else "価格応談"
+        price = (f"{d.listing.price_yen:,}円" if d.listing.price_yen is not None
+                 else "価格応談")
         lines.append(f"・{d.listing.title} {price} ({r})")
         lines.append(f"  {d.listing.url}")
     lines.append("")
 
-    lines.append("🏆 スコア上位:")
+    lines.append("🏆 評価上位 (10点満点):")
     for d, s in ranked[:5]:
-        price = f"{d.listing.price_yen:,}円" if d.listing.price_yen else "価格応談"
+        price = (f"{d.listing.price_yen:,}円" if d.listing.price_yen is not None
+                 else "価格応談")
         badges = " ".join(s.badges) or "情報少・要確認"
-        lines.append(f"・{s.total}点 {d.listing.title} {price}")
+        lines.append(f"・{s.out_of_ten}/10点 {d.listing.title} {price}")
         lines.append(f"  [{badges}]")
         lines.append(f"  {d.listing.url}")
     lines.append("")

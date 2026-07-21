@@ -46,7 +46,7 @@ def format_message(diff: Diff, score: Score) -> str:
     if ctx.drop_pct and ctx.previous_price_yen:
         price = f"{ctx.previous_price_yen:,}円 → {price}"
     lines = [
-        f"{head} [score {score.total}]",
+        f"{head} [評価 {score.out_of_ten}/10]",
         f"物件名: {ls.title}",
         f"価格: {price}",
         f"所在地: {ls.address or '不明'}",
