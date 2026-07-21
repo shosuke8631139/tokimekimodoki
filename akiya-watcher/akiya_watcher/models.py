@@ -36,10 +36,36 @@ class Listing:
 
 
 @dataclass
-class Judgement:
-    """判定結果。matched=True の物件だけが通知対象。"""
-    matched: bool
-    score: int                       # 条件合致度 (通知の優先度表示に使用)
+class ListingContext:
+    """差分DBから得た、スコアリングに使う履歴情報。"""
+    is_new: bool = True
+    age_days: int = 0                      # 初回掲載からの経過日数
+    previous_price_yen: int | None = None  # 直前の(現在と異なる)価格
+    current_price_yen: int | None = None
+    price_changed: bool = False
+
+    @property
+    def drop_pct(self) -> int | None:
+        """値下げ率(%)。値下げでなければ None。"""
+        if (self.previous_price_yen and self.current_price_yen is not None
+                and self.current_price_yen < self.previous_price_yen):
+            return round(100 * (self.previous_price_yen - self.current_price_yen)
+                         / self.previous_price_yen)
+        return None
+
+
+@dataclass
+class Score:
+    """スコアリング結果。落とさない——全物件がスコア順に並ぶ。"""
+    total: int = 0
+    badges: list[str] = field(default_factory=list)    # レポートに出す短いラベル
+    reasons: list[str] = field(default_factory=list)   # 加点・減点の内訳
+    unknowns: list[str] = field(default_factory=list)  # 記載がなく要確認の項目
     matched_keywords: list[str] = field(default_factory=list)
-    reasons: list[str] = field(default_factory=list)      # 合致した理由
-    disqualifiers: list[str] = field(default_factory=list)  # 不合致の理由
+
+    def add(self, points: int, reason: str, badge: str | None = None) -> None:
+        self.total += points
+        sign = "+" if points >= 0 else ""
+        self.reasons.append(f"{reason} ({sign}{points})")
+        if badge:
+            self.badges.append(badge)

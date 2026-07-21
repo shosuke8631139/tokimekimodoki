@@ -1,15 +1,15 @@
-"""判定・パーサの単体テスト。 pytest で実行。"""
+"""パーサ・スコアラーの単体テスト。 pytest で実行。"""
 import pytest
 
 from akiya_watcher.criteria import (
-    Judge,
+    Scorer,
     is_flush_toilet,
     parse_area_sqm,
     parse_layout_rooms,
     parse_parking_slots,
     parse_price_yen,
 )
-from akiya_watcher.models import Listing
+from akiya_watcher.models import Listing, ListingContext
 
 
 @pytest.mark.parametrize("text,expected", [
@@ -71,14 +71,9 @@ def test_toilet(text, expected):
     assert is_flush_toilet(text) is expected
 
 
-CRITERIA = {
-    "price_max_yen": 2_000_000,
-    "parking_min_slots": 2,
-    "floor_area_min_sqm": 80,
-    "rooms_min": 4,
-    "require_flush_toilet": True,
-    "priority_cities": ["鹿児島市"],
-}
+# ---------------------------------------------------------------- Scorer
+
+CRITERIA = {"priority_cities": ["薩摩川内市", "鹿屋市", "出水市", "都城市"]}
 
 
 def make(**kw) -> Listing:
@@ -87,57 +82,69 @@ def make(**kw) -> Listing:
     return Listing(**base)
 
 
-def test_judge_ideal_listing_matches():
-    ls = make(price_yen=1_800_000, floor_area_sqm=98.0, layout="5DK",
-              parking_slots=3, toilet="水洗(浄化槽)",
-              address="鹿児島県鹿児島市", description="残置物あり・現状渡し")
-    j = Judge(CRITERIA).judge(ls)
-    assert j.matched
-    assert "残置物" in j.matched_keywords
-    assert "現状渡し" in j.matched_keywords
-    assert j.score >= 6
+def test_nothing_is_excluded():
+    """どんな物件でもスコアが付き、除外されない(思想の回帰テスト)。"""
+    terrible = make(price_yen=9_000_000, toilet="汲み取り式",
+                    floor_area_sqm=40.0, layout="2K")
+    s = Scorer(CRITERIA).score(terrible)
+    assert s.total is not None  # 例外も除外もなくスコアが返る
 
 
-def test_judge_price_over_disqualifies():
-    ls = make(price_yen=3_000_000, floor_area_sqm=120.0,
-              parking_slots=2, toilet="水洗")
-    j = Judge(CRITERIA).judge(ls)
-    assert not j.matched
-    assert any("上限超過" in d for d in j.disqualifiers)
+def test_price_drop_dominates():
+    """大幅値下げは最重要シグナル。300万→100万のケース。"""
+    ls = make(price_yen=1_000_000, address="鹿児島県薩摩川内市")
+    ctx = ListingContext(is_new=False, age_days=20,
+                         previous_price_yen=3_000_000,
+                         current_price_yen=1_000_000, price_changed=True)
+    s = Scorer(CRITERIA).score(ls, ctx)
+    assert ctx.drop_pct == 67
+    assert any("値下げ67%" in b for b in s.badges)
+    assert s.total >= 10  # 値下げ6 + 100万以下4 + エリア1
 
 
-def test_judge_kumitori_disqualifies_when_required():
-    ls = make(price_yen=1_000_000, floor_area_sqm=90.0,
-              parking_slots=2, toilet="汲み取り式")
-    assert not Judge(CRITERIA).judge(ls).matched
-    relaxed = dict(CRITERIA, require_flush_toilet=False)
-    assert Judge(relaxed).judge(ls).matched
+def test_zanchibutsu_outweighs_bad_toilet():
+    """残置物豊富なら汲み取り減点があってもプラス圏に残る。"""
+    ls = make(price_yen=1_500_000, toilet="汲み取り式",
+              description="残置物多数・家財あり・現状渡し")
+    s = Scorer(CRITERIA).score(ls, ListingContext(is_new=False))
+    assert "🪑残置物" in s.badges
+    assert "⚠️汲み取り" in s.badges
+    assert s.total > 0
 
 
-def test_judge_land_area_fallback_for_parking():
-    ls = make(price_yen=1_500_000, floor_area_sqm=85.0,
-              land_area_sqm=250.0, toilet="水洗")
-    j = Judge(CRITERIA).judge(ls)
-    assert j.matched
-    assert any("駐車余地" in r for r in j.reasons)
+def test_motive_keywords_detected():
+    ls = make(price_yen=2_500_000,
+              description="相続のため売却。所有者は遠方在住で早期処分希望。")
+    s = Scorer(CRITERIA).score(ls)
+    assert "🏠売主事情" in s.badges
+    assert "相続" in s.matched_keywords
 
 
-def test_judge_parking_parsed_from_description():
-    ls = make(price_yen=1_500_000, floor_area_sqm=85.0, toilet="水洗",
-              description="駐車場:2台あり。残置物あり。")
-    j = Judge(CRITERIA).judge(ls)
-    assert j.matched
+def test_unknowns_are_kept_not_dropped():
+    """情報ゼロの物件も落とさず、要確認リストが付く。"""
+    ls = make()
+    s = Scorer(CRITERIA).score(ls)
+    assert "価格(応相談? 指値候補)" in s.unknowns
+    assert "駐車場" in s.unknowns
+    assert "トイレ形式" in s.unknowns
 
 
-def test_judge_small_house_disqualifies():
-    ls = make(price_yen=1_000_000, floor_area_sqm=60.0, layout="3K",
-              parking_slots=2, toilet="水洗")
-    assert not Judge(CRITERIA).judge(ls).matched
+def test_parking_scale():
+    five = Scorer(CRITERIA).score(make(parking_slots=5), ListingContext(is_new=False))
+    two = Scorer(CRITERIA).score(make(parking_slots=2), ListingContext(is_new=False))
+    one = Scorer(CRITERIA).score(make(parking_slots=1), ListingContext(is_new=False))
+    assert five.total > two.total > one.total
 
 
-def test_judge_unknown_price_stays_candidate():
-    ls = make(price_yen=None, floor_area_sqm=90.0,
-              parking_slots=2, toilet="水洗")
-    j = Judge(CRITERIA).judge(ls)
-    assert j.matched
-    assert any("価格不明" in r for r in j.reasons)
+def test_convenience_scored():
+    ls = make(description="スーパー徒歩5分、小学校近く")
+    s = Scorer(CRITERIA).score(ls)
+    assert "🏪利便" in s.badges
+
+
+def test_long_listing_bonus():
+    ls = make(price_yen=2_000_000)
+    old = Scorer(CRITERIA).score(ls, ListingContext(is_new=False, age_days=200))
+    fresh = Scorer(CRITERIA).score(ls, ListingContext(is_new=False, age_days=10))
+    assert old.total > fresh.total
+    assert any("⏳" in b for b in old.badges)

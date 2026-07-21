@@ -1,15 +1,25 @@
-"""探索ターゲット条件の判定ロジック。
+"""スコアリングロジック。
 
-物件表記の揺れ(「198万円」「1,980,000円」「駐車2台可」「並列3台」等)を
-正規化するパーサ群と、config.yaml の条件で Listing を判定する Judge を提供する。
-すべて純関数/純クラスなのでオフラインで単体テストできる。
+設計思想: 条件で物件を「落とす」のではなく、有望さをスコア化して並べる。
+情報が無い項目は減点せず「不明・要確認」として残す。絞りすぎて見逃すことが
+最も避けたい失敗である。
+
+最重要シグナル(重い順):
+  1. 大幅値下げ・新着 (「値下げの瞬間」を逃さないことがツールの存在理由)
+  2. 残置物・家財・現状渡し (他の条件を上書きするほど重要)
+  3. 相続・遠方所有・管理困難など「手放したい事情」がにじむ記載
+  4. 駐車場の広さ (1台は欲しい、5台前後なら理想)
+  5. 生活利便性 (スーパー・小中学校が近い = 買った後に活用できる立地)
+
+表記揺れ(「198万円」「並列2台可」「簡易水洗」等)を正規化するパーサ群も
+ここに集約する。すべて純関数/純クラスなのでオフラインで単体テストできる。
 """
 from __future__ import annotations
 
 import re
 import unicodedata
 
-from .models import Judgement, Listing
+from .models import Listing, ListingContext, Score
 
 # ---------------------------------------------------------------- パーサ群
 
@@ -95,113 +105,142 @@ def is_flush_toilet(text: str) -> bool | None:
         return True
     return None
 
-# ---------------------------------------------------------------- 判定
+# ---------------------------------------------------------------- キーワード群
 
-
-DEFAULT_KEYWORDS = [
-    "残置物",
-    "現状渡し",
-    "現状引き渡し",
-    "現状有姿",
-    "未片付け",
-    "家具",
-    "家財",
-    "要補修",
-    "要修繕",
-    "要リフォーム",
-    "古家",
-    "解体前提",
+# 残置物系: 最重要。買い手に敬遠され交渉しやすく、処分権が引き継がれれば
+# 価値ある品が残っている可能性もある。
+ZANCHI_KEYWORDS = [
+    "残置物", "家財", "家具", "未片付け", "現状渡し", "現状引き渡し", "現状有姿",
 ]
 
+# 売主事情系: 相続・遠方・管理困難など「手放したい事情」がにじむ表現。
+# 公開された説明文の記載だけを対象にする(個人情報の収集・推測はしない)。
+MOTIVE_KEYWORDS = [
+    "相続", "空き家", "遠方", "管理困難", "管理が困難", "早期", "処分",
+    "売り急ぎ", "価格応談", "値下げしました", "お引き取り",
+]
 
-class Judge:
-    """config の条件で Listing を判定する。
+# 生活利便系: 買った後に活用できる立地かどうか。
+CONVENIENCE_KEYWORDS = [
+    "スーパー", "小学校", "中学校", "コンビニ", "病院", "駅", "バス停", "徒歩",
+]
 
-    criteria 例 (config.yaml の criteria セクション):
-        price_max_yen: 2000000
-        parking_min_slots: 2
-        land_area_fallback_sqm: 200   # 駐車場記載なしでも敷地がこれ以上なら可
-        floor_area_min_sqm: 80
-        rooms_min: 4                  # 4LDK 以上
-        keywords: [残置物, 現状渡し, ...]
-        require_flush_toilet: true
-        priority_cities: [鹿児島市, 霧島市, 薩摩川内市, 鹿屋市]
+# 再生コスト系: 除外はしないが把握しておきたい表現。
+REPAIR_KEYWORDS = ["要補修", "要修繕", "要リフォーム", "古家", "解体前提", "雨漏り", "傾き"]
+
+# ---------------------------------------------------------------- スコアラー
+
+
+class Scorer:
+    """Listing と履歴 (ListingContext) から Score を算出する。
+
+    どの項目も「不合格」を作らない。減点はあっても除外はない。
+    config.yaml の criteria セクションでエリア・キーワードを上書きできる。
     """
 
-    def __init__(self, criteria: dict):
-        self.price_max = criteria.get("price_max_yen", 2_000_000)
-        self.parking_min = criteria.get("parking_min_slots", 2)
-        self.land_fallback = criteria.get("land_area_fallback_sqm", 200)
-        self.floor_min = criteria.get("floor_area_min_sqm", 80)
-        self.rooms_min = criteria.get("rooms_min", 4)
-        self.keywords = criteria.get("keywords") or DEFAULT_KEYWORDS
-        self.require_flush = criteria.get("require_flush_toilet", True)
+    def __init__(self, criteria: dict | None = None):
+        criteria = criteria or {}
         self.priority_cities = criteria.get("priority_cities", [])
+        self.zanchi_kw = criteria.get("zanchi_keywords", ZANCHI_KEYWORDS)
+        self.motive_kw = criteria.get("motive_keywords", MOTIVE_KEYWORDS)
+        self.convenience_kw = criteria.get("convenience_keywords", CONVENIENCE_KEYWORDS)
+        self.repair_kw = criteria.get("repair_keywords", REPAIR_KEYWORDS)
 
-    def judge(self, ls: Listing) -> Judgement:
-        reasons: list[str] = []
-        disq: list[str] = []
-        score = 0
-        blob = " ".join([ls.title, ls.description, ls.toilet, ls.layout])
+    def score(self, ls: Listing, ctx: ListingContext | None = None) -> Score:
+        ctx = ctx or ListingContext(current_price_yen=ls.price_yen)
+        s = Score()
+        blob = " ".join([ls.title, ls.description, ls.toilet, ls.layout, ls.address])
 
-        # 価格 (不明は「大幅指値候補」として残し、明確な超過だけ弾く)
-        if ls.price_yen is None:
-            reasons.append("価格不明(要確認・指値候補)")
-        elif ls.price_yen <= self.price_max:
-            reasons.append(f"価格 {ls.price_yen:,}円 ≤ 上限 {self.price_max:,}円")
-            score += 2
-        else:
-            disq.append(f"価格 {ls.price_yen:,}円 が上限超過")
+        # --- 1. 鮮度シグナル: 値下げ・新着・長期掲載 -------------------
+        drop = ctx.drop_pct
+        if drop is not None and drop > 0:
+            old = f"{ctx.previous_price_yen:,}円"
+            new = f"{ctx.current_price_yen:,}円"
+            if drop >= 40:
+                s.add(6, f"大幅値下げ {old}→{new}", f"🔻値下げ{drop}%")
+            elif drop >= 20:
+                s.add(4, f"値下げ {old}→{new}", f"🔻値下げ{drop}%")
+            else:
+                s.add(2, f"値下げ {old}→{new}", f"🔻値下げ{drop}%")
+        elif ctx.is_new:
+            s.add(2, "新着", "🆕新着")
+        if ctx.age_days >= 180:
+            s.add(3, f"長期掲載 {ctx.age_days}日 (指値余地)", f"⏳{ctx.age_days}日")
+        elif ctx.age_days >= 90:
+            s.add(2, f"長期掲載 {ctx.age_days}日", f"⏳{ctx.age_days}日")
 
-        # 駐車場 (台数記載がなければ敷地面積でフォールバック)
+        # --- 2. 残置物 (最重要シグナル) --------------------------------
+        zanchi = [kw for kw in self.zanchi_kw if kw in blob]
+        if zanchi:
+            s.matched_keywords += zanchi
+            s.add(4 + min(len(zanchi) - 1, 2), "残置物系: " + "、".join(zanchi), "🪑残置物")
+
+        # --- 3. 売主事情 ------------------------------------------------
+        motive = [kw for kw in self.motive_kw if kw in blob]
+        if motive:
+            s.matched_keywords += motive
+            s.add(3, "売主事情: " + "、".join(motive), "🏠売主事情")
+
+        # --- 4. 価格 ----------------------------------------------------
+        p = ls.price_yen
+        if p is None:
+            s.unknowns.append("価格(応相談? 指値候補)")
+        elif p <= 1_000_000:
+            s.add(4, f"価格 {p:,}円", "💴100万以下")
+        elif p <= 2_000_000:
+            s.add(3, f"価格 {p:,}円", "💴200万以下")
+        elif p <= 3_000_000:
+            s.add(2, f"価格 {p:,}円")
+        elif p <= 5_000_000:
+            s.add(1, f"価格 {p:,}円")
+
+        # --- 5. 駐車場 (1台は欲しい、5台前後なら理想) --------------------
         slots = ls.parking_slots
         if slots is None:
             slots = parse_parking_slots(blob)
-        if slots is not None and slots >= self.parking_min:
-            reasons.append(f"駐車 {slots}台 ≥ {self.parking_min}台")
-            score += 2
-        elif ls.land_area_sqm and ls.land_area_sqm >= self.land_fallback:
-            reasons.append(f"敷地 {ls.land_area_sqm}㎡ ≥ {self.land_fallback}㎡(駐車余地)")
-            score += 1
+        if slots is not None:
+            if slots >= 5:
+                s.add(4, f"駐車 {slots}台 (理想)", f"🚗{slots}台")
+            elif slots >= 2:
+                s.add(2, f"駐車 {slots}台", f"🚗{slots}台")
+            else:
+                s.add(1, f"駐車 {slots}台")
+        elif ls.land_area_sqm and ls.land_area_sqm >= 300:
+            s.add(3, f"敷地 {ls.land_area_sqm:,.0f}㎡ (複数台の余地)", "🚗敷地広")
+        elif ls.land_area_sqm and ls.land_area_sqm >= 200:
+            s.add(2, f"敷地 {ls.land_area_sqm:,.0f}㎡ (駐車余地)", "🚗敷地広")
         else:
-            disq.append(f"駐車{self.parking_min}台の確証なし")
+            s.unknowns.append("駐車場")
 
-        # 建物規模 (延床 or 間取りのどちらかを満たせばよい)
-        rooms = parse_layout_rooms(ls.layout)
-        if ls.floor_area_sqm and ls.floor_area_sqm >= self.floor_min:
-            reasons.append(f"延床 {ls.floor_area_sqm}㎡ ≥ {self.floor_min}㎡")
-            score += 1
-        elif rooms is not None and rooms >= self.rooms_min:
-            reasons.append(f"間取り {ls.layout} ({rooms}室 ≥ {self.rooms_min}室)")
-            score += 1
-        else:
-            disq.append(f"延床{self.floor_min}㎡以上/{self.rooms_min}LDK以上の確証なし")
-
-        # お宝キーワード
-        matched_kw = [kw for kw in self.keywords if kw in blob]
-        if matched_kw:
-            reasons.append("キーワード: " + "、".join(matched_kw))
-            score += len(matched_kw)
-
-        # トイレ
+        # --- 6. トイレ (汲み取りは減点、ただし除外しない) -----------------
         flush = is_flush_toilet(ls.toilet or blob)
         if flush is True:
-            reasons.append("水洗トイレ")
-            score += 1
+            s.add(1, "水洗トイレ")
         elif flush is False:
-            if self.require_flush:
-                disq.append("汲み取り式(水洗必須条件)")
-            else:
-                reasons.append("汲み取り式(要改修コスト)")
+            s.add(-2, "汲み取り式 (改修コスト)", "⚠️汲み取り")
         else:
-            reasons.append("トイレ形式不明(要確認)")
+            s.unknowns.append("トイレ形式")
 
-        # 優先エリア加点
+        # --- 7. 生活利便性 (買った後に活用できる立地か) -------------------
+        conv = [kw for kw in self.convenience_kw if kw in blob]
+        if conv:
+            s.add(min(len(conv), 3), "生活利便: " + "、".join(conv), "🏪利便")
+        else:
+            s.unknowns.append("周辺環境(スーパー・学校)")
+
+        # --- 8. 建物規模 (参考条件) -------------------------------------
+        rooms = parse_layout_rooms(ls.layout)
+        if (ls.floor_area_sqm and ls.floor_area_sqm >= 80) or (rooms and rooms >= 4):
+            s.add(1, f"建物規模 {ls.floor_area_sqm or ''}㎡ {ls.layout}".strip())
+
+        # --- 9. エリア --------------------------------------------------
         if any(city in ls.address for city in self.priority_cities):
-            score += 1
-            reasons.append("優先エリア")
+            s.add(1, "注力エリア", "📍注力")
 
-        matched = not disq
-        return Judgement(matched=matched, score=score,
-                         matched_keywords=matched_kw,
-                         reasons=reasons, disqualifiers=disq)
+        # --- 10. 再生コストの把握 (減点なし・情報として付記) ---------------
+        repair = [kw for kw in self.repair_kw if kw in blob]
+        if repair:
+            s.matched_keywords += repair
+            s.reasons.append("補修系記載: " + "、".join(repair) + " (±0)")
+
+        return s

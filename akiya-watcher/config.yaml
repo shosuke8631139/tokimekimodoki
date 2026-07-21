@@ -1,37 +1,25 @@
 # 鹿児島お宝再生物件ウォッチャー 設定
 #
-# slack_webhook_url は環境変数 SLACK_WEBHOOK_URL でも指定可能(環境変数推奨。
-# このファイルをgitにコミットする場合はURLを書かないこと)。
+# 設計思想: 条件で落とさない。スコア化して並べ、人間が決める。
+# slack_webhook_url は環境変数 SLACK_WEBHOOK_URL でも指定可能(環境変数推奨)。
 
 db_path: data/listings.db
+notify_min_score: 5   # 即時通知(新着・変更)の最低スコア。レポートには全件載る
 
 criteria:
-  price_max_yen: 2000000        # 掲載価格200万円以下
-  parking_min_slots: 2          # 駐車2台以上
-  land_area_fallback_sqm: 200   # 駐車台数記載がなくても敷地200㎡以上なら可とみなす
-  floor_area_min_sqm: 80        # 延床80㎡以上、または…
-  rooms_min: 4                  # …4LDK/4DK以上
-  require_flush_toilet: true    # 汲み取り式は除外(falseで通知に含める)
+  # 注力エリア (加点のみ。他エリアも除外はしない = 鹿児島県全域が対象)
+  # 都城市は宮崎県だが生活圏として監視対象に含める
   priority_cities:
-    - 鹿児島市
-    - 霧島市
     - 薩摩川内市
     - 鹿屋市
-    - 姶良市
-    - 日置市
-  keywords:
-    - 残置物
-    - 現状渡し
-    - 現状引き渡し
-    - 現状有姿
-    - 未片付け
-    - 家具
-    - 家財
-    - 要補修
-    - 要修繕
-    - 要リフォーム
-    - 古家
-    - 解体前提
+    - 出水市
+    - 都城市
+    - 霧島市
+    - 鹿児島市
+  # キーワード群は criteria.py にデフォルトあり。上書きしたい場合のみ記述:
+  # zanchi_keywords: [残置物, 家財, ...]
+  # motive_keywords: [相続, 空き家, ...]
+  # convenience_keywords: [スーパー, 小学校, ...]
 
 sources:
   # ── 動作確認用デモソース(ローカルJSON・ネットワーク不要) ──
@@ -43,9 +31,9 @@ sources:
   # ── 実サイトの追加例(セレクタは各自治体サイトの開発者ツールで確認して設定) ──
   # 追加前に必ず対象サイトの利用規約と robots.txt を確認すること。
   # 商用ポータル(楽待・健美家・アットホーム等)は規約でスクレイピングを
-  # 禁止しているため、このツールの対象にしないこと。
+  # 禁止しているため対象にしない。公式の新着メール通知+保存検索を使うこと。
   #
-  # - id: example_city_akiya_bank
+  # - id: satsumasendai_akiya_bank
   #   type: generic_html
   #   enabled: false
   #   list_url: "https://www.example.lg.jp/akiya-bank/list.html"

@@ -1,90 +1,121 @@
-"""取得→判定→差分→通知のエンドツーエンドテスト(デモソース使用)。"""
+"""取得→スコア→差分→レポートのエンドツーエンドテスト。
+
+シナリオ: 「300万円で掲載→3週間後に100万円へ値下げ」を再現し、
+値下げの瞬間がレポートの『今すぐ確認』に上がることを検証する。
+"""
 import json
 
 import yaml
 
-from akiya_watcher.main import run
+from akiya_watcher.criteria import Scorer
 from akiya_watcher.models import Listing
+from akiya_watcher.report import render_report
+from akiya_watcher.scrapers import build_scraper
 from akiya_watcher.storage import Store
 
-
-def _write_config(tmp_path, demo_json_path):
-    config = {
-        "db_path": str(tmp_path / "listings.db"),
-        "criteria": {
-            "price_max_yen": 2_000_000,
-            "parking_min_slots": 2,
-            "floor_area_min_sqm": 80,
-            "rooms_min": 4,
-            "require_flush_toilet": True,
-            "priority_cities": ["鹿児島市"],
-        },
-        "sources": [
-            {"id": "demo", "type": "demo", "path": str(demo_json_path)},
-        ],
-    }
-    p = tmp_path / "config.yaml"
-    p.write_text(yaml.safe_dump(config, allow_unicode=True), encoding="utf-8")
-    return p
+DAY = 86400
 
 
-def test_pipeline_end_to_end(tmp_path, capsys):
-    rows = [
-        {
-            "id": "e2e-1",
-            "title": "合致物件",
-            "url": "https://example.com/1",
-            "price": "180万円",
-            "address": "鹿児島県鹿児島市",
-            "floor_area": "98㎡",
-            "layout": "5DK",
-            "parking": "駐車場:3台",
-            "toilet": "水洗(浄化槽)",
-            "description": "残置物あり・現状渡し",
-        },
-        {
-            "id": "e2e-2",
-            "title": "高すぎる物件",
-            "url": "https://example.com/2",
-            "price": "500万円",
-            "floor_area": "100㎡",
-            "parking": "駐車2台",
-            "toilet": "水洗",
-        },
-    ]
-    demo = tmp_path / "demo.json"
-    demo.write_text(json.dumps(rows, ensure_ascii=False), encoding="utf-8")
-    config_path = _write_config(tmp_path, demo)
-
-    # 初回: 合致1件が「新着」として通知される(webhook未設定→標準出力)
-    run(str(config_path))
-    out = capsys.readouterr().out
-    assert "🆕 新着お宝候補" in out
-    assert "合致物件" in out
-    assert "高すぎる物件" not in out
-    assert "残置物" in out
-
-    # 2回目: 変化なし → 通知されない
-    run(str(config_path))
-    out = capsys.readouterr().out
-    assert "🆕" not in out and "🔄" not in out
-
-    # 価格を下げて3回目 → 「掲載変更」として旧価格つきで通知される
-    rows[0]["price"] = "150万円"
-    demo.write_text(json.dumps(rows, ensure_ascii=False), encoding="utf-8")
-    run(str(config_path))
-    out = capsys.readouterr().out
-    assert "🔄 掲載変更" in out
-    assert "1,800,000円 → 1,500,000円" in out
+def _demo_rows(price="300万円"):
+    return [{
+        "id": "e2e-1",
+        "title": "薩摩川内市 相続空き家",
+        "url": "https://example.com/1",
+        "price": price,
+        "address": "鹿児島県薩摩川内市",
+        "floor_area": "98㎡",
+        "layout": "5DK",
+        "parking": "駐車場:5台",
+        "toilet": "水洗(浄化槽)",
+        "description": "相続のため売却。残置物あり現状渡し。スーパー近く。",
+    }]
 
 
-def test_store_diff_kinds(tmp_path):
-    store = Store(tmp_path / "db.sqlite")
-    ls = Listing(source="s", listing_id="1", title="t", url="u", price_yen=100)
-    d1 = store.upsert(ls)
-    assert d1 and d1.kind == "new"
-    assert store.upsert(ls) is None
-    ls2 = Listing(source="s", listing_id="1", title="t", url="u", price_yen=90)
-    d3 = store.upsert(ls2)
-    assert d3 and d3.kind == "changed" and d3.old_price_yen == 100
+def _fetch(tmp_path, rows):
+    p = tmp_path / "demo.json"
+    p.write_text(json.dumps(rows, ensure_ascii=False), encoding="utf-8")
+    scraper = build_scraper({"id": "demo", "type": "demo", "path": str(p)})
+    return scraper.fetch_listings()
+
+
+def test_price_drop_scenario(tmp_path):
+    db = tmp_path / "db.sqlite"
+    scorer = Scorer({"priority_cities": ["薩摩川内市"]})
+
+    # Day 0: 300万円で新規掲載
+    store = Store(db, now=0)
+    (ls,) = _fetch(tmp_path, _demo_rows("300万円"))
+    diff = store.upsert(ls)
+    assert diff.kind == "new" and diff.context.is_new
     store.close()
+
+    # Day 21: 100万円へ値下げ → 値下げ67%が検知される
+    store = Store(db, now=21 * DAY)
+    (ls,) = _fetch(tmp_path, _demo_rows("100万円"))
+    diff = store.upsert(ls)
+    assert diff.kind == "changed"
+    assert diff.context.price_changed
+    assert diff.context.previous_price_yen == 3_000_000
+    assert diff.context.drop_pct == 67
+    assert diff.context.age_days == 21
+
+    score = scorer.score(ls, diff.context)
+    assert any("値下げ67%" in b for b in score.badges)
+
+    # レポートの「今すぐ確認」に載る
+    html = render_report([(diff, score)])
+    assert "今すぐ自分の目で見る (1件)" in html
+    assert "▼67%" in html
+    assert "3,000,000円" in html and "1,000,000円" in html
+    store.close()
+
+    # Day 22: 変化なし → unchanged だが値下げバッジは履歴から維持される
+    store = Store(db, now=22 * DAY)
+    (ls,) = _fetch(tmp_path, _demo_rows("100万円"))
+    diff = store.upsert(ls)
+    assert diff.kind == "unchanged"
+    assert not diff.context.price_changed
+    assert diff.context.drop_pct == 67  # 履歴上の直前価格との比較は残る
+    score = scorer.score(ls, diff.context)
+    html = render_report([(diff, score)])
+    assert "今すぐ自分の目で見る (0件)" in html  # 当日の値下げではないので緊急枠外
+    store.close()
+
+
+def test_report_ranks_by_score(tmp_path):
+    scorer = Scorer({})
+    store = Store(tmp_path / "db.sqlite", now=0)
+    rows = [
+        {"id": "a", "title": "残置物豊富な家", "url": "u1", "price": "150万円",
+         "description": "残置物・家財あり現状渡し。相続物件。", "parking": "駐車3台"},
+        {"id": "b", "title": "情報の少ない家", "url": "u2", "price": "600万円"},
+    ]
+    items = []
+    for ls in _fetch(tmp_path, rows):
+        diff = store.upsert(ls)
+        items.append((diff, scorer.score(ls, diff.context)))
+    html = render_report(items)
+    assert html.index("残置物豊富な家") < html.index("情報の少ない家")
+    assert "要確認" in html  # 情報のない物件も落とされず要確認つきで載る
+    store.close()
+
+
+def test_run_end_to_end(tmp_path, capsys):
+    """main.run が収集→通知→レポート生成まで通ることを確認。"""
+    from akiya_watcher.main import run
+    demo = tmp_path / "demo.json"
+    demo.write_text(json.dumps(_demo_rows(), ensure_ascii=False), encoding="utf-8")
+    report = tmp_path / "report.html"
+    config = {
+        "db_path": str(tmp_path / "db.sqlite"),
+        "criteria": {"priority_cities": ["薩摩川内市"]},
+        "sources": [{"id": "demo", "type": "demo", "path": str(demo)}],
+    }
+    cfg = tmp_path / "config.yaml"
+    cfg.write_text(yaml.safe_dump(config, allow_unicode=True), encoding="utf-8")
+
+    run(str(cfg), report_path=str(report))
+    out = capsys.readouterr().out
+    assert "🆕 新着物件" in out
+    assert report.exists()
+    assert "朝の物件レポート" in report.read_text(encoding="utf-8")
