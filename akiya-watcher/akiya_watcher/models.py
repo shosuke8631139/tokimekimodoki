@@ -23,6 +23,9 @@ class Listing:
     parking_slots: int | None = None      # 駐車可能台数。不明は None
     toilet: str = ""                 # トイレ/排水の記載 (例: "水洗(浄化槽)")
     description: str = ""            # 備考・特記事項などの自由文
+    # 掲載側が明示した変更前価格 (例: Sumai空き家の「300万円→100万円」表記)。
+    # 初回取得時でも履歴なしで値下げとして扱える。
+    advertised_previous_price_yen: int | None = None
     raw: dict = field(default_factory=dict)
 
     @property

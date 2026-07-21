@@ -59,6 +59,13 @@ def collect(config: dict, dry_run: bool = False) -> list[tuple[Diff, Score]]:
             else:
                 ctx = ListingContext(is_new=True, current_price_yen=ls.price_yen)
                 diff = Diff(kind="new", listing=ls, context=ctx)
+            # 掲載側が変更前価格を明示している場合(Sumai空き家の「300万→100万」等)、
+            # こちらの履歴が無くても値下げとして扱う
+            if (ls.advertised_previous_price_yen
+                    and diff.context.previous_price_yen is None):
+                diff.context.previous_price_yen = ls.advertised_previous_price_yen
+                if diff.kind == "new":
+                    diff.context.price_changed = True
             items.append((diff, scorer.score(ls, diff.context)))
 
     if store:

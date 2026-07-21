@@ -71,6 +71,17 @@ sources:
   # 商用ポータル(楽待・健美家・アットホーム等)は規約でスクレイピングを
   # 禁止しているため対象にしない。公式の新着メール通知+保存検索を使うこと。
   #
+  # ── Sumai空き家 (全国の空き家バンク集約サイト。値下げがタイトルに明示される) ──
+  # 有効化する前に https://akiya.sumai.biz/ の利用規約を確認すること
+  # (robots.txt はツールが自動チェックする)。list_urls は初回実行時に
+  # 実際のページ構成を見て調整する。
+  - id: sumai_akiya
+    type: sumai_akiya
+    enabled: false
+    list_urls:
+      - "https://akiya.sumai.biz/kyushu-kagoshima-akiyabank"
+      - "https://akiya.sumai.biz/kyushu-miyazaki-akiyabank"
+
   # ── Gmailメール解析(楽待・アットホーム・SUUMO等のポータルを規約違反なしにカバー) ──
   # 使い方: READMEの「Gmail連携のセットアップ」参照。
   # username を自分のGmailに変えて enabled: true にする。
