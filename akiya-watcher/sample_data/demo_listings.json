@@ -1,0 +1,50 @@
+[
+  {
+    "id": "demo-001",
+    "title": "鹿児島市郊外 残置物あり戸建て",
+    "url": "https://example.com/bukken/001",
+    "price": "180万円",
+    "address": "鹿児島県鹿児島市吉野町",
+    "floor_area": "98.5㎡",
+    "land_area": "250㎡",
+    "layout": "5DK",
+    "parking": "駐車場:3台可",
+    "toilet": "水洗(浄化槽)",
+    "description": "残置物あり・現状渡し。家財が残っていますが敷地広く駐車余裕あり。要リフォーム。"
+  },
+  {
+    "id": "demo-002",
+    "title": "霧島市 格安平屋(汲み取り)",
+    "url": "https://example.com/bukken/002",
+    "price": "150万円",
+    "address": "鹿児島県霧島市国分",
+    "floor_area": "85㎡",
+    "layout": "4DK",
+    "parking": "並列2台",
+    "toilet": "汲み取り式",
+    "description": "現状渡し。残置物あり。"
+  },
+  {
+    "id": "demo-003",
+    "title": "薩摩川内市 300万円の再生向き物件",
+    "url": "https://example.com/bukken/003",
+    "price": "300万円",
+    "address": "鹿児島県薩摩川内市",
+    "floor_area": "120㎡",
+    "layout": "6DK",
+    "parking": "駐車場:2台",
+    "toilet": "水洗(公共下水)",
+    "description": "家具・家財残置。現状有姿での引き渡し。"
+  },
+  {
+    "id": "demo-004",
+    "title": "鹿屋市 駐車場情報なしの小さな家",
+    "url": "https://example.com/bukken/004",
+    "price": "100万円",
+    "address": "鹿児島県鹿屋市",
+    "floor_area": "60㎡",
+    "layout": "3K",
+    "toilet": "水洗",
+    "description": "現状渡し。"
+  }
+]

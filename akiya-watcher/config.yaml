@@ -1,0 +1,62 @@
+# 鹿児島お宝再生物件ウォッチャー 設定
+#
+# slack_webhook_url は環境変数 SLACK_WEBHOOK_URL でも指定可能(環境変数推奨。
+# このファイルをgitにコミットする場合はURLを書かないこと)。
+
+db_path: data/listings.db
+
+criteria:
+  price_max_yen: 2000000        # 掲載価格200万円以下
+  parking_min_slots: 2          # 駐車2台以上
+  land_area_fallback_sqm: 200   # 駐車台数記載がなくても敷地200㎡以上なら可とみなす
+  floor_area_min_sqm: 80        # 延床80㎡以上、または…
+  rooms_min: 4                  # …4LDK/4DK以上
+  require_flush_toilet: true    # 汲み取り式は除外(falseで通知に含める)
+  priority_cities:
+    - 鹿児島市
+    - 霧島市
+    - 薩摩川内市
+    - 鹿屋市
+    - 姶良市
+    - 日置市
+  keywords:
+    - 残置物
+    - 現状渡し
+    - 現状引き渡し
+    - 現状有姿
+    - 未片付け
+    - 家具
+    - 家財
+    - 要補修
+    - 要修繕
+    - 要リフォーム
+    - 古家
+    - 解体前提
+
+sources:
+  # ── 動作確認用デモソース(ローカルJSON・ネットワーク不要) ──
+  - id: demo
+    type: demo
+    enabled: true
+    path: sample_data/demo_listings.json
+
+  # ── 実サイトの追加例(セレクタは各自治体サイトの開発者ツールで確認して設定) ──
+  # 追加前に必ず対象サイトの利用規約と robots.txt を確認すること。
+  # 商用ポータル(楽待・健美家・アットホーム等)は規約でスクレイピングを
+  # 禁止しているため、このツールの対象にしないこと。
+  #
+  # - id: example_city_akiya_bank
+  #   type: generic_html
+  #   enabled: false
+  #   list_url: "https://www.example.lg.jp/akiya-bank/list.html"
+  #   item_selector: "div.property-card"
+  #   fields:
+  #     title:       {selector: "h3 a", attr: "text"}
+  #     url:         {selector: "h3 a", attr: "href"}
+  #     price:       {selector: ".price", attr: "text"}
+  #     address:     {selector: ".address", attr: "text"}
+  #     layout:      {selector: ".layout", attr: "text"}
+  #     floor_area:  {selector: ".floor-area", attr: "text"}
+  #     land_area:   {selector: ".land-area", attr: "text"}
+  #     toilet:      {selector: ".equipment", attr: "text"}
+  #     description: {selector: ".note", attr: "text"}
