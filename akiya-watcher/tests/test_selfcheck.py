@@ -44,7 +44,22 @@ def test_check_detects_placeholder_gmail(tmp_path, capsys, monkeypatch):
     })
     assert self_check(path) == 1
     out = capsys.readouterr().out
-    assert "Gmailアドレスがまだ設定されていません" in out
+    assert "Gmailアドレスが未設定です" in out
+
+
+def test_check_username_from_env(tmp_path, capsys, monkeypatch):
+    """アドレスは環境変数 GMAIL_USERNAME からも読める(公開リポジトリ対策)。"""
+    monkeypatch.setenv("GMAIL_USERNAME", "harumi@gmail.com")
+    monkeypatch.setenv("GMAIL_APP_PASSWORD", "xxxx")
+    path = _write(tmp_path, {
+        "sources": [{"id": "g", "type": "gmail_imap",
+                     "username_env": "GMAIL_USERNAME"}],
+        "notify": {"email": {"username_env": "GMAIL_USERNAME"}},
+    })
+    assert self_check(path) == 0
+    out = capsys.readouterr().out
+    assert "harumi@gmail.com" in out
+    assert "通知メールの宛先: harumi@gmail.com" in out
 
 
 def test_check_detects_missing_password(tmp_path, capsys, monkeypatch):

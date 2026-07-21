@@ -10,10 +10,11 @@ db_path: data/listings.db
 notify:
   min_score: 8          # 新着を即時通知する最低スコア
   ruin_extra_score: 5   # 倒壊級の記載がある物件に上乗せする閾値
-  # メール通知(自分宛てGmail)。Gmail連携と同じアプリパスワードを使うので
-  # 追加登録は不要。下2行の井桁(#)を外して自分のアドレスに変えると有効化。
-  # email:
-  #   username: "your-address@gmail.com"
+  # メール通知(自分宛てGmail)。アドレスは環境変数 GMAIL_USERNAME、
+  # パスワードは環境変数 GMAIL_APP_PASSWORD から読む(公開リポジトリに
+  # 個人情報を書かないため。GitHub Actions では Secrets で渡す)。
+  email:
+    username_env: GMAIL_USERNAME
 
 # 指値候補リスト: 値下げを「待つ」のではなく「起こす」ための攻めのリスト
 offer_list:
@@ -87,14 +88,12 @@ sources:
       - "https://akiya.sumai.biz/kyushu-miyazaki-akiyabank"
 
   # ── Gmailメール解析(楽待・アットホーム・SUUMO等のポータルを規約違反なしにカバー) ──
-  # 使い方: READMEの「Gmail連携のセットアップ」参照。
-  # username を自分のGmailに変えて enabled: true にする。
-  # パスワードは環境変数 GMAIL_APP_PASSWORD (アプリパスワード。configに書かない)
+  # アドレスは環境変数 GMAIL_USERNAME、パスワードは GMAIL_APP_PASSWORD から読む。
   - id: gmail_portal_mail
     type: gmail_imap
-    enabled: false
-    username: "your-address@gmail.com"
-    folder: "bukken"        # 通知メールを振り分けるGmailラベル(半角英数推奨)
+    enabled: true
+    username_env: GMAIL_USERNAME
+    folder: "bukken"        # 通知メールを振り分けるGmailラベル
     lookback_days: 3        # 直近何日分のメールを読むか(差分検知が重複を吸収する)
 
   # ── ジモティー(個人間の格安・0円物件) ──

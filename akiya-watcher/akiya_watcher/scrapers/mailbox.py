@@ -164,7 +164,10 @@ class GmailImapScraper(BaseScraper):
         super().__init__(config)
         self.source_id = config.get("id", "gmail_imap")
         self.host = config.get("imap_host", "imap.gmail.com")
-        self.username = config["username"]
+        # アドレスは config 直書きか、環境変数 GMAIL_USERNAME (公開リポジトリでは
+        # 環境変数推奨 — メールアドレスをコードに残さない)
+        self.username = config.get("username") or os.environ.get(
+            config.get("username_env", "GMAIL_USERNAME"), "")
         self.password_env = config.get("password_env", "GMAIL_APP_PASSWORD")
         self.folder = config.get("folder", "bukken")
         self.lookback_days = config.get("lookback_days", 3)
@@ -173,6 +176,9 @@ class GmailImapScraper(BaseScraper):
                         else domains or DEFAULT_PORTAL_DOMAINS)
 
     def fetch_listings(self) -> list[Listing]:
+        if not self.username:
+            raise RuntimeError(
+                "Gmailアドレスが未設定 (環境変数 GMAIL_USERNAME を設定)")
         password = os.environ.get(self.password_env)
         if not password:
             raise RuntimeError(

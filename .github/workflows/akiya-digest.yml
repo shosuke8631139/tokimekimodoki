@@ -20,8 +20,16 @@ jobs:
           python-version: '3.12'
       - name: 依存インストール
         run: pip install -r akiya-watcher/requirements.txt
+      - name: 巡回データを復元
+        uses: actions/cache/restore@v4
+        with:
+          path: akiya-watcher/data
+          key: akiya-db-digest-${{ github.run_id }}
+          restore-keys: |
+            akiya-db-
       - name: ダイジェスト送信
         working-directory: akiya-watcher
         env:
+          GMAIL_USERNAME: ${{ secrets.GMAIL_USERNAME }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
         run: python -m akiya_watcher.main --config config.yaml --digest

@@ -54,7 +54,13 @@ class Notifier:
     def __init__(self, slack_webhook_url: str | None = None,
                  email: dict | None = None):
         self.webhook = slack_webhook_url or os.environ.get("SLACK_WEBHOOK_URL")
-        self.email = email if email and email.get("username") else None
+        self.email = None
+        if email is not None:
+            # アドレスは config 直書きか環境変数 GMAIL_USERNAME (公開リポジトリでは後者)
+            user = email.get("username") or os.environ.get(
+                email.get("username_env", "GMAIL_USERNAME"), "")
+            if user:
+                self.email = dict(email, username=user)
 
     def send(self, diff: Diff, score: Score) -> None:
         self.send_text(format_message(diff, score))

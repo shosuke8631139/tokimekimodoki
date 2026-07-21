@@ -168,10 +168,11 @@ def self_check(config_path: str) -> int:
     for s in enabled:
         if s.get("type") != "gmail_imap":
             continue
-        user = s.get("username", "")
+        user = s.get("username") or os.environ.get(
+            s.get("username_env", "GMAIL_USERNAME"), "")
         if not user or "your-address" in user:
-            bad(f"[{s.get('id')}] Gmailアドレスがまだ設定されていません "
-                "(config.yaml の username を自分のアドレスに)")
+            bad(f"[{s.get('id')}] Gmailアドレスが未設定です "
+                "(環境変数 GMAIL_USERNAME、または config.yaml の username)")
             continue
         good(f"[{s.get('id')}] Gmailアドレス: {user}")
         env = s.get("password_env", "GMAIL_APP_PASSWORD")
@@ -182,8 +183,12 @@ def self_check(config_path: str) -> int:
                 "windows/set_gmail_password.bat で設定できます)")
 
     email = config.get("notify", {}).get("email")
-    if email and email.get("username") and "your-address" not in email["username"]:
-        good(f"通知メールの宛先: {email['username']}")
+    email_user = ""
+    if email is not None:
+        email_user = email.get("username") or os.environ.get(
+            email.get("username_env", "GMAIL_USERNAME"), "")
+    if email_user and "your-address" not in email_user:
+        good(f"通知メールの宛先: {email_user}")
         if not os.environ.get(email.get("password_env", "GMAIL_APP_PASSWORD")):
             bad("通知メール用のアプリパスワードが未設定です")
     elif os.environ.get("SLACK_WEBHOOK_URL") or config.get("slack_webhook_url"):
