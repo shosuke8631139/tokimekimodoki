@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MacBookではじめる ChatGPT Codex 超入門</title>
+<style>
+  :root {
+    --bg: #f7f5f0;
+    --card: #ffffff;
+    --ink: #2b2b2b;
+    --accent: #0d8a6a;
+    --accent-light: #e2f3ee;
+    --warn-bg: #fff6e0;
+    --warn-border: #e6b84c;
+    --code-bg: #2d2d3a;
+    --code-ink: #e8e8f0;
+    --border: #e3ded4;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", Meiryo, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.9;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 24px 20px 80px; }
+  header {
+    background: linear-gradient(135deg, #0d8a6a, #0b6e8a);
+    color: #fff;
+    padding: 48px 20px 40px;
+    text-align: center;
+  }
+  header h1 { margin: 0 0 12px; font-size: 1.7rem; line-height: 1.5; }
+  header p { margin: 0; opacity: .92; font-size: .95rem; }
+  h2 {
+    font-size: 1.3rem;
+    border-left: 6px solid var(--accent);
+    padding-left: 12px;
+    margin: 56px 0 16px;
+  }
+  h3 { font-size: 1.05rem; margin: 28px 0 8px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 22px;
+    margin: 16px 0;
+  }
+  .step {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    margin: 18px 0;
+  }
+  .step .num {
+    flex: none;
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-weight: bold;
+    display: flex; align-items: center; justify-content: center;
+    margin-top: 4px;
+  }
+  .note {
+    background: var(--warn-bg);
+    border: 1px solid var(--warn-border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: .93rem;
+    margin: 16px 0;
+  }
+  .tip {
+    background: var(--accent-light);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: .93rem;
+    margin: 16px 0;
+  }
+  code {
+    background: #ece9e2;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-family: Menlo, Monaco, monospace;
+    font-size: .88em;
+  }
+  pre {
+    background: var(--code-bg);
+    color: var(--code-ink);
+    border-radius: 10px;
+    padding: 14px 18px;
+    overflow-x: auto;
+    font-size: .85rem;
+    line-height: 1.7;
+  }
+  pre code { background: none; padding: 0; color: inherit; }
+  table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+  th, td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--accent-light); }
+  .quote {
+    background: #f0eee8;
+    border-left: 4px solid #b8b2a4;
+    padding: 10px 16px;
+    border-radius: 0 8px 8px 0;
+    margin: 10px 0;
+    font-size: .93rem;
+  }
+  .toc { font-size: .95rem; }
+  .toc a { color: var(--accent); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  .badge {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 999px;
+    padding: 1px 12px;
+    font-size: .8rem;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+  .badge.gray { background: #8a8a8a; }
+  footer { text-align: center; font-size: .8rem; color: #888; padding: 24px; }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>💻 MacBookではじめる<br>ChatGPT Codex(コーデックス)超入門</h1>
+  <p>プログラミングをAIにお願いできる「Codex」を、チームのみんなで使うためのガイド</p>
+</header>
+
+<div class="wrap">
+
+  <div class="card toc">
+    <strong>📑 もくじ</strong>
+    <ol>
+      <li><a href="#what">Codexってなに?</a></li>
+      <li><a href="#prepare">準備するもの(3つだけ)</a></li>
+      <li><a href="#three-ways">使い方は3通り。どれを選べばいい?</a></li>
+      <li><a href="#web">方法① ChatGPTのWebで使う(いちばん簡単)</a></li>
+      <li><a href="#app">方法② Mac用Codexアプリで使う(おすすめ)</a></li>
+      <li><a href="#cli">方法③ ターミナルのCodex CLIで使う(慣れてる人向け)</a></li>
+      <li><a href="#prompt">最初のお願い(プロンプト)の例文集</a></li>
+      <li><a href="#tips">上手に使うコツ5か条</a></li>
+      <li><a href="#faq">よくあるつまずきQ&amp;A</a></li>
+    </ol>
+  </div>
+
+  <h2 id="what">1. Codexってなに?</h2>
+  <div class="card">
+    <p><strong>Codex(コーデックス)は、OpenAIが作った「プログラミングをやってくれるAIエージェント」</strong>です。ChatGPTが「文章で答えてくれるAI」だとすると、Codexは<strong>「実際に手を動かして、コードを書いたり直したりしてくれるAI」</strong>です。</p>
+    <p>たとえば、こんなことを日本語でお願いするだけでやってくれます。</p>
+    <ul>
+      <li>「このボタンの色を赤に変えて」→ コードを探して修正してくれる</li>
+      <li>「エラーが出てるから直して」→ 原因を調べて修正案を出してくれる</li>
+      <li>「◯◯なゲームを作って」→ ゼロからファイル一式を作ってくれる</li>
+    </ul>
+    <p>プログラミングの知識がなくても、<strong>日本語で「やってほしいこと」を書ければOK</strong>です。</p>
+  </div>
+
+  <h2 id="prepare">2. 準備するもの(3つだけ)</h2>
+  <div class="card">
+    <div class="step"><div class="num">1</div><div>
+      <strong>MacBook</strong><br>
+      特別なスペックは不要です。ブラウザ(Safari / Chrome)が動けばOK。
+    </div></div>
+    <div class="step"><div class="num">2</div><div>
+      <strong>ChatGPTの有料アカウント</strong><br>
+      Codexは <strong>ChatGPT Plus / Pro / Business / Edu / Enterprise</strong> のプランに含まれています。個人なら月20ドルの<strong>Plus</strong>でOK。無料プランでは使えないので注意。
+    </div></div>
+    <div class="step"><div class="num">3</div><div>
+      <strong>GitHubアカウント(あとからでもOK)</strong><br>
+      チームで同じプロジェクト(コードの置き場所)を触るなら必要です。Web版Codexは、GitHub上のプロジェクトに接続して作業します。まだ持っていない人は <a href="https://github.com/" target="_blank" rel="noopener">github.com</a> で無料で作れます。
+    </div></div>
+  </div>
+
+  <h2 id="three-ways">3. 使い方は3通り。どれを選べばいい?</h2>
+  <div class="card">
+    <table>
+      <tr><th>方法</th><th>向いている人</th><th>特徴</th></tr>
+      <tr>
+        <td><span class="badge">①</span><strong>ChatGPTのWeb</strong></td>
+        <td>まず試したい人・全員</td>
+        <td>インストール不要。ブラウザだけで完結。GitHubのプロジェクトに接続して、クラウド上で作業してくれる。</td>
+      </tr>
+      <tr>
+        <td><span class="badge">②</span><strong>Mac用アプリ</strong></td>
+        <td>日常的に使う人</td>
+        <td>MacBookに入れる専用アプリ。手元のフォルダのファイルを直接編集してくれる。いちばんバランスが良い。</td>
+      </tr>
+      <tr>
+        <td><span class="badge">③</span><strong>ターミナル(CLI)</strong></td>
+        <td>黒い画面に抵抗がない人</td>
+        <td>ターミナルからコマンドで操作。開発者向けで細かい制御ができる。</td>
+      </tr>
+    </table>
+    <div class="tip">💡 <strong>迷ったら:まず「① Web」で体験 → 気に入ったら「② Macアプリ」</strong>の順がおすすめです。③は普段からターミナルを使う人だけで大丈夫。</div>
+  </div>
+
+  <h2 id="web">4. 方法① ChatGPTのWebで使う(いちばん簡単)</h2>
+  <div class="card">
+    <div class="step"><div class="num">1</div><div>
+      ブラウザで <a href="https://chatgpt.com/codex" target="_blank" rel="noopener">chatgpt.com/codex</a> を開く。<br>
+      (ChatGPTの画面の左メニューにある「Codex」からも入れます)
+    </div></div>
+    <div class="step"><div class="num">2</div><div>
+      ChatGPTのアカウントで<strong>ログイン</strong>する。
+    </div></div>
+    <div class="step"><div class="num">3</div><div>
+      初回は「<strong>GitHubに接続(Connect to GitHub)</strong>」ボタンが出るので、画面の案内に従ってGitHubアカウントを連携し、<strong>触ってほしいリポジトリ(プロジェクト)を選ぶ</strong>。
+    </div></div>
+    <div class="step"><div class="num">4</div><div>
+      入力欄に、やってほしいことを<strong>日本語で書いて送信</strong>。<br>
+      <div class="quote">例:「README.md の誤字を直して」「トップページの背景色をもう少し明るくして」</div>
+    </div></div>
+    <div class="step"><div class="num">5</div><div>
+      Codexがクラウド上で作業を始めます(数分かかることも)。終わると<strong>変更内容(diff)</strong>が表示されるので、内容を確認して、よければ「<strong>PRを作成</strong>」ボタンでGitHubに反映を依頼します。
+    </div></div>
+    <div class="note">⚠️ Web版のCodexは「あなたのMacの中」ではなく「GitHub上のプロジェクト」に対して作業します。手元のファイルを直接触ってほしい場合は、方法②か③を使ってください。</div>
+  </div>
+
+  <h2 id="app">5. 方法② Mac用Codexアプリで使う(おすすめ)</h2>
+  <div class="card">
+    <div class="step"><div class="num">1</div><div>
+      <a href="https://openai.com/codex/" target="_blank" rel="noopener">openai.com/codex</a> から <strong>macOS用のアプリ(.dmg)をダウンロード</strong>する。<br>
+      <span style="font-size:.88em;">Apple Silicon(M1以降)/ Intel どちらのMacBookにも対応。macOS 13(Ventura)以降推奨。</span>
+    </div></div>
+    <div class="step"><div class="num">2</div><div>
+      ダウンロードした <code>.dmg</code> をダブルクリックして開き、<strong>Codexアイコンを「アプリケーション」フォルダにドラッグ</strong>する。
+    </div></div>
+    <div class="step"><div class="num">3</div><div>
+      アプリケーションフォルダからCodexを起動。初回は「開いてもよろしいですか?」と聞かれるので「開く」を選択。
+    </div></div>
+    <div class="step"><div class="num">4</div><div>
+      「<strong>Sign in with ChatGPT</strong>」を選び、ブラウザが開いたらChatGPTアカウントでログイン。
+    </div></div>
+    <div class="step"><div class="num">5</div><div>
+      <strong>作業したいフォルダ(プロジェクト)を選ぶ</strong>。あとは入力欄に日本語でお願いを書くだけ。手元のファイルを直接編集してくれます。
+    </div></div>
+    <div class="tip">💡 アプリ版は、変更する前に「こう変えていい?」と確認してくれるモードがあります。慣れるまでは<strong>確認ありのモード</strong>のままにしておくのが安心です。</div>
+  </div>
+
+  <h2 id="cli">6. 方法③ ターミナルのCodex CLIで使う(慣れてる人向け)</h2>
+  <div class="card">
+    <p>ターミナル(黒い画面)を普段から使う人向けです。使わない人はこの章はスキップでOK。</p>
+    <h3>インストール(どちらか1つでOK)</h3>
+    <pre><code># Homebrewを使う場合
+brew install --cask codex
+
+# npm(Node.js)を使う場合
+npm install -g @openai/codex</code></pre>
+    <h3>初回セットアップ</h3>
+    <pre><code># 作業したいプロジェクトのフォルダに移動して
+cd ~/path/to/your-project
+
+# Codexを起動
+codex</code></pre>
+    <p>初回起動時に「<strong>Sign in with ChatGPT</strong>」を選ぶとブラウザが開くので、ChatGPTアカウントでログインすれば準備完了。あとは対話画面で日本語でお願いするだけです。</p>
+    <div class="note">⚠️ APIキーでのログインも選べますが、その場合は<strong>ChatGPTのプランとは別にAPI利用料が課金</strong>されます。チームで使うなら「Sign in with ChatGPT」を選びましょう。</div>
+  </div>
+
+  <h2 id="prompt">7. 最初のお願い(プロンプト)の例文集</h2>
+  <div class="card">
+    <p>コピペして使えるお願いの例です。<strong>「何を」「どうしたいか」を具体的に</strong>書くのがコツ。</p>
+    <h3>🔰 まず試すのにちょうどいいお願い</h3>
+    <div class="quote">このプロジェクトがどんな構成になっているか、初心者向けに説明して</div>
+    <div class="quote">README.md を読んで、誤字脱字があったら直して</div>
+    <h3>🎨 見た目を変えたいとき</h3>
+    <div class="quote">トップページの見出しの文字をもう少し大きくして、色を紺色にして</div>
+    <div class="quote">スマホで見たときにボタンがはみ出すので、直して</div>
+    <h3>🛠 機能を足したいとき</h3>
+    <div class="quote">ゲームにBGMのオン/オフボタンを追加して。デフォルトはオフで</div>
+    <div class="quote">フォームに「メールアドレスの形式チェック」を追加して</div>
+    <h3>🐛 エラーで困ったとき</h3>
+    <div class="quote">ページを開くとコンソールに「Uncaught TypeError: ...」と出る。原因を調べて直して</div>
+  </div>
+
+  <h2 id="tips">8. 上手に使うコツ5か条</h2>
+  <div class="card">
+    <ol>
+      <li><strong>1回のお願いは1つに絞る。</strong>「AもBもCも」と欲張ると精度が落ちます。1つ終わってから次をお願いする。</li>
+      <li><strong>具体的に書く。</strong>「いい感じにして」より「見出しを16pxから20pxにして」の方が正確に伝わります。</li>
+      <li><strong>変更内容は必ず自分の目で確認。</strong>Codexが出してきた変更(diff)をざっと眺めて、意図と違ったら「ここはこうして」と追加でお願いする。</li>
+      <li><strong>壊れても戻せるようにしておく。</strong>Gitで管理しているプロジェクトなら安心。大事なファイルはお願いする前にコピーを取っておくのも◎。</li>
+      <li><strong>エラーメッセージはそのまま貼る。</strong>要約せずに全文コピペした方が、Codexは原因を見つけやすいです。</li>
+    </ol>
+  </div>
+
+  <h2 id="faq">9. よくあるつまずきQ&amp;A</h2>
+  <div class="card">
+    <h3>Q. 「Codex」がChatGPTのメニューに出てこない</h3>
+    <p>A. 無料プランでは使えません。Plus以上のプランになっているか確認してください。プラン変更直後は、いったんログアウト→ログインし直すと出ることがあります。</p>
+    <h3>Q. Macアプリを開こうとしたら「開発元を検証できません」と出た</h3>
+    <p>A. 公式サイト(openai.com/codex)からダウンロードしたものであれば、「システム設定 → プライバシーとセキュリティ」の下の方にある「このまま開く」で起動できます。それ以外の場所から入手したファイルは開かないでください。</p>
+    <h3>Q. 英語で返事が来てしまう</h3>
+    <p>A. 「日本語で答えて」と一言添えればOK。以後そのセッションでは日本語で返してくれます。</p>
+    <h3>Q. 作業が終わったのに、ファイルが変わっていない(Web版)</h3>
+    <p>A. Web版は変更を「PR(プルリクエスト)」という形でGitHubに提案するところまでが仕事です。GitHub上でPRを確認して<strong>マージ(取り込み)</strong>すると反映されます。</p>
+    <h3>Q. 料金が心配…</h3>
+    <p>A. 「Sign in with ChatGPT」でログインしていれば、<strong>ChatGPTの月額料金の範囲内</strong>で使えます(プランごとに利用量の上限あり)。APIキーでログインした場合だけ従量課金になるので、そこだけ注意。</p>
+    <h3>Q. 会社の機密コードを扱っても大丈夫?</h3>
+    <p>A. チームで業務利用するなら、データがAIの学習に使われない設定になっている<strong>Business / Enterpriseプラン</strong>の利用を検討してください。個人プランで扱う場合は、設定でデータ管理(学習への利用オフ)を確認しましょう。</p>
+  </div>
+
+  <div class="tip" style="margin-top:48px;">
+    🎉 <strong>まとめ:</strong> ①ChatGPT Plus以上のアカウントを用意 → ②まずはWeb版(chatgpt.com/codex)で体験 → ③気に入ったらMacアプリを入れる。お願いは「具体的に・1つずつ・日本語で」。これだけ覚えれば今日から使えます!
+  </div>
+
+</div>
+
+<footer>
+  このページは社内向けチュートリアルです。最新の仕様は <a href="https://openai.com/codex/" target="_blank" rel="noopener">OpenAI公式サイト</a> を確認してください。(最終更新: 2026年7月)
+</footer>
+
+</body>
+</html>

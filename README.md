@@ -7,6 +7,11 @@
 | ときめきモドキ | `index.html`(ルート) | ギャグ恋愛シミュレーション |
 | モドキクエストII | `rpg/index.html` | ドット絵コマンドRPG |
 
+## 📖 チーム向けドキュメント
+
+- **[MacBookではじめる ChatGPT Codex 超入門](codex-tutorial/index.html)** (`codex-tutorial/index.html`)
+  — ChatGPTのCodex(コーデックス)をMacBookで使うためのチュートリアル。ブラウザで開くだけで読めます。
+
 ---
 
 # モドキクエストII 〜ふっかつのじゅもんはいらない〜
