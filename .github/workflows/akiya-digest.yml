@@ -3,7 +3,8 @@ name: akiya-digest
 
 on:
   schedule:
-    - cron: '0 23 * * 6'   # 土曜23時UTC = 日曜8時JST
+    # 0分ちょうどの混雑を避けて23分に。土曜23:23 UTC = 日曜 8:23 JST
+    - cron: '23 23 * * 6'
   workflow_dispatch: {}
 
 concurrency:
