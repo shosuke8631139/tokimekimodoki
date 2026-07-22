@@ -10,6 +10,9 @@ db_path: data/listings.db
 notify:
   min_score: 8          # 新着を即時通知する最低スコア
   ruin_extra_score: 5   # 倒壊級の記載がある物件に上乗せする閾値
+  # 生存報告: 通知ゼロの日も1日1回だけ「動いています+いま熱い物件上位」を送る
+  # (2026-07 ユーザー要望。falseにすると完全な「何もない日は何も来ない」に戻る)
+  heartbeat: true
   # メール通知(自分宛てGmail)。アドレスは環境変数 GMAIL_USERNAME、
   # パスワードは環境変数 GMAIL_APP_PASSWORD から読む(公開リポジトリに
   # 個人情報を書かないため。GitHub Actions では Secrets で渡す)。

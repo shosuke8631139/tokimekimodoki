@@ -44,6 +44,10 @@ CREATE TABLE IF NOT EXISTS deal_log (
     note      TEXT,
     at        INTEGER NOT NULL
 );
+CREATE TABLE IF NOT EXISTS meta (
+    key   TEXT PRIMARY KEY,
+    value TEXT
+);
 """
 
 # 商談ステータス (番号は deals CLI の選択肢)
@@ -79,6 +83,20 @@ class Store:
 
     def close(self) -> None:
         self.conn.close()
+
+    # ------------------------------------------------------------ メタ情報
+    # 「最後にメールを送った日」など、物件以外のちょっとした記録に使う。
+
+    def get_meta(self, key: str, default: str | None = None) -> str | None:
+        row = self.conn.execute(
+            "SELECT value FROM meta WHERE key = ?", (key,)).fetchone()
+        return row[0] if row else default
+
+    def set_meta(self, key: str, value: str) -> None:
+        self.conn.execute(
+            "INSERT INTO meta (key, value) VALUES (?, ?) "
+            "ON CONFLICT(key) DO UPDATE SET value = excluded.value", (key, value))
+        self.conn.commit()
 
     def upsert(self, ls: Listing) -> Diff:
         """物件を記録し、履歴コンテキストつきの差分を返す。"""

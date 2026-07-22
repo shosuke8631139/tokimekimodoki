@@ -177,6 +177,34 @@ def build_digest(items: list[tuple[Diff, Score]], offer_min_age_days: int,
     return "\n".join(lines)
 
 
+def build_heartbeat(items: list[tuple[Diff, Score]], top_n: int = 5) -> str:
+    """生存報告: 何もない日に1日1回だけ送る「動いています+今の注目上位」。"""
+    ranked = sorted(items, key=lambda x: x[1].total, reverse=True)
+    lines = ["✅ 巡回は動いています — 今回は通知に値する動きなし", ""]
+    if ranked:
+        lines.append(f"監視中 {len(items)}件。いま熱い物件 上位{min(top_n, len(ranked))}件:")
+        for d, s in ranked[:top_n]:
+            price = (f"{d.listing.price_yen:,}円" if d.listing.price_yen is not None
+                     else "価格応談")
+            badges = " ".join(s.badges) or "情報少・要確認"
+            lines.append(f"・{s.out_of_ten}/10点 {d.listing.title} {price}")
+            lines.append(f"  [{badges}]")
+            lines.append(f"  {d.listing.url}")
+    else:
+        lines.append("監視中の物件が0件です (情報源の取得失敗が続く場合は要確認)。")
+    lines.append("")
+    lines.append("※ この報せは「何もない日」に1日1回だけ。値下げ・高スコア新着・")
+    lines.append("   キープ物件の変化があれば、この報せとは別にすぐ鳴ります。")
+    return "\n".join(lines)
+
+
+def jst_today() -> str:
+    """日本時間での今日の日付 (YYYY-MM-DD)。生存報告の1日1回判定に使う。"""
+    import datetime
+    jst = datetime.timezone(datetime.timedelta(hours=9))
+    return datetime.datetime.now(jst).date().isoformat()
+
+
 def self_check(config_path: str) -> int:
     """設定の健康診断。何が出来ていて何が足りないかを日本語で報告する。"""
     import os
@@ -275,6 +303,10 @@ def run(config_path: str, dry_run: bool = False, report_path: str | None = None,
                                             kanpo_enabled=kanpo_on),
                                attachment=report_path)
             notified = 1
+            # ダイジェスト自体がメールなので、同日の生存報告は不要と記録する
+            meta_store = Store(config.get("db_path", "data/listings.db"))
+            meta_store.set_meta("last_mail_date", jst_today())
+            meta_store.close()
     else:
         # 通常巡回: 通知ゲートを通った物件だけ即時通知 (沈黙デフォルト)
         for diff, score in items:
@@ -299,6 +331,20 @@ def run(config_path: str, dry_run: bool = False, report_path: str | None = None,
                     f"⭐ キープ物件が掲載終了(売れた可能性)\n"
                     f"物件名: {info['title']}\n価格: {price}\nURL: {info['url']}")
                 notified += 1
+
+        # 生存報告: 何も知らせなかった日も、1日1回だけ「動いています+注目上位」を
+        # 送る (2026-07 ユーザー要望)。送った日は meta に記録し、同日の以降の
+        # 巡回では沈黙する。通知が出た日は生存報告は不要なので日付だけ記録する。
+        if not dry_run and notify_cfg.get("heartbeat", True):
+            meta_store = Store(config.get("db_path", "data/listings.db"))
+            today = jst_today()
+            if notified > 0:
+                meta_store.set_meta("last_mail_date", today)
+            elif meta_store.get_meta("last_mail_date") != today:
+                notifier.send_text(build_heartbeat(items))
+                meta_store.set_meta("last_mail_date", today)
+                print("[info] 生存報告を送信 (本日初回・通知なしのため)")
+            meta_store.close()
 
     # 通知が出た巡回では、レポート本体もメール添付で届ける
     # (スマホのGmailから添付を開けばブラウザで見られる)
