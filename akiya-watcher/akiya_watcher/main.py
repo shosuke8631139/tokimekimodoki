@@ -341,7 +341,9 @@ def run(config_path: str, dry_run: bool = False, report_path: str | None = None,
             if notified > 0:
                 meta_store.set_meta("last_mail_date", today)
             elif meta_store.get_meta("last_mail_date") != today:
-                notifier.send_text(build_heartbeat(items))
+                # 届く実績のあるダイジェストと同じ構成(レポート添付つき)で送る
+                # (2026-07 生存報告だけ届かない事象の対策。迷惑メール判定回避)
+                notifier.send_text(build_heartbeat(items), attachment=report_path)
                 meta_store.set_meta("last_mail_date", today)
                 print("[info] 生存報告を送信 (本日初回・通知なしのため)")
             meta_store.close()

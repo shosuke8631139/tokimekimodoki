@@ -146,4 +146,10 @@ class Notifier:
         with smtplib.SMTP_SSL(host, self.email.get("smtp_port", 465),
                               timeout=20) as smtp:
             smtp.login(self.email["username"], password)
-            smtp.send_message(msg)
+            refused = smtp.send_message(msg)
+        # 追跡用の記録 (アドレスは公開ログに出さない)
+        att = "添付あり" if attachment else "添付なし"
+        if refused:
+            print(f"[warn] メール一部拒否: {len(refused)}宛先 件名={msg['Subject']}")
+        else:
+            print(f"[info] メール送信完了: 件名={msg['Subject']} ({att})")
