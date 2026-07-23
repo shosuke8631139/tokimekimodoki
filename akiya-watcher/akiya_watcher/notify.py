@@ -75,6 +75,12 @@ class Notifier:
                 email.get("username_env", "GMAIL_USERNAME"), "")
             if user:
                 self.email = dict(email, username=user)
+                # 宛先を送信元と別のアドレスにしたい場合 (例: 収集用Gmailで送り、
+                # 普段見るアドレスで受ける)。Secrets の NOTIFY_TO で指定する。
+                to = email.get("to") or os.environ.get(
+                    email.get("to_env", "NOTIFY_TO"), "")
+                if to:
+                    self.email["to"] = to
 
     def send(self, diff: Diff, score: Score) -> None:
         self.send_text(format_message(diff, score))

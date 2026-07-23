@@ -42,3 +42,17 @@ def test_mail_has_html_alternative_with_clickable_links():
     content = html_part.get_content()
     assert '<a href="https://example.com/bukken/1?a=1&amp;b=2">' in content
     assert "<br>" in content
+
+def test_宛先はNOTIFY_TOで上書きできる(monkeypatch):
+    # 収集用Gmailから送り、普段見るアドレスで受けるための仕組み
+    monkeypatch.setenv("NOTIFY_TO", "main-mailbox@example.com")
+    n = Notifier(email={"username": "bot@gmail.com"})
+    msg = n._build_mail("本文")
+    assert msg["To"] == "main-mailbox@example.com"
+    assert msg["From"] == "bot@gmail.com"
+
+
+def test_NOTIFY_TO未設定なら自分宛て(monkeypatch):
+    monkeypatch.delenv("NOTIFY_TO", raising=False)
+    n = Notifier(email={"username": "bot@gmail.com"})
+    assert n._build_mail("本文")["To"] == "bot@gmail.com"

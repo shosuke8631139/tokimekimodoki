@@ -33,4 +33,6 @@ jobs:
         env:
           GMAIL_USERNAME: ${{ secrets.GMAIL_USERNAME }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          # 通知の宛先を送信元と別にしたい場合のみ設定 (未設定なら自分宛て)
+          NOTIFY_TO: ${{ secrets.NOTIFY_TO }}
         run: python -m akiya_watcher.main --config config.yaml --digest --report data/report.html
