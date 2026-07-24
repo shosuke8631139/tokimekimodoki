@@ -66,9 +66,13 @@
     font-weight: 700;
   }
   .subtitle { color: var(--muted); font-size: 14.5px; margin: 0; }
+  .greeting {
+    background: var(--paper); border: 1px solid var(--line); border-radius: 10px;
+    padding: 16px 18px; font-size: 15px; margin: 18px 0 0;
+  }
   .draft-band {
     background: var(--amber-soft); border: 1.5px solid var(--amber); color: var(--ink);
-    border-radius: 8px; padding: 12px 16px; font-size: 14px; margin: 18px 0 0;
+    border-radius: 8px; padding: 12px 16px; font-size: 14px; margin: 14px 0 0;
   }
   .draft-band strong { color: var(--amber); }
   section.chapter {
@@ -80,8 +84,8 @@
   }
   .h2-sub { font-size: 13.5px; color: var(--muted); margin: 0 0 16px; }
   .bigline {
-    font-size: 18px; font-weight: 700; background: var(--indigo-soft);
-    border-radius: 8px; padding: 12px 16px; margin: 0 0 16px;
+    font-size: 17px; font-weight: 700; background: var(--indigo-soft);
+    border-radius: 8px; padding: 12px 16px; margin: 0 0 16px; line-height: 1.8;
   }
   ul.plain { padding-left: 1.3em; margin: 8px 0; }
   ul.plain li { margin-bottom: 6px; }
@@ -129,20 +133,27 @@
 <header class="hero">
   <div class="eyebrow">DIY・ペットOK 古い戸建て賃貸</div>
   <h1>この家のルールブック<br>(たたき台・下書き)</h1>
-  <p class="subtitle">むずかしい言葉なし。○△×だけ覚えれば大丈夫。</p>
+  <p class="subtitle">むずかしい言葉は使っていません。○△×の3つだけ覚えていただければ大丈夫です。</p>
+  <div class="greeting">
+    この家に興味を持っていただき、ありがとうございます。<br>
+    正直に言うと、古い家です。でもそのぶん、ペットと暮らしたり、
+    自分好みに作り変えたりする自由があります。<br>
+    あとで「聞いてなかった」と悲しい思いをしてほしくないので、
+    大事なことを先に、ぜんぶ書いておきますね。
+  </div>
   <div class="draft-band">
-    <strong>これは下書きです。</strong>まだ契約書ではありません。<br>
-    金額などの<span class="fill">【 】</span>は、これから決める場所です。最後に専門家のチェックを受けてから使います。
+    <strong>これは下書き(たたき台)です。</strong>まだ契約書ではありません。<br>
+    <span class="fill">【 】</span>の部分は、これから決めていくところです。最後に専門家のチェックを受けてから正式版になります。
   </div>
 </header>
 
 <!-- 0 -->
 <section class="chapter">
   <h2>0. この家は、こんな家です</h2>
-  <p class="h2-sub">最初に、いちばん大事なこと</p>
-  <div class="bigline">古い家です。新品ではありません。<br>そのかわり、安い・ペットOK・改造OK。</div>
+  <p class="h2-sub">最初に、いちばん大事なことをお伝えします</p>
+  <div class="bigline">古い家です。新品ではありません。<br>そのかわり、家賃を安くして、ペットもDIYも楽しめる家にしました。</div>
   <div class="rule-block rule-ok">
-    <div class="rule-head"><span class="mark mark-ok">✓</span>直してあるもの(安全に関わるところ)</div>
+    <div class="rule-head"><span class="mark mark-ok">✓</span>直してあるところ(ご安心ください)</div>
     <ul>
       <li>雨漏り → 直してあります</li>
       <li>お湯 → 出ます</li>
@@ -150,27 +161,27 @@
     </ul>
   </div>
   <div class="rule-block rule-ng">
-    <div class="rule-head"><span class="mark mark-ng">!</span>直していないもの(そのまま貸します)</div>
+    <div class="rule-head"><span class="mark mark-ng">!</span>直していないところ(そのままでお貸しします)</div>
     <ul>
-      <li>網戸 → 破れています</li>
-      <li>畳・襖(ふすま) → 古いです</li>
-      <li>壁・床の汚れやキズ → あります</li>
+      <li>網戸 → 破れたままです</li>
+      <li>畳・襖(ふすま) → 古いままです</li>
+      <li>壁や床の汚れ・キズ → あります</li>
     </ul>
-    <p class="why">→ ここは「直して」と言われても直しません。そのかわり、自由にDIYしてOKです。</p>
+    <p class="why">→ 申し訳ないのですが、ここは「直してほしい」と言われても直さない前提でお貸しします。そのぶん家賃を抑えていますので、ご自由に手を入れて楽しんでいただけたら嬉しいです。</p>
   </div>
 </section>
 
 <!-- 1 -->
 <section class="chapter">
   <h2>1. DIY(改造)のルール</h2>
-  <p class="h2-sub">覚えるのは3つだけ。「○そのままOK」「△先に相談」「×ダメ」</p>
+  <p class="h2-sub">覚えていただくのは3つだけ。「○ご自由に」「△先にご相談」「×お受けできません」</p>
 
   <div class="rule-block rule-ok">
-    <div class="rule-head"><span class="mark mark-ok">○</span>そのままやってOK(連絡いらない)</div>
+    <div class="rule-head"><span class="mark mark-ok">○</span>ご自由にどうぞ(連絡はいりません)</div>
     <ul>
       <li>壁紙を貼る・はがす</li>
       <li>ペンキを塗る</li>
-      <li>棚や家具を置く(置くだけ)</li>
+      <li>棚や家具を置く(置くだけのもの)</li>
       <li>畳の上にマットやフローリング材を敷く</li>
       <li>襖・障子を張り替える</li>
       <li>網戸を張り替える</li>
@@ -179,7 +190,7 @@
   </div>
 
   <div class="rule-block rule-ask">
-    <div class="rule-head"><span class="mark mark-ask">△</span>やる前に、まず連絡(相談すればOKが多い)</div>
+    <div class="rule-head"><span class="mark mark-ask">△</span>やる前に、ひとことご相談ください</div>
     <ul>
       <li>床を貼り替える・はがす</li>
       <li>壁に大きな棚をガッチリ固定する</li>
@@ -187,115 +198,115 @@
       <li>キッチンやお風呂まわりを変える</li>
       <li>庭に物置・ウッドデッキを作る</li>
     </ul>
-    <p class="why">→ ダメと言いたいわけではなく、家が壊れないか一緒に確認したいだけです。</p>
+    <p class="why">→ 反対したいわけではありません。家がいたまないか、一緒に確認させてほしいだけです。ほとんどの場合OKになりますので、お気軽にご相談ください。</p>
   </div>
 
   <div class="rule-block rule-ng">
-    <div class="rule-head"><span class="mark mark-ng">×</span>絶対にダメ(相談してもダメ)</div>
+    <div class="rule-head"><span class="mark mark-ng">×</span>ここだけは、お受けできません</div>
     <ul>
       <li>柱・梁(はり)を切る・けずる</li>
-      <li>電気の配線をいじる(<strong>火事のもと。資格がいる工事です</strong>)</li>
-      <li>ガス・水道の配管をいじる(資格がいる工事です)</li>
+      <li>電気の配線をいじる(<strong>火事のもとになります。資格が必要な工事です</strong>)</li>
+      <li>ガス・水道の配管をいじる(こちらも資格が必要な工事です)</li>
       <li>屋根・外壁の工事</li>
       <li>建物を増築する</li>
     </ul>
-    <p class="why">→ 法律で資格が必要な工事と、家が倒れる危険がある工事です。ここだけは守ってください。</p>
+    <p class="why">→ 法律で資格が必要な工事と、家の安全そのものに関わる工事です。あなたとご家族の安全のためでもあるので、ここだけはどうか守ってください。</p>
   </div>
 </section>
 
 <!-- 2 -->
 <section class="chapter">
   <h2>2. ペットのルール</h2>
-  <p class="h2-sub">ペット、大歓迎です。守ってほしいのは「ご近所」だけ。</p>
+  <p class="h2-sub">ペットは大歓迎です。お願いしたいのは「ご近所への気づかい」だけです。</p>
 
   <div class="rule-block rule-ok">
-    <div class="rule-head"><span class="mark mark-ok">○</span>OK</div>
+    <div class="rule-head"><span class="mark mark-ok">○</span>どうぞどうぞ</div>
     <ul>
-      <li>犬・猫 あわせて <span class="fill">【 】</span>匹まで</li>
-      <li>猫が襖や柱をひっかく → <strong>想定内です。お金は請求しません</strong></li>
-      <li>室内の抜け毛・多少のにおい → 想定内です</li>
+      <li>犬・猫 あわせて <span class="fill">【 】</span>匹まで飼っていただけます</li>
+      <li>猫ちゃんが襖や柱をひっかいてしまっても → <strong>想定内です。修理代はいただきません</strong></li>
+      <li>お部屋の抜け毛や多少のにおいも → 想定内です</li>
     </ul>
   </div>
 
   <div class="rule-block rule-ask">
-    <div class="rule-head"><span class="mark mark-ask">△</span>先に相談</div>
+    <div class="rule-head"><span class="mark mark-ask">△</span>先にご相談ください</div>
     <ul>
-      <li><span class="fill">【 】</span>匹より多く飼いたい</li>
-      <li>大型犬を飼いたい</li>
-      <li>犬・猫以外の動物を飼いたい</li>
+      <li><span class="fill">【 】</span>匹より多く飼いたいとき</li>
+      <li>大型犬を飼いたいとき</li>
+      <li>犬・猫以外の動物を飼いたいとき</li>
     </ul>
   </div>
 
   <div class="rule-block rule-ng">
-    <div class="rule-head"><span class="mark mark-ng">×</span>ダメ</div>
+    <div class="rule-head"><span class="mark mark-ng">×</span>これだけは、お願いします</div>
     <ul>
-      <li>放し飼い・脱走の放置</li>
-      <li>フン・尿の放置(家の中も庭も)</li>
-      <li>鳴き声やにおいでご近所から苦情が来ているのに、何もしない</li>
-      <li>相談なしにどんどん数を増やす</li>
+      <li>放し飼いや、脱走したままにしておくこと</li>
+      <li>フン・尿の放置(お家の中も、お庭も)</li>
+      <li>鳴き声やにおいでご近所から苦情が来ているのに、そのままにすること</li>
+      <li>ご相談なしに、どんどん数を増やすこと</li>
     </ul>
-    <p class="why">→ ご近所トラブルを放置すると、契約を続けられなくなります。ここが一番大事です。</p>
+    <p class="why">→ ご近所とのトラブルだけは、放っておくと契約を続けられなくなってしまいます。何かあったら一人で抱えず、私にも教えてください。一緒に対応します。</p>
   </div>
 </section>
 
 <!-- 3 -->
 <section class="chapter">
-  <h2>3. 壊れたとき、誰が直す?</h2>
-  <p class="h2-sub">ルールはひとつだけ。<strong>「勝手に判断しないで、まず連絡」</strong></p>
+  <h2>3. 何かが壊れたら、どうする?</h2>
+  <p class="h2-sub">ルールはひとつだけです。<strong>「自分で判断せず、まずご連絡ください」</strong></p>
   <div class="table-scroll">
   <table>
-    <tr><th>何が起きた?</th><th>直すのは</th><th>あなたがすること</th></tr>
+    <tr><th>何が起きた?</th><th>直すのは</th><th>お願いしたいこと</th></tr>
     <tr>
       <td>雨漏りしてきた/お湯が出ない/電気がつかない</td>
       <td class="who-owner">大家</td>
-      <td>すぐ連絡</td>
+      <td>すぐご連絡ください</td>
     </tr>
     <tr>
       <td>最初から壊れていたもの(網戸・畳など)</td>
       <td class="who-none">直しません</td>
-      <td>自由にDIYしてOK</td>
+      <td>ご自由にDIYしていただいてOKです</td>
     </tr>
     <tr>
-      <td>自分やペットが壊した</td>
-      <td class="who-tenant">入居者</td>
-      <td>連絡だけください</td>
+      <td>ご自分やペットが壊してしまった</td>
+      <td class="who-tenant">入居者さん</td>
+      <td>ご連絡だけお願いします</td>
     </tr>
     <tr>
-      <td>DIYに失敗して壊した</td>
-      <td class="who-tenant">入居者</td>
-      <td>連絡だけください</td>
+      <td>DIYに失敗して壊してしまった</td>
+      <td class="who-tenant">入居者さん</td>
+      <td>ご連絡だけお願いします</td>
     </tr>
   </table>
   </div>
-  <div class="bigline">⚠ 黙っていて被害が広がったら、その分は入居者の負担になることがあります。<br>連絡は早いほど、あなたが得します。</div>
+  <div class="bigline">壊しても怒りません。でも、黙っていて被害が広がると、その分のご負担をお願いすることになってしまいます。<br>早めのご連絡が、あなた自身を守ります。</div>
 </section>
 
 <!-- 4 -->
 <section class="chapter">
   <h2>4. 庭・外まわりのルール</h2>
-  <p class="h2-sub">庭も自由に使ってOK。ただし「荒れ放題」だけはNG。</p>
+  <p class="h2-sub">お庭も自由に楽しんでください。お願いしたいのは「荒れ放題にしないこと」だけです。</p>
   <div class="rule-block rule-ok">
-    <div class="rule-head"><span class="mark mark-ok">○</span>OK</div>
+    <div class="rule-head"><span class="mark mark-ok">○</span>ご自由にどうぞ</div>
     <ul>
       <li>家庭菜園・花壇・プランター</li>
-      <li>ガーデニング・芝生</li>
-      <li>ペットを庭で遊ばせる(脱走対策はしてね)</li>
+      <li>ガーデニング・芝生づくり</li>
+      <li>ペットをお庭で遊ばせる(脱走対策だけお願いします)</li>
     </ul>
   </div>
   <div class="rule-block rule-ask">
-    <div class="rule-head"><span class="mark mark-ask">△</span>先に相談</div>
+    <div class="rule-head"><span class="mark mark-ask">△</span>先にご相談ください</div>
     <ul>
-      <li>物置・ウッドデッキ・柵を作る</li>
-      <li>大きな木を切る・植える</li>
+      <li>物置・ウッドデッキ・柵を作りたいとき</li>
+      <li>大きな木を切りたい・植えたいとき</li>
     </ul>
   </div>
   <div class="rule-block rule-ng">
-    <div class="rule-head"><span class="mark mark-ng">×</span>ダメ</div>
+    <div class="rule-head"><span class="mark mark-ng">×</span>これはご遠慮ください</div>
     <ul>
-      <li>ゴミをためる・ゴミ置き場にする</li>
-      <li>動かない車を置きっぱなしにする</li>
-      <li>資材や廃品の置き場にする</li>
-      <li>草がボーボーのまま放置(年に数回は草刈りを)</li>
+      <li>ゴミをためること・ゴミ置き場にすること</li>
+      <li>動かない車を置きっぱなしにすること</li>
+      <li>資材や廃品の置き場にすること</li>
+      <li>草が伸び放題のままにすること(年に数回、草刈りをお願いします)</li>
     </ul>
   </div>
 </section>
@@ -303,65 +314,66 @@
 <!-- 5 -->
 <section class="chapter">
   <h2>5. ご近所とのおつきあい</h2>
-  <p class="h2-sub">この家に住み続けられるかは、実はここで決まります。</p>
+  <p class="h2-sub">この家で長く楽しく暮らせるかどうかは、実はここで決まります。</p>
   <ul class="plain">
-    <li>ゴミ出しの日とルールを守る</li>
-    <li>夜中の大きな音(DIYの工具・音楽)は出さない</li>
-    <li>ペットの鳴き声・においに気をつける</li>
-    <li>苦情が来たら、無視しないで大家にも教えてください。<strong>一緒に対応します</strong></li>
+    <li>ゴミ出しの日とルールを守っていただけると助かります</li>
+    <li>夜おそくの大きな音(DIYの工具・音楽など)はご遠慮ください</li>
+    <li>ペットの鳴き声・においには、少しだけ気を配ってあげてください</li>
+    <li>もし苦情が来てしまったら、一人で悩まず私にも教えてください。<strong>一緒に対応します</strong></li>
   </ul>
-  <div class="bigline">⚠ ご近所トラブルをずっと放置した場合は、契約を終わりにすることがあります。</div>
+  <div class="bigline">ご近所とのトラブルが続いて、どうしても改善されない場合は、残念ですが契約を終わりにさせていただくことがあります。そうならないよう、一緒に気をつけていきましょう。</div>
 </section>
 
 <!-- 6 -->
 <section class="chapter">
-  <h2>6. 出ていくとき(退去)のルール</h2>
-  <p class="h2-sub">ふつうの賃貸と大きく違うところです。いい意味で。</p>
+  <h2>6. 引っ越して出ていくとき(退去)のルール</h2>
+  <p class="h2-sub">ふつうの賃貸と大きく違うところです。いい意味で、です。</p>
   <div class="rule-block rule-ok">
-    <div class="rule-head"><span class="mark mark-ok">○</span>ラクなところ</div>
+    <div class="rule-head"><span class="mark mark-ok">○</span>ラクなところ(ふつうの賃貸より、ずっと身軽です)</div>
     <ul>
-      <li>DIYした壁・床・棚 → <strong>元に戻さなくてOK。そのまま置いていってOK</strong></li>
-      <li>畳・襖・柱のペットのキズ → 請求しません</li>
+      <li>DIYした壁・床・棚 → <strong>元に戻さなくて大丈夫です。そのまま置いていってOK</strong></li>
+      <li>畳・襖・柱についたペットのキズ → 修理代はいただきません</li>
     </ul>
   </div>
   <div class="rule-block rule-ng">
-    <div class="rule-head"><span class="mark mark-ng">×</span>守ってほしいところ</div>
+    <div class="rule-head"><span class="mark mark-ng">×</span>お願いしたいところ</div>
     <ul>
-      <li>自分の荷物・家具・ゴミは全部持って帰る(置いていくのはNG)</li>
-      <li>大家が「これは危ない」と言った物(グラグラの棚など)は、外してから出る</li>
-      <li>DIYした物を「買い取って」とは言えません(作った物はプレゼント扱いです)</li>
-      <li>かかったリフォーム代を「払って」とも言えません</li>
+      <li>お荷物・家具・ゴミは、すべてお持ち帰りください(置いていくのはご遠慮ください)</li>
+      <li>「これは危ないな」とこちらが判断した物(グラつく棚など)は、外してからのお引っ越しをお願いします</li>
+      <li>DIYで作った物の買い取りは、お受けできません(置いていく物は、無償でお譲りいただく形になります)</li>
+      <li>かけていただいたリフォーム代のご請求も、お受けできません</li>
     </ul>
+    <p class="why">→ 「自由に改造してよくて、元に戻さなくてもいい」の代わりに、「かかったお金はお互いに請求しない」という約束です。フェアな交換だと考えています。</p>
   </div>
 </section>
 
 <!-- 7 -->
 <section class="chapter">
   <h2>7. お金のこと</h2>
-  <p class="h2-sub">あとから「聞いてない」が起きないように、先に全部言います。</p>
+  <p class="h2-sub">あとから「聞いてなかった」が起きないように、先にぜんぶお伝えします。</p>
   <div class="table-scroll">
   <table>
     <tr><th>項目</th><th>金額</th><th>ひとこと</th></tr>
-    <tr><td>家賃</td><td><span class="fill">【 】</span>円/月</td><td>古い家なので安くしています</td></tr>
-    <tr><td>敷金</td><td><span class="fill">【 】</span>ヶ月分</td><td>預かり金です</td></tr>
-    <tr><td>ペットを飼う場合の追加敷金</td><td>+<span class="fill">【 】</span>ヶ月分</td><td>ペット分の預かり金</td></tr>
-    <tr><td>そのうち返ってこない分</td><td><span class="fill">【 】</span>ヶ月分</td><td>退去時の掃除・消臭代。<strong>先に言っておきます</strong></td></tr>
+    <tr><td>家賃</td><td><span class="fill">【 】</span>円/月</td><td>古い家ですので、お安くしています</td></tr>
+    <tr><td>敷金</td><td><span class="fill">【 】</span>ヶ月分</td><td>お預かりするお金です</td></tr>
+    <tr><td>ペットを飼う場合の追加敷金</td><td>+<span class="fill">【 】</span>ヶ月分</td><td>ペット分のお預かりです</td></tr>
+    <tr><td>そのうち返ってこない分</td><td><span class="fill">【 】</span>ヶ月分</td><td>退去時のお掃除・消臭代です。<strong>先にお伝えしておきますね</strong></td></tr>
     <tr><td>礼金</td><td><span class="fill">【 】</span></td><td></td></tr>
-    <tr><td>火災保険</td><td>加入必須</td><td>入居者負担で加入してもらいます</td></tr>
+    <tr><td>火災保険</td><td>ご加入をお願いします</td><td>入居者さんのご負担でお願いしています</td></tr>
   </table>
   </div>
 </section>
 
 <!-- 8 -->
 <section class="chapter">
-  <h2>8. 入居の日に、一緒にやること</h2>
-  <p class="h2-sub">お互いを守る「お守り」づくり。10分で終わります。</p>
+  <h2>8. 入居の日に、一緒にやりたいこと</h2>
+  <p class="h2-sub">お互いを守る「お守り」づくりです。10分ほどで終わります。</p>
   <ul class="plain">
-    <li>📷 二人で家じゅうの写真を撮る(最初からあるキズ・汚れ)</li>
-    <li>📝 「最初からあるキズのリスト」に二人でサイン</li>
-    <li>✅ このルールブックを読んで、チェック表にチェック</li>
+    <li>📷 二人で家じゅうの写真を撮る(最初からあるキズ・汚れの記録)</li>
+    <li>📝 「最初からあるキズのリスト」に、二人でサイン</li>
+    <li>✅ このルールブックを一緒に読んで、チェック表にチェック</li>
   </ul>
-  <div class="bigline">これをやっておくと、出ていくとき「この傷は最初から?」でモメません。<br>あなたを守るためのものです。</div>
+  <div class="bigline">これをやっておくと、お引っ越しのとき「このキズは最初からあった?」で揉めずにすみます。<br>あなたを守るためのものなので、少しだけお付き合いください。</div>
 </section>
 
 <!-- 貸主用メモ -->
@@ -374,7 +386,7 @@
       <li><strong>定期借家契約</strong>(3〜5年・再契約型)にする — 問題入居者の出口確保</li>
       <li><strong>修繕義務の免除特約</strong> — 「直さないものリスト」(セクション0)を別紙で契約書に添付。ただし雨漏り・給湯・電気水道など安全と生活の根幹は貸主負担のまま残す(消費者契約法対策)</li>
       <li><strong>設備リストの明記</strong> — 民法611条の当然減額対策。「本契約の設備」と「設備ではない現状有姿の物」を分ける</li>
-      <li><strong>有益費償還請求権の放棄</strong>(民法608条)+<strong>造作買取請求権の放棄</strong>(借地借家法33条) — セクション6の「買い取って/払ってと言えない」の法的裏付け</li>
+      <li><strong>有益費償還請求権の放棄</strong>(民法608条)+<strong>造作買取請求権の放棄</strong>(借地借家法33条) — セクション6の「買い取り・リフォーム代の請求はお受けできない」の法的裏付け</li>
       <li><strong>DIY造作の所有権は貸主帰属</strong>+<strong>危険造作は借主費用で撤去請求可</strong> — 民法717条(工作物責任)対策とセット</li>
       <li><strong>敷引き(償却)は家賃の2ヶ月分程度まで</strong> — 最高裁平成23年判例の目安。金額を必ず数字で明記</li>
       <li><strong>無資格工事の禁止</strong>(電気工事士法・水道法・ガス事業法)を明文化</li>
@@ -389,7 +401,7 @@
 </section>
 
 <footer>
-  たたき台 v0.1(2026年7月)|専門家(弁護士・司法書士・宅建士)チェック前の下書きです
+  たたき台 v0.2(2026年7月)|専門家(弁護士・司法書士・宅建士)チェック前の下書きです
 </footer>
 
 </div>
