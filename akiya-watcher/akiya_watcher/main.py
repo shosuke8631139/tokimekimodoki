@@ -177,10 +177,16 @@ def build_digest(items: list[tuple[Diff, Score]], offer_min_age_days: int,
     return "\n".join(lines)
 
 
-def build_heartbeat(items: list[tuple[Diff, Score]], top_n: int = 5) -> str:
-    """生存報告: 何もない日に1日1回だけ送る「動いています+今の注目上位」。"""
+def build_heartbeat(items: list[tuple[Diff, Score]], top_n: int = 5,
+                    kanpo_enabled: bool = True) -> str:
+    """生存報告: 何もない日に1日1回だけ送る「動いています+注目上位+官報」。"""
     ranked = sorted(items, key=lambda x: x[1].total, reverse=True)
     lines = ["✅ 巡回は動いています — 今回は通知に値する動きなし", ""]
+    if kanpo_enabled:
+        import datetime
+        from .kanpo import daily_lines
+        lines += daily_lines(datetime.date.fromisoformat(jst_today()))
+        lines.append("")
     if ranked:
         lines.append(f"監視中 {len(items)}件。いま熱い物件 上位{min(top_n, len(ranked))}件:")
         for d, s in ranked[:top_n]:
@@ -343,7 +349,9 @@ def run(config_path: str, dry_run: bool = False, report_path: str | None = None,
             elif meta_store.get_meta("last_mail_date") != today:
                 # 届く実績のあるダイジェストと同じ構成(レポート添付つき)で送る
                 # (2026-07 生存報告だけ届かない事象の対策。迷惑メール判定回避)
-                notifier.send_text(build_heartbeat(items), attachment=report_path)
+                kanpo_on = config.get("kanpo", {}).get("enabled", True)
+                notifier.send_text(build_heartbeat(items, kanpo_enabled=kanpo_on),
+                                   attachment=report_path)
                 meta_store.set_meta("last_mail_date", today)
                 print("[info] 生存報告を送信 (本日初回・通知なしのため)")
             meta_store.close()

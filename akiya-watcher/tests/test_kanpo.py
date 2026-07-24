@@ -35,3 +35,28 @@ def test_ダイジェストに官報チェック便が合流する():
 def test_設定でオフにできる():
     text = build_digest([], offer_min_age_days=90, kanpo_enabled=False)
     assert "官報チェック便" not in text
+
+
+def test_平日の今日の官報チェックにリンクとチュートリアルが入る():
+    from akiya_watcher.kanpo import daily_lines
+    lines = daily_lines(datetime.date(2026, 7, 24))  # 金曜
+    text = "\n".join(lines)
+    assert "今日の官報チェック" in text
+    assert "20260724.fullcontents.html" in text
+    assert "相続財産清算人" in text
+    assert "スクショ" in text
+
+
+def test_土日はお休みの案内だけになる():
+    from akiya_watcher.kanpo import daily_lines
+    lines = daily_lines(datetime.date(2026, 7, 25))  # 土曜
+    assert len(lines) == 1
+    assert "お休み" in lines[0]
+
+
+def test_生存報告に今日の官報チェックが載る():
+    from akiya_watcher.main import build_heartbeat
+    text = build_heartbeat([], kanpo_enabled=True)
+    assert "官報" in text
+    text_off = build_heartbeat([], kanpo_enabled=False)
+    assert "官報" not in text_off

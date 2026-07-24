@@ -36,6 +36,27 @@ def weekday_issues(end: datetime.date, lookback_days: int = 7) -> list[datetime.
     return days
 
 
+def daily_lines(today: datetime.date | None = None) -> list[str]:
+    """毎日の生存報告に載せる「今日の官報チェック」チュートリアル。
+
+    官報は行政機関の休日(土日祝)は発行されない。土日はお休みの案内だけ返す。
+    祝日は判定表を持たないため、リンクを出して「開けなければお休み」と案内する。
+    """
+    today = today or datetime.date.today()
+    if today.weekday() >= 5:  # 土日
+        return ["📜 今日の官報チェック: 土日は官報の発行がお休みです。また月曜に。"]
+    return [
+        "📜 今日の官報チェック (30秒。宝の地図は毎朝8:30に更新)",
+        "1. 開く → " + issue_toc_url(today),
+        "   (開けない日は祝日=官報お休み。それで終了です)",
+        "2. ページを下へスクロールして「公告」の並びの「裁判所」を開く",
+        "3. 【相続財産清算人】の文字を目で探す (機械が読めない画像なので目で)",
+        "4. 近くに「鹿児島」か「宮崎」があれば当たり! その場でスクショ →",
+        "   Claudeとの会話に貼れば、解読と手紙の書き方まで案内します",
+        "なければ今日は終了。「裁判所の公告自体がない日」も普通にあります。",
+    ]
+
+
 def digest_lines(today: datetime.date | None = None, lookback_days: int = 7) -> list[str]:
     """週次ダイジェストに足す「官報チェック便」の行を作る。
 
