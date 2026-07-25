@@ -406,6 +406,7 @@ const Game = {
     const bonus = GOAL_BONUS[Math.min(p.goalRank, GOAL_BONUS.length - 1)];
     p.cash += bonus;
     UI.log(`🏰 ${p.name} が ${p.goalRank + 1}着で ゴール! 賞金 +${yen(bonus)}`, "head");
+    if (UI.celebrate) UI.celebrate(p);   // 城から紙吹雪(シミュレータのスタブUIには無い)
     UI.refresh();
     await UI.say(p, `${p.name}、${p.goalRank + 1}着で ゴール!\nゴール賞金 ${yen(bonus)}。\n株の清算は 全員が ゴールしてから。`);
   },

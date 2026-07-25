@@ -16,6 +16,7 @@
     <div class="title-deco">🚗 💵 🏰</div>
     <h1 class="game-title">人生<span class="title-modoki">モドキ</span></h1>
     <p class="game-subtitle">〜どこで曲がっても後悔する〜</p>
+    <canvas id="title-demo" width="150" height="30"></canvas>
     <p class="title-desc">
       ルーレットを止めて、車を すすめる。<br>
       大学か 就職か。家庭か 仕事か。<br>
@@ -48,7 +49,9 @@
 
   <div id="main">
     <div id="board-wrap" class="panel">
-      <canvas id="board" width="560" height="412"></canvas>
+      <div id="crt">
+        <canvas id="board" width="280" height="210"></canvas>
+      </div>
       <div id="legend">
         <span><i style="background:#2fa14e"></i>給料日</span>
         <span><i style="background:#4f8fd4"></i>収入</span>

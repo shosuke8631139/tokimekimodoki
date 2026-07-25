@@ -38,6 +38,9 @@ const UI = {
 
     this.buildWheel();
 
+    const demo = document.getElementById("title-demo");
+    if (demo && typeof Board !== "undefined") Board.titleDemo(demo);
+
     let count = 4;
     this.el.countBtns.forEach((b) => {
       b.addEventListener("click", () => {
@@ -200,6 +203,10 @@ const UI = {
 
   wait(ms) {
     return new Promise((r) => setTimeout(r, ms));
+  },
+
+  celebrate(p) {
+    if (typeof Board !== "undefined") Board.celebrate(p);
   },
 
   log(text, cls) {
