@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>人生モドキ 〜どこで曲がっても後悔する〜</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ========== タイトル画面 ========== -->
+<div id="title-screen" class="screen">
+  <div class="title-box">
+    <div class="title-deco">🚗 💵 🏰</div>
+    <h1 class="game-title">人生<span class="title-modoki">モドキ</span></h1>
+    <p class="game-subtitle">〜どこで曲がっても後悔する〜</p>
+    <p class="title-desc">
+      ルーレットを止めて、車を すすめる。<br>
+      大学か 就職か。家庭か 仕事か。<br>
+      ゴールしたときに 一番お金を持っていた者が 勝ちだ。<br>
+      <small>※ 人生はお金では決まらない。このゲームは決まる。</small>
+    </p>
+    <div class="name-entry">
+      <label for="player-name">きみの名前</label>
+      <input id="player-name" type="text" maxlength="8" value="あなた" autocomplete="off">
+    </div>
+    <div class="count-entry">
+      <span>人数</span>
+      <button class="count-btn" data-count="2">2人</button>
+      <button class="count-btn" data-count="3">3人</button>
+      <button class="count-btn on" data-count="4">4人</button>
+      <small>あなた以外は CPU</small>
+    </div>
+    <button id="start-btn" class="big-btn">人生を はじめる</button>
+    <p class="title-help">Enter / Z / スペース でも すすめます</p>
+  </div>
+</div>
+
+<!-- ========== ゲーム画面 ========== -->
+<div id="game-screen" class="screen hidden">
+  <header id="hud">
+    <div id="hud-turn"></div>
+    <div id="hud-cell"></div>
+    <label id="fast-label"><input type="checkbox" id="fast-toggle"> CPUを はやくする</label>
+  </header>
+
+  <div id="main">
+    <div id="board-wrap" class="panel">
+      <canvas id="board" width="560" height="412"></canvas>
+      <div id="legend">
+        <span><i style="background:#2fa14e"></i>給料日</span>
+        <span><i style="background:#4f8fd4"></i>収入</span>
+        <span><i style="background:#e23b3b"></i>支払い</span>
+        <span><i style="background:#8a5cf5"></i>株・賭け</span>
+        <span><i style="background:#b5651d"></i>二択</span>
+        <span><i style="background:#e06fa5"></i>家族</span>
+        <span><i style="background:#20a8a8"></i>保険・転職</span>
+        <span><i style="background:#f08c19"></i>分岐</span>
+        <span><i style="background:#f0c419"></i>就職・ゴール</span>
+      </div>
+    </div>
+
+    <aside id="side">
+      <section id="players" class="panel"></section>
+      <section id="log-panel" class="panel">
+        <h2>できごと</h2>
+        <div id="log-area"></div>
+      </section>
+    </aside>
+  </div>
+
+  <footer id="control" class="panel">
+    <div id="roulette-area">
+      <div id="wheel-wrap">
+        <div id="needle">▼</div>
+        <div id="wheel"></div>
+        <div id="wheel-num">?</div>
+      </div>
+      <button id="spin-btn" class="big-btn">まわす</button>
+    </div>
+
+    <div id="msg-box" class="hidden">
+      <p id="msg-text"></p>
+      <span class="msg-next">▼</span>
+    </div>
+
+    <div id="choices" class="hidden"></div>
+  </footer>
+</div>
+
+<!-- ========== 結果発表 ========== -->
+<div id="result-screen" class="screen hidden">
+  <div class="result-box">
+    <h1>けっさん</h1>
+    <p class="result-lead">総資産で 順位が きまる。<br>株券は いま 清算された。</p>
+    <div id="result-body"></div>
+    <button id="restart-btn" class="big-btn">もう一度 生まれる</button>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/game.js"></script>
+<script src="js/board.js"></script>
+<script src="js/ui.js"></script>
+</body>
+</html>
