@@ -234,6 +234,33 @@ const TILE_ICONS = {
     "KWYKKYWK",
     "KKKKKKKK",
   ],
+  happen: [
+    "...WW...",
+    "...WW...",
+    "...WW...",
+    "...WW...",
+    "........",
+    "...WW...",
+    "...WW...",
+  ],
+  lottery: [
+    "KKKKKKKK",
+    "KWWWWWWK",
+    "KWRRWWWK",
+    "KWRRWWWK",
+    "KWWWWWWK",
+    "KKKKKKKK",
+  ],
+  fire: [
+    "....R...",
+    "...RR...",
+    "..RRRR..",
+    ".RRYYRR.",
+    ".RYWWYR.",
+    "RRYWWYRR",
+    ".RRYYRR.",
+    "..RRRR..",
+  ],
 };
 
 /* ---------- 環境(木・雲・城・旗) ---------- */
@@ -278,6 +305,55 @@ const CASTLE = [
 
 const FLAG_A = ["RRRR", "RRRR", "RR.."];
 const FLAG_B = ["RR..", "RRRR", "RRRR"];
+
+/* 人生の節目を感じさせる建物たち(S=壁 b=窓あかり) */
+PX.S = "#7f93a5";
+PX.b = "#cfe8f8";
+
+const SCHOOL = [
+  ".KKKKKKKKKKKK.",
+  ".KRRRRRRRRRRK.",
+  ".KRRRRRRRRRRK.",
+  ".KWWWWWWWWWWK.",
+  ".KWBBWBBWBBWK.",
+  ".KWWWWWWWWWWK.",
+  ".KWBBWBBWBBWK.",
+  ".KWWWWWWWWWWK.",
+  ".KWWWWNNWWWWK.",
+  ".KWWWWNNWWWWK.",
+  ".KKKKKKKKKKKK.",
+];
+
+const CHURCH = [
+  ".....KK.....",
+  "....KKKK....",
+  ".....KK.....",
+  "....KWWK....",
+  "...KWWWWK...",
+  "..KWWWWWWK..",
+  ".KWWWWWWWWK.",
+  ".KWWWBBWWWK.",
+  ".KWWWBBWWWK.",
+  ".KWWWWWWWWK.",
+  ".KWWWNNWWWK.",
+  ".KWWWNNWWWK.",
+  ".KKKKKKKKKK.",
+];
+
+const OFFICE = [
+  "KKKKKKKKKK",
+  "KSSSSSSSSK",
+  "KSbSbSbSbK",
+  "KSSSSSSSSK",
+  "KSbSbSbSbK",
+  "KSSSSSSSSK",
+  "KSbSbSbSbK",
+  "KSSSSSSSSK",
+  "KSbSbSbSbK",
+  "KSSSSSSSSK",
+  "KSSSnnSSSK",
+  "KKKKKKKKKK",
+];
 
 /* =========================================================
  * Board
@@ -459,8 +535,15 @@ const Board = {
       }
     }
 
+    // 建物(学生街 → 教会とオフィス街、という人生の順路)
+    for (const [rows, x, y] of [[SCHOOL, 48, 62], [CHURCH, 24, 146], [OFFICE, 70, 146]]) {
+      ctx.fillStyle = "rgba(0,0,0,0.25)";
+      ctx.fillRect(x + 2, y + rows.length - 1, rows[0].length - 3, 2);
+      this.sprite(ctx, rows, x, y);
+    }
+
     // 木(道とぶつからない空き地に)
-    for (const [x, y] of [[24, 68], [70, 71], [112, 66], [96, 152], [252, 176], [14, 124]]) {
+    for (const [x, y] of [[16, 70], [110, 68], [116, 150], [252, 176], [14, 124]]) {
       ctx.fillStyle = "rgba(0,0,0,0.25)";
       ctx.fillRect(x + 1, y + 9, 7, 2);
       this.sprite(ctx, TREE, x, y);

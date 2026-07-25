@@ -133,6 +133,7 @@ const Game = {
   pay(p, amount, why) {
     p.cash -= amount;
     UI.log(`${p.emoji} ${p.name}:${why} ${yen(-amount)}`, amount > 0 ? "minus" : "plus");
+    if (UI.sfx) UI.sfx(amount > 0 ? "pay" : "coin");
     UI.refresh();
   },
 
@@ -144,6 +145,8 @@ const Game = {
     const salary = p.salary || 100;   // 無職ならバイト代
     p.cash += salary;
     UI.log(`${p.emoji} ${p.name}:給料日${passing ? "を通過" : ""} +${yen(salary)}`, "plus");
+    if (UI.jingle && !passing) UI.jingle("payday");
+    else if (UI.sfx) UI.sfx("coin");
     UI.refresh();
   },
 
@@ -249,6 +252,7 @@ const Game = {
 
       case "job": {
         const job = pick(JOBS[cell.jobs]);
+        if (UI.scene) await UI.scene("job", { color: p.color });
         p.job = job;
         p.salary = job.salary;
         await UI.say(p, `${p.name}の職業は「${job.emoji} ${job.name}」に きまった。\n給料は 1回 ${yen(job.salary)}。`);
@@ -288,9 +292,60 @@ const Game = {
         if (p.insured && !p.insuranceUsed) {
           p.insuranceUsed = true;
           p.insured = false;
+          if (UI.scene) await UI.scene("saved", { color: p.color });
           await UI.say(p, `保険が おりた! 支払い ${yen(cell.m ? -cell.m : 0)} は ゼロ。\nあの日の勧誘を 断らなくて よかった。`);
         } else {
+          if (UI.scene) await UI.scene("accident", { color: p.color });
+          if (UI.shake) UI.shake();
           this.pay(p, -cell.m, "修理と治療");
+        }
+        break;
+      }
+
+      /* 火事。家がなければ他人事、保険があれば助かる。 */
+      case "fire": {
+        if (!p.house) {
+          await UI.say(p, "近所で ぼや。うちは 賃貸なので 見物した。\n身軽であることの 数少ない 勝利。");
+          break;
+        }
+        if (p.insured && !p.insuranceUsed) {
+          p.insuranceUsed = true;
+          p.insured = false;
+          if (UI.scene) await UI.scene("saved", { color: p.color });
+          await UI.say(p, `火は 出たが、保険が 全額 出た。\n修理代 ${yen(-cell.m)} は ゼロ。`);
+        } else {
+          if (UI.scene) await UI.scene("fire", { color: p.color });
+          if (UI.shake) UI.shake();
+          this.pay(p, -cell.m, "火事の修理");
+          await UI.say(p, "家は 直せる。写真は 戻らない。\n保険の 勧誘を 思い出していた。");
+        }
+        break;
+      }
+
+      /* 宝くじ。清算はゴール後、1枚ごとに抽選。 */
+      case "lottery": {
+        const yes = p.cpu
+          ? Cpu.decide(p, "lottery", cell)
+          : (await UI.ask(p, `宝くじを 1枚 買う? ${yen(cell.price)}(1等 1200万・確率8%)`,
+              [`買う(${yen(cell.price)})`, "夢を 見ない"])) === 0;
+        if (!yes) { await UI.say(p, "堅実。だが 夢も ない。"); break; }
+        this.pay(p, cell.price, "宝くじ");
+        p.lottery = (p.lottery || 0) + 1;
+        await UI.say(p, `宝くじを 買った(${p.lottery}枚目)。\n抽選日は ゴールの日だ。`);
+        break;
+      }
+
+      /* ハプニング。デッキからランダムで1つ引く。 */
+      case "happen": {
+        const ev = pick(HAPPENINGS);
+        if (UI.scene) await UI.scene("happen", { color: p.color });
+        UI.log(`${p.emoji} ${p.name}:${ev.e} ${ev.n}`, "head");
+        await UI.say(p, `${ev.e}【${ev.n}】\n${ev.t}`);
+        if (ev.m) this.pay(p, -ev.m, ev.n);
+        if (ev.mv && depth < 2) {
+          await this.move(p, ev.mv);
+          await this.resolve(p, depth + 1);
+          return;
         }
         break;
       }
@@ -316,9 +371,11 @@ const Game = {
         this.pay(p, cell.bet, "賭け金");
         if (Math.random() < 0.45) {
           const win = Math.round(cell.bet * 2.2);
+          if (UI.scene) await UI.scene("win", { color: p.color });
           this.gain(p, win, "的中");
           await UI.say(p, `当たった! ${yen(win)} が ころがり込んだ。\nこの成功体験が、後で 効いてくる。悪い意味で。`);
         } else {
+          if (UI.scene) await UI.scene("lose", { color: p.color });
           await UI.say(p, `外れた。${yen(cell.bet)} は 消えた。\n「次は 当たる」と 思っている顔だ。`);
         }
         break;
@@ -331,6 +388,7 @@ const Game = {
           : (await UI.ask(p, `家を 買う? ${yen(cell.cost)}(ゴール時 評価額 ${yen(cell.value)})`,
               [`買う(${yen(cell.cost)})`, "賃貸で いく"])) === 0;
         if (!yes) { await UI.say(p, "賃貸で いくことにした。身軽が いちばん。"); break; }
+        if (UI.scene) await UI.scene("house", { color: p.color });
         this.pay(p, cell.cost, "住宅購入");
         p.house = cell.value;
         await UI.say(p, `マイホームを 手に入れた!\n買値 ${yen(cell.cost)} / 評価額 ${yen(cell.value)}。差額は 思い出の代金。`);
@@ -338,6 +396,7 @@ const Game = {
       }
 
       case "marry": {
+        if (UI.scene) await UI.scene("marry", { color: p.color });
         this.pay(p, cell.cost, "結婚式");
         p.spouse = true;
         const gift = rand(2, 8) * 60;
@@ -349,6 +408,7 @@ const Game = {
       case "baby": {
         const twins = rand(1, 10) === 1;
         const num = twins ? 2 : 1;
+        if (UI.scene) await UI.scene("baby", { color: p.color, count: num });
         p.kids += num;
         this.pay(p, 50 * num, "出産費用");
         await UI.say(p, twins
@@ -403,6 +463,7 @@ const Game = {
   async reachGoal(p) {
     p.goaled = true;
     p.goalRank = this.state.goalCount++;
+    if (UI.scene) await UI.scene("goal", { color: p.color });
     const bonus = GOAL_BONUS[Math.min(p.goalRank, GOAL_BONUS.length - 1)];
     p.cash += bonus;
     UI.log(`🏰 ${p.name} が ${p.goalRank + 1}着で ゴール! 賞金 +${yen(bonus)}`, "head");
@@ -451,6 +512,17 @@ const Game = {
           value: family * per,
         });
         total += family * per;
+      }
+
+      if (p.lottery) {
+        let winSum = 0;
+        for (let i = 0; i < p.lottery; i++) if (Math.random() < 0.08) winSum += 1200;
+        lines.push({
+          label: `宝くじ ${p.lottery}枚の抽選`,
+          value: winSum,
+          note: winSum > 0 ? "1等が 当たってしまった。人生とは。" : "夢は 50万円だった。",
+        });
+        total += winSum;
       }
 
       if (p.insured && !p.insuranceUsed) {
@@ -522,6 +594,11 @@ const Cpu = {
       case "jobchange":
         if (p.cpu === "bold") return true;
         return p.salary < 400;                       // 給料が低いときだけ動く
+
+      case "lottery":
+        if (p.cash < cell.price) return false;
+        // 守銭奴ほど宝くじは買う。人間とは そういうものだ
+        return p.cpu === "greedy" || p.cpu === "bold";
 
       default:
         return false;

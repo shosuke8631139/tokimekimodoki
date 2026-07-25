@@ -41,6 +41,18 @@ const UI = {
     const demo = document.getElementById("title-demo");
     if (demo && typeof Board !== "undefined") Board.titleDemo(demo);
 
+    // 音は初回操作で解禁(ブラウザの自動再生制限)
+    document.addEventListener("pointerdown", () => {
+      if (typeof Snd !== "undefined") Snd.init();
+    }, { once: true });
+    const mute = document.getElementById("mute-toggle");
+    if (mute) {
+      mute.addEventListener("change", (e) => {
+        if (typeof Snd !== "undefined") Snd.setMuted(!e.target.checked);
+      });
+    }
+    if (typeof Scenes !== "undefined") Scenes.init();
+
     let count = 4;
     this.el.countBtns.forEach((b) => {
       b.addEventListener("click", () => {
@@ -106,7 +118,9 @@ const UI = {
         const loop = (now) => {
           if (!this.spinning) return;
           this.setWheel((this.wheelAngle + (now - last) * 0.75) % 360);  // 約750度/秒
-          this.el.wheelNum.textContent = this.numberAt(this.wheelAngle);
+          const n = this.numberAt(this.wheelAngle);
+          if (String(n) !== this.el.wheelNum.textContent) this.sfx("tick");
+          this.el.wheelNum.textContent = n;
           last = now;
           this.rafId = requestAnimationFrame(loop);
         };
@@ -143,6 +157,7 @@ const UI = {
         });
         this.el.wheelNum.textContent = n;
         this.el.spinBtn.textContent = `${n}!`;
+        this.sfx("decide");
         await this.wait(this.fast ? 80 : 320);
         resolve(n);
       };
@@ -164,15 +179,50 @@ const UI = {
     this.el.choices.classList.toggle("hidden", which !== "choices");
   },
 
+  /* メッセージは1文字ずつ打字して表示する(ファミコン式)。
+     打字中のクリックで全文表示、表示後のクリックで送り。 */
   say(p, text) {
     this.show("msg");
-    this.el.msgText.innerHTML = String(text).replace(/\n/g, "<br>");
     this.el.msgBox.classList.toggle("auto", !!p.cpu);
     this.log(text.replace(/\n/g, " "), "msg");
 
-    if (p.cpu) return this.wait(this.fast ? 120 : 900);
+    const full = String(text);
+    const el = this.el.msgText;
+    const speed = p.cpu ? (this.fast ? 0 : 8) : 18;   // ms/文字
+    let i = 0;
+    let timer = 0;
+    let done = false;
+
+    const render = () => {
+      el.innerHTML = full.slice(0, i).replace(/\n/g, "<br>");
+    };
+    const finish = () => {
+      done = true;
+      clearInterval(timer);
+      i = full.length;
+      render();
+    };
+
+    if (speed === 0) finish();
+    else {
+      timer = setInterval(() => {
+        i++;
+        if (i % 3 === 0) this.sfx("typebeep");
+        render();
+        if (i >= full.length) finish();
+      }, speed);
+    }
+
+    if (p.cpu) {
+      return this.wait(this.fast ? 120 : 700 + full.length * 8).then(() => clearInterval(timer));
+    }
     return new Promise((resolve) => {
-      this.el.msgBox.onclick = () => { this.el.msgBox.onclick = null; resolve(); };
+      this.el.msgBox.onclick = () => {
+        if (!done) { finish(); return; }   // 1回目のクリックは全文表示
+        this.el.msgBox.onclick = null;
+        this.sfx("msgbeep");
+        resolve();
+      };
     });
   },
 
@@ -189,7 +239,7 @@ const UI = {
         const b = document.createElement("button");
         b.className = "choice-btn";
         b.textContent = label;
-        b.onclick = () => { this.show("msg"); resolve(i); };
+        b.onclick = () => { this.sfx("decide"); this.show("msg"); resolve(i); };
         this.el.choices.appendChild(b);
       });
     });
@@ -198,6 +248,7 @@ const UI = {
   step(p) {
     Board.highlight = p.pos;
     this.el.hudCell.textContent = `いるマス:${BOARD[p.pos].e} ${BOARD[p.pos].n}`;
+    if (!(p.cpu && this.fast)) this.sfx("hop");
     return Board.animateToken(p, p.cpu && this.fast ? 0 : 150);
   },
 
@@ -207,6 +258,29 @@ const UI = {
 
   celebrate(p) {
     if (typeof Board !== "undefined") Board.celebrate(p);
+  },
+
+  /* ---------- 演出まわりの橋渡し(無くてもゲームは動く) ---------- */
+
+  sfx(name) {
+    if (typeof Snd !== "undefined") Snd.sfx(name);
+  },
+
+  jingle(name) {
+    if (typeof Snd !== "undefined") Snd.jingle(name);
+  },
+
+  scene(name, opts) {
+    if (typeof Scenes === "undefined") return Promise.resolve();
+    return Scenes.play(name, { ...(opts || {}), fast: this.fast && Game.cur().cpu });
+  },
+
+  /* 画面を揺らす(事故・火事) */
+  shake() {
+    const el = this.el.game;
+    el.classList.remove("shake");
+    void el.offsetWidth;   // 連続発動でもアニメを最初から
+    el.classList.add("shake");
   },
 
   log(text, cls) {
@@ -274,6 +348,7 @@ const UI = {
     this.el.game.classList.remove("hidden");
     Board.init();
     this.refresh();
+    this.jingle("start");
     this.log("── 人生モドキ、はじまります ──", "head");
     await this.loop();
   },
