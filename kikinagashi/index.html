@@ -145,17 +145,20 @@
 </section>
 
 <section class="card">
-  <h2><span class="step">2</span>文字起こしを渡す(AIの「耳」になります)</h2>
-  <p class="hint">これを貼っておくと、質問した瞬間の「直前◯秒に流れていた内容」が自動でAIに伝わります。貼らなくても使えますが、精度が段違いです。</p>
+  <h2><span class="step">2</span>AIの「耳」を用意する</h2>
+  <p class="hint">
+    <b>iPhone・スマホの人:</b> この手順は飛ばしてOKです。下の⚙設定で <b>Gemini</b> を選べば、AIが動画そのものを直接「見て・聞いて」答えるので、文字起こしは不要です(YouTubeアプリは文字起こしのコピーができないため、スマホはこちらが正解)。<br>
+    <b>PCの人:</b> 文字起こしを貼っておくと、どのAIでも(コピー方式でも)「直前の内容」が自動で伝わるようになります。
+  </p>
   <details class="help">
-    <summary>文字起こしのコピーの仕方(30秒でできます)</summary>
+    <summary>【PC向け】文字起こしのコピーの仕方(30秒でできます)</summary>
     <ol>
       <li>YouTubeで動画の<b>説明欄(概要欄)を開く</b></li>
       <li>下の方にある<b>「文字起こしを表示」</b>を押す</li>
       <li>出てきた文字起こしを<b>先頭から最後までドラッグして全部コピー</b>(タイムスタンプごとでOK)</li>
       <li>下の欄に貼り付けて「登録」</li>
     </ol>
-    スマホの場合も概要欄→「文字起こしを表示」で同じものが出ます。
+    ※iPhone/AndroidのYouTubeアプリでは文字起こしのコピーはできません。スマホの人はGemini設定(⚙)を使ってください。
   </details>
   <textarea id="transcriptInput" rows="5" placeholder="0:00&#10;こんにちは今日は一問一答をやっていきます&#10;0:05&#10;第1問 …&#10;(こんな形式のまま丸ごと貼り付けでOK)"></textarea>
   <div class="row" style="margin-top:8px">
@@ -218,14 +221,16 @@
   <details>
     <summary style="cursor:pointer;font-weight:700;color:var(--indigo)">⚙ 設定:APIキーで「その場で回答」を有効にする(任意)</summary>
     <p class="hint" style="margin-top:10px">
-      キーを入れると、外部サイトに移動せずこのページ内でAIが即答します。キーは<b>この端末のブラウザ内(localStorage)にだけ</b>保存され、どこかに送信されることはありません(質問時にAI各社のAPIへ直接送られるだけです)。
+      キーを入れると、外部サイトに移動せずこのページ内でAIが即答します。<b>Geminiを選ぶと、質問の瞬間の「直前◯分」の動画をAIが直接見て答える</b>ので、文字起こしの貼り付けが不要になります(スマホはこれ一択)。
+      Geminiのキーは <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> で無料で作れます(Googleアカウントでログイン→「APIキーを作成」)。
+      キーは<b>この端末のブラウザ内(localStorage)にだけ</b>保存され、どこかに送信されることはありません(質問時にAI各社のAPIへ直接送られるだけです)。
     </p>
     <div class="row" style="margin-top:8px">
       <label class="hint" style="flex-shrink:0">AI:
         <select id="providerSelect" style="width:auto;padding:6px 8px">
           <option value="">使わない(コピー方式)</option>
+          <option value="gemini">Gemini(無料枠あり・動画を直接見られる=スマホ向き)</option>
           <option value="anthropic">Claude(Anthropic API)</option>
-          <option value="gemini">Gemini(Google AI・無料枠あり)</option>
           <option value="openai">ChatGPT(OpenAI API)</option>
         </select>
       </label>
@@ -407,13 +412,16 @@ function transcriptWindow(t, winSec) {
 }
 
 /* ---------- プロンプト生成 ---------- */
-function buildPrompt(question, winSec) {
+/* geminiDirect: Gemini APIに動画クリップそのものを添付するモード(文字起こし不要) */
+function buildPrompt(question, winSec, geminiDirect) {
   const ctx = transcriptWindow(capturedTime, winSec);
   const lines = [];
   lines.push("【状況】YouTubeの勉強動画(資格試験の聞き流し・一問一答など)を聞いています。あなたも一緒に聞いていた勉強仲間として答えてください。");
   lines.push("【動画】" + videoUrl + "&t=" + Math.floor(capturedTime) + "s");
   lines.push("【質問した瞬間の再生位置】" + fmt(capturedTime));
-  if (ctx) {
+  if (geminiDirect) {
+    lines.push("【添付】質問の直前 " + fmt(Math.max(0, capturedTime - winSec)) + "〜" + fmt(capturedTime) + " の動画クリップを添付しています。私の言う「今の」はこの範囲のことです。まず添付区間の音声・映像を確認してから答えてください。");
+  } else if (ctx) {
     lines.push("【直前に流れていた内容(文字起こし)— 私の言う「今の」はこの範囲のことです】");
     lines.push(ctx);
   } else {
@@ -432,9 +440,11 @@ function openAskPanel() {
   capturedTime = (playerReady && player.getCurrentTime()) || 0;
   $("askPanel").classList.add("open");
   const hasTr = transcript.length > 0;
+  const geminiReady = localStorage.getItem("kikinagashi_provider") === "gemini" && localStorage.getItem("kikinagashi_key");
   $("askContext").innerHTML = "📍 <b>" + fmt(capturedTime) + "</b> で一時停止しました。" +
-    (hasTr ? "直前の内容は自動で添付されます。「今の問題って…」のままでOK。"
-           : "<span style='color:var(--amber)'>文字起こし未登録なので、問題の内容は質問文に少し書いてください(ステップ2を使うと楽になります)。</span>");
+    (geminiReady ? "直前の動画をGeminiが直接見て答えます。「今の問題って…」のままでOK。"
+     : hasTr ? "直前の内容は自動で添付されます。「今の問題って…」のままでOK。"
+     : "<span style='color:var(--amber)'>文字起こし未登録なので、コピー方式では問題の内容を質問文に少し書いてください(⚙設定でGeminiを選ぶと不要になります)。</span>");
   $("questionInput").focus();
 }
 $("askBtn").addEventListener("click", openAskPanel);
@@ -516,7 +526,7 @@ loadSettings();
 /* ---------- APIモード(その場で回答) ---------- */
 const SYSTEM_PROMPT =
   "あなたはユーザーと一緒にYouTubeの勉強動画(資格試験の聞き流し・一問一答・過去問解説など)を聞いている勉強仲間です。" +
-  "ユーザーの発言に含まれる「今の」「さっきの」は、直前に渡される文字起こしの範囲を指します。" +
+  "ユーザーの発言に含まれる「今の」「さっきの」は、一緒に渡される文字起こしまたは動画クリップの範囲を指します。" +
   "回答は日本語で、①答えと理由 ②混同しやすい類似パターン・例外 ③関連する頻出論点ひとこと、を簡潔に。" +
   "文字起こしが不完全で特定できないときは、推測で断定せず聞き返してください。";
 
@@ -550,7 +560,21 @@ async function callAI(messages) {
     return data.choices[0].message.content;
   }
   if (provider === "gemini") {
-    const contents = messages.map(m => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] }));
+    const contents = messages.map(m => {
+      const parts = [];
+      if (m.videoWindow && videoId) {
+        // 動画の該当区間をGeminiに直接見せる(文字起こし不要の仕組み)
+        parts.push({
+          fileData: { fileUri: "https://www.youtube.com/watch?v=" + videoId },
+          videoMetadata: {
+            startOffset: Math.floor(m.videoWindow.start) + "s",
+            endOffset: Math.floor(m.videoWindow.end) + "s"
+          }
+        });
+      }
+      parts.push({ text: m.content });
+      return { role: m.role === "assistant" ? "model" : "user", parts };
+    });
     const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent?key=" + encodeURIComponent(key), {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -573,9 +597,16 @@ function addQa(cls, meta, text) {
 }
 
 async function sendToApi(userText, isNewQuestion) {
-  const content = isNewQuestion ? buildPrompt(userText, +$("windowSelect").value) : userText;
+  const winSec = +$("windowSelect").value;
+  // Geminiのときは文字起こしの有無にかかわらず動画クリップを直接添付する
+  const geminiDirect = localStorage.getItem("kikinagashi_provider") === "gemini";
+  const content = isNewQuestion ? buildPrompt(userText, winSec, geminiDirect) : userText;
   if (isNewQuestion) chatMessages = []; // 新しい「今の」で仕切り直し
-  chatMessages.push({ role: "user", content });
+  const msg = { role: "user", content };
+  if (isNewQuestion && geminiDirect) {
+    msg.videoWindow = { start: Math.max(0, capturedTime - winSec), end: capturedTime + 5 };
+  }
+  chatMessages.push(msg);
   addQa("q", (isNewQuestion ? "📍 " + fmt(capturedTime) + " の質問" : "追加の質問"), userText);
   const thinking = addQa("a thinking", "AI", "考え中…");
   try {
