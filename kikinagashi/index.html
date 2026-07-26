@@ -1,0 +1,640 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>いっしょに聞き流し|「今の質問」がそのまま通じる勉強部屋</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --ground: #FAF9F5;
+    --paper: #FFFFFF;
+    --ink: #262A31;
+    --muted: #5D6570;
+    --line: #DDD9CF;
+    --indigo: #2C4770;
+    --indigo-soft: #EAEEF5;
+    --green: #4E7A45;
+    --green-soft: #EEF3EA;
+    --amber: #A8641F;
+    --amber-soft: #FBF1E3;
+    --ex-bg: #F3F2ED;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #1C1E23; --paper: #24272E; --ink: #E8E6E0; --muted: #A2A8B2;
+      --line: #3B3F48; --indigo: #8FA9D6; --indigo-soft: #2B3345;
+      --green: #93B98A; --green-soft: #2A3527; --amber: #D9A05B; --amber-soft: #3B2F1E;
+      --ex-bg: #2B2E36;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic Medium", "Yu Gothic", "Noto Sans JP", "Meiryo", sans-serif;
+    line-height: 1.8;
+    font-size: 15.5px;
+    -webkit-text-size-adjust: 100%;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 0 16px 90px; }
+  header.hero { border-bottom: 3px double var(--indigo); padding: 30px 0 18px; margin-bottom: 20px; }
+  .eyebrow { font-size: 12px; letter-spacing: .18em; color: var(--muted); margin-bottom: 8px; }
+  h1 {
+    font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+    font-size: clamp(21px, 4.6vw, 30px);
+    line-height: 1.4; margin: 0 0 8px; color: var(--indigo);
+    font-weight: 600; text-wrap: balance;
+  }
+  .subtitle { color: var(--muted); font-size: 14px; margin: 0; }
+  section.card {
+    background: var(--paper); border: 1px solid var(--line); border-radius: 10px;
+    padding: 20px 18px 16px; margin-bottom: 18px;
+  }
+  h2 {
+    font-size: 16px; color: var(--indigo); margin: 0 0 10px; font-weight: 700;
+  }
+  h2 .step {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--indigo); color: var(--paper);
+    font-size: 13px; margin-right: 8px; flex-shrink: 0;
+  }
+  p { margin: 0 0 10px; }
+  .hint { color: var(--muted); font-size: 13px; }
+  input[type="text"], input[type="password"], textarea, select {
+    width: 100%; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 8px;
+    background: var(--ground); color: var(--ink); font: inherit; font-size: 14.5px;
+  }
+  textarea { resize: vertical; }
+  input:focus-visible, textarea:focus-visible, select:focus-visible, button:focus-visible {
+    outline: 3px solid var(--amber); outline-offset: 1px;
+  }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .row > .grow { flex: 1 1 240px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 16px; border-radius: 8px; font-size: 14px; font-weight: 700;
+    border: 1.5px solid var(--indigo); cursor: pointer; text-decoration: none;
+    background: transparent; color: var(--indigo); font-family: inherit;
+  }
+  .btn-primary { background: var(--indigo); color: var(--paper); }
+  .btn-green { background: var(--green); border-color: var(--green); color: var(--paper); }
+  .btn-ghost { border-color: var(--line); color: var(--muted); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn-big {
+    width: 100%; justify-content: center; font-size: 17px; padding: 15px;
+    border-radius: 12px; letter-spacing: .04em;
+  }
+  details.help {
+    background: var(--indigo-soft); border-radius: 8px; padding: 10px 14px; margin: 10px 0;
+    font-size: 13.5px;
+  }
+  details.help summary { cursor: pointer; font-weight: 700; color: var(--indigo); }
+  details.help ol { margin: 8px 0 4px; padding-left: 1.4em; }
+  .status-ok {
+    background: var(--green-soft); border-left: 4px solid var(--green);
+    padding: 8px 12px; border-radius: 0 6px 6px 0; font-size: 13.5px; margin-top: 10px;
+  }
+  .status-warn {
+    background: var(--amber-soft); border-left: 4px solid var(--amber);
+    padding: 8px 12px; border-radius: 0 6px 6px 0; font-size: 13.5px; margin-top: 10px;
+  }
+  #playerBox { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: 10px; overflow: hidden; }
+  #playerBox iframe { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .nowline {
+    display: flex; gap: 10px; align-items: baseline; margin-top: 10px;
+    background: var(--ex-bg); border-radius: 8px; padding: 8px 12px; font-size: 13.5px;
+    min-height: 2.4em;
+  }
+  .nowline .t { font-variant-numeric: tabular-nums; color: var(--indigo); font-weight: 700; flex-shrink: 0; }
+  .nowline .txt { color: var(--muted); overflow: hidden; }
+  #askPanel { display: none; }
+  #askPanel.open { display: block; }
+  .qa { margin-top: 14px; }
+  .qa .q, .qa .a {
+    border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; font-size: 14.5px;
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .qa .q { background: var(--indigo-soft); }
+  .qa .q .meta, .qa .a .meta { font-size: 12px; color: var(--muted); margin-bottom: 4px; white-space: normal; }
+  .qa .a { background: var(--paper); border: 1px solid var(--line); }
+  .qa .a.thinking { color: var(--muted); font-style: italic; }
+  .micbtn.rec { background: #B03A2E; border-color: #B03A2E; color: #fff; }
+  .keyhint { font-size: 12px; color: var(--muted); text-align: center; margin-top: 6px; }
+  footer { color: var(--muted); font-size: 12.5px; margin-top: 30px; text-align: center; }
+  .copied { color: var(--green); font-weight: 700; font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <div class="eyebrow">KIKINAGASHI STUDY ROOM</div>
+  <h1>いっしょに聞き流し</h1>
+  <p class="subtitle">AIと同じYouTubeを「一緒に聞いている」状態にして、「あれ、今のって?」がそのまま通じる勉強部屋。</p>
+</header>
+
+<section class="card">
+  <h2><span class="step">1</span>動画を読み込む</h2>
+  <div class="row">
+    <div class="grow"><input type="text" id="urlInput" placeholder="YouTubeのURLを貼り付け(例: https://youtu.be/…)" autocomplete="off"></div>
+    <button class="btn btn-primary" id="loadBtn">読み込む</button>
+  </div>
+  <div id="urlStatus"></div>
+</section>
+
+<section class="card">
+  <h2><span class="step">2</span>AIの「耳」を用意する</h2>
+  <p class="hint">
+    <b>iPhone・スマホの人:</b> この手順は飛ばしてOKです。下の⚙設定で <b>Gemini</b> を選べば、AIが動画そのものを直接「見て・聞いて」答えるので、文字起こしは不要です(YouTubeアプリは文字起こしのコピーができないため、スマホはこちらが正解)。<br>
+    <b>PCの人:</b> 文字起こしを貼っておくと、どのAIでも(コピー方式でも)「直前の内容」が自動で伝わるようになります。
+  </p>
+  <details class="help">
+    <summary>【PC向け】文字起こしのコピーの仕方(30秒でできます)</summary>
+    <ol>
+      <li>YouTubeで動画の<b>説明欄(概要欄)を開く</b></li>
+      <li>下の方にある<b>「文字起こしを表示」</b>を押す</li>
+      <li>出てきた文字起こしを<b>先頭から最後までドラッグして全部コピー</b>(タイムスタンプごとでOK)</li>
+      <li>下の欄に貼り付けて「登録」</li>
+    </ol>
+    ※iPhone/AndroidのYouTubeアプリでは文字起こしのコピーはできません。スマホの人はGemini設定(⚙)を使ってください。
+  </details>
+  <textarea id="transcriptInput" rows="5" placeholder="0:00&#10;こんにちは今日は一問一答をやっていきます&#10;0:05&#10;第1問 …&#10;(こんな形式のまま丸ごと貼り付けでOK)"></textarea>
+  <div class="row" style="margin-top:8px">
+    <button class="btn btn-primary" id="transcriptBtn">登録</button>
+    <span id="transcriptStatus" class="hint"></span>
+  </div>
+</section>
+
+<section class="card" id="playerCard" style="display:none">
+  <h2><span class="step">3</span>いっしょに聞く</h2>
+  <div id="playerBox"><div id="player"></div></div>
+  <div class="nowline">
+    <span class="t" id="nowTime">0:00</span>
+    <span class="txt" id="nowText">(再生するとここに「AIがいま聞いている内容」が流れます)</span>
+  </div>
+
+  <div style="margin-top:14px">
+    <button class="btn btn-green btn-big" id="askBtn">❓ あれ、今のって? — 動画を止めて質問する</button>
+    <div class="keyhint">キーボードなら <b>Q</b> キーでも開けます</div>
+  </div>
+
+  <div id="askPanel">
+    <hr style="border:none;border-top:1px solid var(--line);margin:16px 0">
+    <p class="hint" id="askContext"></p>
+    <div class="row">
+      <div class="grow">
+        <textarea id="questionInput" rows="2" placeholder="例: 今の問題って、賃借人側からだと結論変わらなかったっけ?"></textarea>
+      </div>
+      <button class="btn micbtn" id="micBtn" title="音声で入力">🎤 話す</button>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <label class="hint">「今の」の範囲:
+        <select id="windowSelect" style="width:auto;padding:6px 8px">
+          <option value="60">直前1分</option>
+          <option value="90" selected>直前1分半</option>
+          <option value="180">直前3分</option>
+          <option value="300">直前5分</option>
+        </select>
+      </label>
+    </div>
+    <div class="row" style="margin-top:10px" id="askActions">
+      <button class="btn btn-primary" id="askApiBtn" style="display:none">この場でAIに聞く</button>
+      <button class="btn" id="copyChatGptBtn">コピーしてChatGPTへ</button>
+      <button class="btn" id="copyClaudeBtn">コピーしてClaudeへ</button>
+      <button class="btn btn-ghost" id="copyOnlyBtn">コピーのみ</button>
+      <span id="copyStatus"></span>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn btn-ghost" id="resumeBtn">▶ 続きを聞く(パネルを閉じる)</button>
+    </div>
+    <div class="qa" id="qaLog"></div>
+    <div class="row" id="followupRow" style="display:none;margin-top:4px">
+      <div class="grow"><input type="text" id="followupInput" placeholder="続けて質問(同じ話題のまま深掘り)"></div>
+      <button class="btn btn-primary" id="followupBtn">送信</button>
+    </div>
+  </div>
+</section>
+
+<section class="card">
+  <details>
+    <summary style="cursor:pointer;font-weight:700;color:var(--indigo)">⚙ 設定:APIキーで「その場で回答」を有効にする(任意)</summary>
+    <p class="hint" style="margin-top:10px">
+      キーを入れると、外部サイトに移動せずこのページ内でAIが即答します。<b>Geminiを選ぶと、質問の瞬間の「直前◯分」の動画をAIが直接見て答える</b>ので、文字起こしの貼り付けが不要になります(スマホはこれ一択)。
+      Geminiのキーは <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> で無料で作れます(Googleアカウントでログイン→「APIキーを作成」)。
+      キーは<b>この端末のブラウザ内(localStorage)にだけ</b>保存され、どこかに送信されることはありません(質問時にAI各社のAPIへ直接送られるだけです)。
+    </p>
+    <div class="row" style="margin-top:8px">
+      <label class="hint" style="flex-shrink:0">AI:
+        <select id="providerSelect" style="width:auto;padding:6px 8px">
+          <option value="">使わない(コピー方式)</option>
+          <option value="gemini">Gemini(無料枠あり・動画を直接見られる=スマホ向き)</option>
+          <option value="anthropic">Claude(Anthropic API)</option>
+          <option value="openai">ChatGPT(OpenAI API)</option>
+        </select>
+      </label>
+      <div class="grow"><input type="password" id="apiKeyInput" placeholder="APIキー" autocomplete="off"></div>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <label class="hint" style="flex-shrink:0">モデル:</label>
+      <div class="grow"><input type="text" id="modelInput" placeholder="(空欄なら標準モデル)"></div>
+      <button class="btn btn-primary" id="saveSettingsBtn">保存</button>
+      <span id="settingsStatus" class="hint"></span>
+    </div>
+  </details>
+</section>
+
+<footer>モドキゲームズ別館・勉強部屋 — このページは全部ブラウザ内で動きます。</footer>
+</div>
+
+<script>
+"use strict";
+/* ---------- 状態 ---------- */
+const $ = id => document.getElementById(id);
+let player = null;
+let playerReady = false;
+let videoId = null;
+let videoUrl = "";
+let transcript = [];          // [{t: 秒, text: "…"}]
+let chatMessages = [];        // APIモードの会話履歴 [{role, content}]
+let capturedTime = 0;         // 質問ボタンを押した瞬間の再生位置
+
+const DEFAULT_MODELS = {
+  anthropic: "claude-sonnet-5",
+  gemini: "gemini-2.5-flash",
+  openai: "gpt-4o-mini"
+};
+
+/* ---------- ユーティリティ ---------- */
+function fmt(sec) {
+  sec = Math.max(0, Math.floor(sec));
+  const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60;
+  return (h ? h + ":" + String(m).padStart(2, "0") : m) + ":" + String(s).padStart(2, "0");
+}
+function esc(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+/* ---------- 動画URLの解析 ---------- */
+function extractVideoId(url) {
+  url = url.trim();
+  if (/^[\w-]{11}$/.test(url)) return url;
+  try {
+    const u = new URL(url);
+    if (u.hostname === "youtu.be") return u.pathname.slice(1).split("/")[0] || null;
+    if (/(^|\.)youtube\.com$/.test(u.hostname)) {
+      if (u.searchParams.get("v")) return u.searchParams.get("v");
+      const m = u.pathname.match(/\/(shorts|embed|live)\/([\w-]{11})/);
+      if (m) return m[2];
+    }
+  } catch (e) { /* URLでない */ }
+  return null;
+}
+
+/* ---------- YouTubeプレーヤー ---------- */
+function loadYouTubeApi() {
+  return new Promise(resolve => {
+    if (window.YT && window.YT.Player) return resolve();
+    window.onYouTubeIframeAPIReady = resolve;
+    const s = document.createElement("script");
+    s.src = "https://www.youtube.com/iframe_api";
+    document.head.appendChild(s);
+  });
+}
+
+$("loadBtn").addEventListener("click", async () => {
+  const id = extractVideoId($("urlInput").value);
+  const st = $("urlStatus");
+  if (!id) {
+    st.innerHTML = '<div class="status-warn">YouTubeのURLとして読み取れませんでした。動画ページのURLをそのまま貼ってください。</div>';
+    return;
+  }
+  videoId = id;
+  videoUrl = "https://www.youtube.com/watch?v=" + id;
+  st.innerHTML = '<div class="status-ok">読み込みました。下のプレーヤーで再生できます。</div>';
+  $("playerCard").style.display = "";
+  await loadYouTubeApi();
+  if (player) {
+    player.loadVideoById(id);
+  } else {
+    player = new YT.Player("player", {
+      videoId: id,
+      playerVars: { rel: 0, playsinline: 1 },
+      events: { onReady: () => { playerReady = true; } }
+    });
+  }
+  // この動画用の文字起こしに切り替え(保存があれば復元、なければ空に)
+  transcript = [];
+  $("nowText").textContent = "(再生するとここに「AIがいま聞いている内容」が流れます)";
+  const saved = localStorage.getItem("kikinagashi_tr_" + id);
+  if (saved) {
+    try {
+      transcript = JSON.parse(saved);
+      $("transcriptStatus").textContent = "この動画の文字起こしを前回の保存から復元しました(" + transcript.length + "区間)";
+    } catch (e) {}
+  } else {
+    $("transcriptStatus").textContent = "";
+  }
+  $("playerCard").scrollIntoView({ behavior: "smooth" });
+});
+
+/* ---------- 文字起こし ---------- */
+function parseTranscript(text) {
+  const tsRe = /^\s*(?:(\d{1,2}):)?(\d{1,3}):(\d{2})\s*(.*)$/;
+  const segs = [];
+  let cur = null;
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line) continue;
+    const m = line.match(tsRe);
+    if (m) {
+      const t = (m[1] ? +m[1] * 3600 : 0) + (+m[2]) * 60 + (+m[3]);
+      cur = { t, text: (m[4] || "").trim() };
+      segs.push(cur);
+    } else if (cur) {
+      cur.text = (cur.text ? cur.text + " " : "") + line;
+    } else {
+      // タイムスタンプが1つも出る前のテキストは 0:00 扱い
+      cur = { t: 0, text: line };
+      segs.push(cur);
+    }
+  }
+  return segs.filter(s => s.text);
+}
+
+$("transcriptBtn").addEventListener("click", () => {
+  const raw = $("transcriptInput").value;
+  const segs = parseTranscript(raw);
+  const st = $("transcriptStatus");
+  if (segs.length === 0) {
+    st.textContent = "読み取れませんでした。YouTubeの「文字起こしを表示」からコピーしたものをそのまま貼ってください。";
+    return;
+  }
+  transcript = segs;
+  st.textContent = "登録しました(" + segs.length + "区間・" + fmt(segs[segs.length - 1].t) + "まで)。これでAIの耳は準備OKです。";
+  if (videoId) {
+    try { localStorage.setItem("kikinagashi_tr_" + videoId, JSON.stringify(segs)); } catch (e) {}
+  }
+});
+
+/* 現在位置の文字起こしを常時表示(「一緒に聞いてる」表示) */
+function currentSegIndex(t) {
+  let lo = 0, hi = transcript.length - 1, ans = -1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (transcript[mid].t <= t) { ans = mid; lo = mid + 1; } else { hi = mid - 1; }
+  }
+  return ans;
+}
+setInterval(() => {
+  if (!playerReady || !player || typeof player.getCurrentTime !== "function") return;
+  const t = player.getCurrentTime() || 0;
+  $("nowTime").textContent = fmt(t);
+  if (transcript.length) {
+    const i = currentSegIndex(t);
+    if (i >= 0) $("nowText").textContent = transcript[i].text;
+  }
+}, 500);
+
+/* ---------- 「今の」抽出 ---------- */
+function transcriptWindow(t, winSec) {
+  if (!transcript.length) return null;
+  const from = Math.max(0, t - winSec);
+  let startIdx = currentSegIndex(from);
+  if (startIdx < 0) startIdx = 0;
+  const endIdx = Math.max(startIdx, currentSegIndex(t + 3));
+  const parts = [];
+  for (let i = startIdx; i <= endIdx && i < transcript.length; i++) {
+    parts.push("[" + fmt(transcript[i].t) + "] " + transcript[i].text);
+  }
+  return parts.join("\n");
+}
+
+/* ---------- プロンプト生成 ---------- */
+/* geminiDirect: Gemini APIに動画クリップそのものを添付するモード(文字起こし不要) */
+function buildPrompt(question, winSec, geminiDirect) {
+  const ctx = transcriptWindow(capturedTime, winSec);
+  const lines = [];
+  lines.push("【状況】YouTubeの勉強動画(資格試験の聞き流し・一問一答など)を聞いています。あなたも一緒に聞いていた勉強仲間として答えてください。");
+  lines.push("【動画】" + videoUrl + "&t=" + Math.floor(capturedTime) + "s");
+  lines.push("【質問した瞬間の再生位置】" + fmt(capturedTime));
+  if (geminiDirect) {
+    lines.push("【添付】質問の直前 " + fmt(Math.max(0, capturedTime - winSec)) + "〜" + fmt(capturedTime) + " の動画クリップを添付しています。私の言う「今の」はこの範囲のことです。まず添付区間の音声・映像を確認してから答えてください。");
+  } else if (ctx) {
+    lines.push("【直前に流れていた内容(文字起こし)— 私の言う「今の」はこの範囲のことです】");
+    lines.push(ctx);
+  } else {
+    lines.push("【注意】文字起こしは渡せていません。再生位置と質問文から推測して、必要なら聞き返してください。");
+  }
+  lines.push("【質問】");
+  lines.push(question);
+  lines.push("【答え方のお願い】①質問への答えと理由 ②混同しやすい類似パターン・例外(あれば) ③関連する頻出論点ひとこと — を簡潔に。");
+  return lines.join("\n");
+}
+
+/* ---------- 質問パネル ---------- */
+function openAskPanel() {
+  if (!player) return;
+  try { player.pauseVideo(); } catch (e) {}
+  capturedTime = (playerReady && player.getCurrentTime()) || 0;
+  $("askPanel").classList.add("open");
+  const hasTr = transcript.length > 0;
+  const geminiReady = localStorage.getItem("kikinagashi_provider") === "gemini" && localStorage.getItem("kikinagashi_key");
+  $("askContext").innerHTML = "📍 <b>" + fmt(capturedTime) + "</b> で一時停止しました。" +
+    (geminiReady ? "直前の動画をGeminiが直接見て答えます。「今の問題って…」のままでOK。"
+     : hasTr ? "直前の内容は自動で添付されます。「今の問題って…」のままでOK。"
+     : "<span style='color:var(--amber)'>文字起こし未登録なので、コピー方式では問題の内容を質問文に少し書いてください(⚙設定でGeminiを選ぶと不要になります)。</span>");
+  $("questionInput").focus();
+}
+$("askBtn").addEventListener("click", openAskPanel);
+document.addEventListener("keydown", e => {
+  if (e.key.toLowerCase() === "q" && !/(INPUT|TEXTAREA|SELECT)/.test(document.activeElement.tagName)) {
+    e.preventDefault();
+    if ($("playerCard").style.display !== "none") openAskPanel();
+  }
+});
+$("resumeBtn").addEventListener("click", () => {
+  $("askPanel").classList.remove("open");
+  try { player.playVideo(); } catch (e) {}
+});
+
+/* ---------- コピー方式 ---------- */
+async function copyPrompt(openUrl) {
+  const q = $("questionInput").value.trim();
+  if (!q) { $("copyStatus").innerHTML = '<span style="color:var(--amber)">先に質問を書いて(話して)ください</span>'; return; }
+  const prompt = buildPrompt(q, +$("windowSelect").value);
+  try { await navigator.clipboard.writeText(prompt); } catch (e) {
+    // クリップボードが使えない環境向けフォールバック
+    const ta = document.createElement("textarea");
+    ta.value = prompt; document.body.appendChild(ta); ta.select();
+    document.execCommand("copy"); ta.remove();
+  }
+  $("copyStatus").innerHTML = '<span class="copied">✓ コピーしました。貼り付けるだけ!</span>';
+  if (openUrl) window.open(openUrl, "_blank", "noopener");
+}
+$("copyChatGptBtn").addEventListener("click", () => copyPrompt("https://chatgpt.com/"));
+$("copyClaudeBtn").addEventListener("click", () => copyPrompt("https://claude.ai/new"));
+$("copyOnlyBtn").addEventListener("click", () => copyPrompt(null));
+
+/* ---------- 音声入力 ---------- */
+(() => {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const btn = $("micBtn");
+  if (!SR) { btn.style.display = "none"; return; }
+  let rec = null, recording = false;
+  btn.addEventListener("click", () => {
+    if (recording) { rec.stop(); return; }
+    rec = new SR();
+    rec.lang = "ja-JP";
+    rec.interimResults = false;
+    rec.continuous = false;
+    rec.onresult = e => {
+      const text = Array.from(e.results).map(r => r[0].transcript).join("");
+      const q = $("questionInput");
+      q.value = (q.value ? q.value + " " : "") + text;
+    };
+    rec.onend = () => { recording = false; btn.classList.remove("rec"); btn.textContent = "🎤 話す"; };
+    rec.onerror = rec.onend;
+    rec.start();
+    recording = true; btn.classList.add("rec"); btn.textContent = "⏹ 停止";
+  });
+})();
+
+/* ---------- 設定(APIモード) ---------- */
+function loadSettings() {
+  const p = localStorage.getItem("kikinagashi_provider") || "";
+  $("providerSelect").value = p;
+  $("apiKeyInput").value = localStorage.getItem("kikinagashi_key") || "";
+  $("modelInput").value = localStorage.getItem("kikinagashi_model") || "";
+  $("modelInput").placeholder = p ? "標準: " + DEFAULT_MODELS[p] : "(空欄なら標準モデル)";
+  $("askApiBtn").style.display = (p && $("apiKeyInput").value) ? "" : "none";
+}
+$("providerSelect").addEventListener("change", () => {
+  const p = $("providerSelect").value;
+  $("modelInput").placeholder = p ? "標準: " + DEFAULT_MODELS[p] : "(空欄なら標準モデル)";
+});
+$("saveSettingsBtn").addEventListener("click", () => {
+  localStorage.setItem("kikinagashi_provider", $("providerSelect").value);
+  localStorage.setItem("kikinagashi_key", $("apiKeyInput").value.trim());
+  localStorage.setItem("kikinagashi_model", $("modelInput").value.trim());
+  $("settingsStatus").textContent = "保存しました";
+  loadSettings();
+});
+loadSettings();
+
+/* ---------- APIモード(その場で回答) ---------- */
+const SYSTEM_PROMPT =
+  "あなたはユーザーと一緒にYouTubeの勉強動画(資格試験の聞き流し・一問一答・過去問解説など)を聞いている勉強仲間です。" +
+  "ユーザーの発言に含まれる「今の」「さっきの」は、一緒に渡される文字起こしまたは動画クリップの範囲を指します。" +
+  "回答は日本語で、①答えと理由 ②混同しやすい類似パターン・例外 ③関連する頻出論点ひとこと、を簡潔に。" +
+  "文字起こしが不完全で特定できないときは、推測で断定せず聞き返してください。";
+
+async function callAI(messages) {
+  const provider = localStorage.getItem("kikinagashi_provider");
+  const key = localStorage.getItem("kikinagashi_key");
+  const model = localStorage.getItem("kikinagashi_model") || DEFAULT_MODELS[provider];
+  if (provider === "anthropic") {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-api-key": key,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true"
+      },
+      body: JSON.stringify({ model, max_tokens: 1500, system: SYSTEM_PROMPT, messages })
+    });
+    if (!res.ok) throw new Error("Anthropic API " + res.status + ": " + await res.text());
+    const data = await res.json();
+    return data.content.filter(b => b.type === "text").map(b => b.text).join("\n");
+  }
+  if (provider === "openai") {
+    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: { "content-type": "application/json", "authorization": "Bearer " + key },
+      body: JSON.stringify({ model, messages: [{ role: "system", content: SYSTEM_PROMPT }, ...messages] })
+    });
+    if (!res.ok) throw new Error("OpenAI API " + res.status + ": " + await res.text());
+    const data = await res.json();
+    return data.choices[0].message.content;
+  }
+  if (provider === "gemini") {
+    const contents = messages.map(m => {
+      const parts = [];
+      if (m.videoWindow && videoId) {
+        // 動画の該当区間をGeminiに直接見せる(文字起こし不要の仕組み)
+        parts.push({
+          fileData: { fileUri: "https://www.youtube.com/watch?v=" + videoId },
+          videoMetadata: {
+            startOffset: Math.floor(m.videoWindow.start) + "s",
+            endOffset: Math.floor(m.videoWindow.end) + "s"
+          }
+        });
+      }
+      parts.push({ text: m.content });
+      return { role: m.role === "assistant" ? "model" : "user", parts };
+    });
+    const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent?key=" + encodeURIComponent(key), {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ system_instruction: { parts: [{ text: SYSTEM_PROMPT }] }, contents })
+    });
+    if (!res.ok) throw new Error("Gemini API " + res.status + ": " + await res.text());
+    const data = await res.json();
+    return data.candidates[0].content.parts.map(p => p.text).join("\n");
+  }
+  throw new Error("設定でAIとAPIキーを保存してください");
+}
+
+function addQa(cls, meta, text) {
+  const div = document.createElement("div");
+  div.className = cls;
+  div.innerHTML = '<div class="meta">' + esc(meta) + "</div>" + esc(text);
+  $("qaLog").appendChild(div);
+  div.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  return div;
+}
+
+async function sendToApi(userText, isNewQuestion) {
+  const winSec = +$("windowSelect").value;
+  // Geminiのときは文字起こしの有無にかかわらず動画クリップを直接添付する
+  const geminiDirect = localStorage.getItem("kikinagashi_provider") === "gemini";
+  const content = isNewQuestion ? buildPrompt(userText, winSec, geminiDirect) : userText;
+  if (isNewQuestion) chatMessages = []; // 新しい「今の」で仕切り直し
+  const msg = { role: "user", content };
+  if (isNewQuestion && geminiDirect) {
+    msg.videoWindow = { start: Math.max(0, capturedTime - winSec), end: capturedTime + 5 };
+  }
+  chatMessages.push(msg);
+  addQa("q", (isNewQuestion ? "📍 " + fmt(capturedTime) + " の質問" : "追加の質問"), userText);
+  const thinking = addQa("a thinking", "AI", "考え中…");
+  try {
+    const answer = await callAI(chatMessages);
+    chatMessages.push({ role: "assistant", content: answer });
+    thinking.className = "a";
+    thinking.innerHTML = '<div class="meta">AI</div>' + esc(answer);
+    $("followupRow").style.display = "";
+  } catch (err) {
+    thinking.className = "a";
+    thinking.innerHTML = '<div class="meta">エラー</div>' + esc(String(err.message || err)) +
+      "\n\nキー・モデル名を設定で確認してください。急ぎならコピー方式が使えます。";
+  }
+}
+
+$("askApiBtn").addEventListener("click", () => {
+  const q = $("questionInput").value.trim();
+  if (!q) { $("questionInput").focus(); return; }
+  $("questionInput").value = "";
+  sendToApi(q, true);
+});
+$("followupBtn").addEventListener("click", () => {
+  const q = $("followupInput").value.trim();
+  if (!q) return;
+  $("followupInput").value = "";
+  sendToApi(q, false);
+});
+$("followupInput").addEventListener("keydown", e => { if (e.key === "Enter") $("followupBtn").click(); });
+</script>
+</body>
+</html>

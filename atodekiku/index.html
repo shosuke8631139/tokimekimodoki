@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>あとで聞くメモ&復習ノート|YouTubeアプリのまま使える質問メモ</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --ground: #FAF9F5; --paper: #FFFFFF; --ink: #262A31; --muted: #5D6570;
+    --line: #DDD9CF; --indigo: #2C4770; --indigo-soft: #EAEEF5;
+    --green: #4E7A45; --green-soft: #EEF3EA;
+    --amber: #A8641F; --amber-soft: #FBF1E3; --ex-bg: #F3F2ED;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #1C1E23; --paper: #24272E; --ink: #E8E6E0; --muted: #A2A8B2;
+      --line: #3B3F48; --indigo: #8FA9D6; --indigo-soft: #2B3345;
+      --green: #93B98A; --green-soft: #2A3527; --amber: #D9A05B; --amber-soft: #3B2F1E;
+      --ex-bg: #2B2E36;
+    }
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body {
+    margin: 0; background: var(--ground); color: var(--ink);
+    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic Medium", "Yu Gothic", "Noto Sans JP", "Meiryo", sans-serif;
+    line-height: 1.8; font-size: 15.5px; -webkit-text-size-adjust: 100%;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 0 14px 90px; }
+  header.hero { border-bottom: 3px double var(--indigo); padding: 26px 0 14px; margin-bottom: 16px; }
+  .eyebrow { font-size: 11px; letter-spacing: .18em; color: var(--muted); margin-bottom: 6px; }
+  h1 {
+    font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+    font-size: clamp(20px, 5vw, 27px); line-height: 1.4; margin: 0 0 6px;
+    color: var(--indigo); font-weight: 600; text-wrap: balance;
+  }
+  .subtitle { color: var(--muted); font-size: 13.5px; margin: 0; }
+  section.card {
+    background: var(--paper); border: 1px solid var(--line); border-radius: 10px;
+    padding: 18px 16px 14px; margin-bottom: 16px;
+  }
+  h2 { font-size: 16px; color: var(--indigo); margin: 0 0 10px; font-weight: 700; }
+  p { margin: 0 0 10px; }
+  .hint { color: var(--muted); font-size: 13px; }
+  input[type="text"], textarea {
+    width: 100%; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 8px;
+    background: var(--ground); color: var(--ink); font: inherit; font-size: 14.5px;
+  }
+  input:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3px solid var(--amber); outline-offset: 1px; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .row > .grow { flex: 1 1 180px; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 10px 14px; border-radius: 8px; font-size: 14px; font-weight: 700;
+    border: 1.5px solid var(--indigo); cursor: pointer; background: transparent;
+    color: var(--indigo); font-family: inherit; text-decoration: none;
+  }
+  .btn-primary { background: var(--indigo); color: var(--paper); }
+  .btn-green { background: var(--green); border-color: var(--green); color: var(--paper); }
+  .btn-amber { background: var(--amber); border-color: var(--amber); color: var(--paper); }
+  .btn-ghost { border-color: var(--line); color: var(--muted); }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+  .clock {
+    font-variant-numeric: tabular-nums; text-align: center;
+    font-size: clamp(40px, 13vw, 56px); font-weight: 700; color: var(--indigo);
+    line-height: 1.2; margin: 6px 0 2px; letter-spacing: .03em;
+  }
+  .clock.paused { color: var(--amber); }
+  .clockstate { text-align: center; font-size: 12.5px; color: var(--muted); margin-bottom: 10px; min-height: 1.5em; }
+  .bigmark {
+    width: 100%; padding: 22px 10px; font-size: 19px; border-radius: 14px; margin: 8px 0 4px;
+  }
+  .swbtns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+  .marks { margin-top: 12px; }
+  .mark {
+    display: flex; gap: 8px; align-items: center; background: var(--ex-bg);
+    border-radius: 8px; padding: 7px 10px; margin-bottom: 7px;
+  }
+  .mark .t { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--indigo); flex-shrink: 0; }
+  .mark input { border: none; background: transparent; padding: 4px 6px; flex: 1; font-size: 14px; }
+  .mark button { border: none; background: none; color: var(--muted); font-size: 16px; cursor: pointer; padding: 4px; }
+  .duecard {
+    border: 1.5px solid var(--line); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px;
+    background: var(--ground);
+  }
+  .duecard .meta { font-size: 12px; color: var(--muted); margin-bottom: 2px; }
+  .duecard .q { font-weight: 700; margin-bottom: 6px; }
+  .duecard .ans { font-size: 13.5px; color: var(--muted); white-space: pre-wrap; margin-bottom: 8px; }
+  .badge {
+    display: inline-block; background: var(--amber-soft); color: var(--amber);
+    border-radius: 999px; padding: 1px 10px; font-size: 12.5px; font-weight: 700; margin-left: 6px;
+  }
+  .badge.ok { background: var(--green-soft); color: var(--green); }
+  details.plain summary { cursor: pointer; font-weight: 700; color: var(--indigo); font-size: 14px; }
+  .note-ans { margin-top: 6px; }
+  .note-ans textarea { font-size: 13.5px; }
+  .status { font-size: 13px; margin-top: 6px; }
+  .status .ok { color: var(--green); font-weight: 700; }
+  footer { color: var(--muted); font-size: 12px; margin-top: 26px; text-align: center; }
+  .empty { color: var(--muted); font-size: 13.5px; background: var(--ex-bg); border-radius: 8px; padding: 10px 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <div class="eyebrow">ATODE-KIKU MEMO</div>
+  <h1>あとで聞くメモ&復習ノート</h1>
+  <p class="subtitle">YouTubeは<b>いつものアプリのまま</b>。「あれ?」の瞬間はボタン1つでメモして、休憩でまとめてGeminiに質問。聞いたことは復習ノートが忘れた頃に再出題。</p>
+</header>
+
+<section class="card">
+  <h2>📺 いま聞いている動画</h2>
+  <div class="row">
+    <div class="grow"><input type="text" id="vUrl" placeholder="動画URL(YouTubeアプリの共有→リンクをコピー)"></div>
+  </div>
+  <div class="row" style="margin-top:8px">
+    <div class="grow"><input type="text" id="vTitle" placeholder="動画の呼び名(例: 宅建一問一答 権利関係)※任意"></div>
+  </div>
+  <div class="row" style="margin-top:8px">
+    <div class="grow"><input type="text" id="examName" placeholder="勉強中の試験(例: 宅建)※任意・プロンプトに反映"></div>
+  </div>
+</section>
+
+<section class="card">
+  <h2>⏱ 動画と並走ストップウォッチ</h2>
+  <p class="hint" id="swHelp">YouTubeアプリで<b>再生を始めた瞬間</b>に「スタート」。あとは普段どおり聞き流すだけ。途中から聞くときは「途中から」で現在の再生位置(例: 15:20)を入れてください。</p>
+  <div class="clock" id="clock">0:00</div>
+  <div class="clockstate" id="clockState">まだ止まっています</div>
+
+  <button class="btn btn-green bigmark" id="markBtn">❓ あれ? — いまの位置をメモ</button>
+  <div class="hint" style="text-align:center">押した瞬間の「何分ごろ」が記録されます。メモ書きはあとからでOK。</div>
+
+  <div class="swbtns">
+    <button class="btn btn-primary" id="startBtn">▶ スタート(0:00から)</button>
+    <button class="btn" id="startAtBtn">▶ 途中から…</button>
+    <button class="btn btn-amber" id="pauseBtn" disabled>⏸ 動画を止めた</button>
+    <button class="btn" id="resumeBtn" disabled>▶ 動画を再開した</button>
+    <button class="btn btn-ghost" id="syncBtn" disabled>🕐 位置合わせ…</button>
+    <button class="btn btn-ghost" id="stopBtn" disabled>■ 今日はここまで</button>
+  </div>
+
+  <div class="marks" id="marksBox"></div>
+
+  <div class="row" style="margin-top:10px" id="promptRow" hidden>
+    <button class="btn btn-primary" id="genPromptBtn">📋 まとめて質問プロンプトをコピー</button>
+    <a class="btn" href="https://gemini.google.com/app" target="_blank" rel="noopener" id="openGeminiBtn">Geminiを開く</a>
+  </div>
+  <div class="status" id="promptStatus"></div>
+</section>
+
+<section class="card">
+  <h2>📒 復習ノート <span class="badge" id="dueBadge" hidden></span></h2>
+  <p class="hint">「今日はここまで」を押すと、その日のメモがここに入ります。翌日→3日後→1週間後…と、忘れた頃に再出題します。</p>
+  <div id="dueBox"></div>
+  <div class="row" style="margin-top:6px">
+    <button class="btn" id="quizPromptBtn">📋 このノートから一問一答テストを作るプロンプトをコピー</button>
+  </div>
+  <div class="status" id="quizStatus"></div>
+  <details class="plain" style="margin-top:12px">
+    <summary>すべてのノートを見る(<span id="allCount">0</span>件)</summary>
+    <div id="allBox" style="margin-top:10px"></div>
+    <div class="row" style="margin-top:8px">
+      <button class="btn btn-ghost" id="backupBtn">バックアップ用にデータをコピー</button>
+      <span class="status" id="backupStatus"></span>
+    </div>
+  </details>
+</section>
+
+<footer>モドキゲームズ別館・勉強部屋 — データはこの端末のブラウザ内にだけ保存されます。<br>ホーム画面に追加(共有→ホーム画面に追加)するとアプリのように使えます。</footer>
+</div>
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const KEY = "atodekiku_v1";
+const STAGE_DAYS = [1, 3, 7, 14, 30, 60];
+
+/* ---------- 状態(リロード・アプリ切替で消えないよう常時保存) ---------- */
+let S = {
+  video: { url: "", title: "" },
+  exam: "",
+  sw: null,      // {startEpoch, offset, pausedAccum, pauseAt}
+  marks: [],     // [{t, memo}]
+  notes: []      // [{id, vtitle, vurl, t, memo, answer, stage, due, done}]
+};
+try { const raw = localStorage.getItem(KEY); if (raw) S = Object.assign(S, JSON.parse(raw)); } catch (e) {}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+
+/* ---------- ユーティリティ ---------- */
+function fmt(sec) {
+  sec = Math.max(0, Math.floor(sec));
+  const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60;
+  return (h ? h + ":" + String(m).padStart(2, "0") : m) + ":" + String(s).padStart(2, "0");
+}
+function parseTime(str) {
+  const m = String(str).trim().match(/^(?:(\d{1,2}):)?(\d{1,3}):(\d{2})$|^(\d+)$/);
+  if (!m) return null;
+  if (m[4] !== undefined) return +m[4] * 60; // 「15」→15分
+  return (m[1] ? +m[1] * 3600 : 0) + (+m[2]) * 60 + (+m[3]);
+}
+function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+function today() { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+function addDays(n) { const d = new Date(); d.setDate(d.getDate() + n); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); return true; }
+  catch (e) {
+    const ta = document.createElement("textarea");
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    const ok = document.execCommand("copy"); ta.remove(); return ok;
+  }
+}
+
+/* ---------- 動画情報 ---------- */
+$("vUrl").value = S.video.url; $("vTitle").value = S.video.title; $("examName").value = S.exam;
+$("vUrl").addEventListener("input", () => { S.video.url = $("vUrl").value.trim(); save(); });
+$("vTitle").addEventListener("input", () => { S.video.title = $("vTitle").value.trim(); save(); });
+$("examName").addEventListener("input", () => { S.exam = $("examName").value.trim(); save(); });
+
+/* ---------- ストップウォッチ ---------- */
+function elapsed() {
+  if (!S.sw) return 0;
+  const now = S.sw.pauseAt || Date.now();
+  return (now - S.sw.startEpoch) / 1000 - S.sw.pausedAccum + S.sw.offset;
+}
+function renderSw() {
+  const running = !!S.sw, paused = running && !!S.sw.pauseAt;
+  $("clock").textContent = fmt(elapsed());
+  $("clock").classList.toggle("paused", paused);
+  $("clockState").textContent = !running ? "まだ止まっています"
+    : paused ? "⏸ 一時停止中(動画を再開したら「▶動画を再開した」を押してね)"
+    : "▶ 動画と並走中…(この画面は閉じてYouTubeに戻ってOK)";
+  $("startBtn").disabled = running;
+  $("startAtBtn").disabled = running;
+  $("pauseBtn").disabled = !running || paused;
+  $("resumeBtn").disabled = !running || !paused;
+  $("syncBtn").disabled = !running;
+  $("stopBtn").disabled = !running && S.marks.length === 0;
+  $("promptRow").hidden = S.marks.length === 0;
+}
+setInterval(renderSw, 500);
+
+$("startBtn").addEventListener("click", () => {
+  S.sw = { startEpoch: Date.now(), offset: 0, pausedAccum: 0, pauseAt: null };
+  save(); renderSw();
+});
+$("startAtBtn").addEventListener("click", () => {
+  const v = prompt("いま動画の再生位置は?(例: 15:20 / 1:02:30 / 15 と入れると15分)");
+  if (v === null) return;
+  const sec = parseTime(v);
+  if (sec === null) { alert("読み取れませんでした(例: 15:20)"); return; }
+  S.sw = { startEpoch: Date.now(), offset: sec, pausedAccum: 0, pauseAt: null };
+  save(); renderSw();
+});
+$("pauseBtn").addEventListener("click", () => { if (S.sw && !S.sw.pauseAt) { S.sw.pauseAt = Date.now(); save(); renderSw(); } });
+$("resumeBtn").addEventListener("click", () => {
+  if (S.sw && S.sw.pauseAt) { S.sw.pausedAccum += (Date.now() - S.sw.pauseAt) / 1000; S.sw.pauseAt = null; save(); renderSw(); }
+});
+$("syncBtn").addEventListener("click", () => {
+  const v = prompt("いま動画の再生位置は?(例: 23:45)ズレをここで直せます");
+  if (v === null) return;
+  const sec = parseTime(v);
+  if (sec === null) { alert("読み取れませんでした(例: 23:45)"); return; }
+  S.sw.offset += sec - elapsed();
+  save(); renderSw();
+});
+
+/* ---------- メモ(あれ?ボタン) ---------- */
+function renderMarks() {
+  const box = $("marksBox");
+  box.innerHTML = "";
+  S.marks.forEach((m, i) => {
+    const div = document.createElement("div");
+    div.className = "mark";
+    div.innerHTML = '<span class="t">' + fmt(m.t) + '</span>' +
+      '<input type="text" placeholder="ひとことメモ(任意・例: 根抵当権のとこ)" value="' + esc(m.memo) + '">' +
+      '<button title="削除">✕</button>';
+    div.querySelector("input").addEventListener("input", e => { S.marks[i].memo = e.target.value; save(); });
+    div.querySelector("button").addEventListener("click", () => { S.marks.splice(i, 1); save(); renderMarks(); renderSw(); });
+    box.appendChild(div);
+  });
+}
+$("markBtn").addEventListener("click", () => {
+  if (!S.sw) { alert("先に「スタート」を押してください(動画の再生開始と同時に)"); return; }
+  S.marks.push({ t: Math.floor(elapsed()), memo: "" });
+  save(); renderMarks(); renderSw();
+  if (navigator.vibrate) navigator.vibrate(30);
+});
+
+/* ---------- まとめて質問プロンプト ---------- */
+function buildAskPrompt() {
+  const lines = [];
+  lines.push("【状況】" + (S.exam ? S.exam + "の" : "") + "勉強でYouTube動画を聞き流していました。私の勉強サポート役として答えてください。");
+  if (S.video.url) lines.push("【動画】" + (S.video.title ? S.video.title + " " : "") + S.video.url);
+  else if (S.video.title) lines.push("【動画】" + S.video.title + "(URLは手元で確認します)");
+  lines.push("以下の各時点について、その直前で扱っていた問題・論点を動画から確認して、それぞれ ①答えと理由 ②混同しやすい類似パターン・例外 ③関連する頻出論点 を簡潔に教えてください。");
+  S.marks.forEach((m, i) => {
+    lines.push((i + 1) + ". [" + fmt(m.t) + "ごろ]" + (m.memo ? " メモ: " + m.memo : ""));
+  });
+  return lines.join("\n");
+}
+$("genPromptBtn").addEventListener("click", async () => {
+  if (S.marks.length === 0) return;
+  const ok = await copyText(buildAskPrompt());
+  $("promptStatus").innerHTML = ok ? '<span class="ok">✓ コピーしました。Geminiに貼るだけ!</span>' : "コピーに失敗しました";
+});
+
+/* ---------- セッション終了 → 復習ノートへ ---------- */
+$("stopBtn").addEventListener("click", () => {
+  if (S.marks.length > 0) {
+    for (const m of S.marks) {
+      S.notes.unshift({
+        id: Date.now() + "_" + Math.random().toString(36).slice(2, 7),
+        vtitle: S.video.title, vurl: S.video.url,
+        t: m.t, memo: m.memo, answer: "",
+        stage: 0, due: addDays(STAGE_DAYS[0]), done: false
+      });
+    }
+    S.marks = [];
+  }
+  S.sw = null;
+  save(); renderMarks(); renderSw(); renderNotes();
+  $("promptStatus").innerHTML = '<span class="ok">おつかれさま!メモは復習ノートに入りました。明日また出題します。</span>';
+});
+
+/* ---------- 復習ノート ---------- */
+function noteLabel(n) {
+  return (n.vtitle || "動画") + " " + fmt(n.t) + (n.memo ? " — " + n.memo : "の疑問");
+}
+function noteCard(n, withReviewBtns) {
+  const div = document.createElement("div");
+  div.className = "duecard";
+  div.innerHTML =
+    '<div class="meta">' + esc(n.vtitle || "動画") + " [" + fmt(n.t) + "ごろ]" +
+      (n.done ? ' <span class="badge ok">卒業</span>' : ' <span class="badge">' + STAGE_DAYS[Math.min(n.stage, STAGE_DAYS.length - 1)] + '日間隔</span>') + '</div>' +
+    '<div class="q">' + esc(n.memo || "(メモなし)この時点の疑問") + '</div>' +
+    (n.answer ? '<div class="ans">' + esc(n.answer) + '</div>' : "") +
+    '<div class="row"></div>';
+  const row = div.querySelector(".row");
+  if (withReviewBtns) {
+    const okBtn = document.createElement("button");
+    okBtn.className = "btn btn-green"; okBtn.textContent = "覚えてた";
+    okBtn.addEventListener("click", () => {
+      n.stage++;
+      if (n.stage >= STAGE_DAYS.length) { n.done = true; }
+      else n.due = addDays(STAGE_DAYS[n.stage]);
+      save(); renderNotes();
+    });
+    const ngBtn = document.createElement("button");
+    ngBtn.className = "btn btn-amber"; ngBtn.textContent = "忘れてた…";
+    ngBtn.addEventListener("click", () => { n.stage = 0; n.due = addDays(1); save(); renderNotes(); });
+    row.appendChild(okBtn); row.appendChild(ngBtn);
+  }
+  // 答えの要点(Geminiの回答の要点を貼っておく欄)
+  const ansBox = document.createElement("details");
+  ansBox.className = "plain note-ans";
+  ansBox.innerHTML = '<summary>' + (n.answer ? "答えの要点を編集" : "答えの要点を書いておく(Geminiの回答の要点をペタッと)") + '</summary>';
+  const ta = document.createElement("textarea");
+  ta.rows = 3; ta.value = n.answer;
+  ta.addEventListener("input", () => { n.answer = ta.value; save(); });
+  ansBox.appendChild(ta);
+  const delBtn = document.createElement("button");
+  delBtn.className = "btn btn-ghost"; delBtn.textContent = "このノートを削除"; delBtn.style.marginTop = "6px";
+  delBtn.addEventListener("click", () => {
+    if (!confirm("削除しますか?")) return;
+    S.notes = S.notes.filter(x => x.id !== n.id); save(); renderNotes();
+  });
+  ansBox.appendChild(delBtn);
+  div.appendChild(ansBox);
+  return div;
+}
+function renderNotes() {
+  const t = today();
+  const due = S.notes.filter(n => !n.done && n.due <= t);
+  const dueBox = $("dueBox");
+  dueBox.innerHTML = "";
+  $("dueBadge").hidden = due.length === 0;
+  $("dueBadge").textContent = "今日の復習 " + due.length + "件";
+  if (due.length === 0) {
+    dueBox.innerHTML = '<div class="empty">今日の復習はありません。' + (S.notes.length === 0 ? "まずは聞き流し中に「あれ?」ボタンを押すところから。" : "えらい!") + '</div>';
+  } else {
+    const p = document.createElement("p");
+    p.className = "hint";
+    p.textContent = "思い出してから開くのがコツ。「これ何の話だっけ?」→思い出す→答え合わせ。";
+    dueBox.appendChild(p);
+    due.forEach(n => dueBox.appendChild(noteCard(n, true)));
+  }
+  const allBox = $("allBox");
+  allBox.innerHTML = "";
+  $("allCount").textContent = S.notes.length;
+  if (S.notes.length === 0) allBox.innerHTML = '<div class="empty">まだノートはありません。</div>';
+  else S.notes.forEach(n => allBox.appendChild(noteCard(n, false)));
+}
+
+/* ---------- 復習テスト用プロンプト ---------- */
+$("quizPromptBtn").addEventListener("click", async () => {
+  if (S.notes.length === 0) { $("quizStatus").textContent = "ノートがまだありません"; return; }
+  const lines = [];
+  lines.push("私が" + (S.exam ? S.exam + "の" : "") + "勉強中に疑問に思った点のリストです。これを元に一問一答テストを作ってください。");
+  lines.push("ルール: まず問題を1問ずつ出す→私が答える→採点と解説→次の問題。全部で" + Math.min(10, S.notes.length) + "問。私が疑問に思った論点の「類似パターン・ひっかけ」も混ぜてください。");
+  lines.push("【疑問リスト】");
+  for (const n of S.notes.slice(0, 30)) {
+    lines.push("- " + noteLabel(n) + (n.answer ? "(要点: " + n.answer.replace(/\n/g, " ").slice(0, 100) + ")" : ""));
+  }
+  const ok = await copyText(lines.join("\n"));
+  $("quizStatus").innerHTML = ok ? '<span class="ok">✓ コピーしました。Geminiに貼るとテストが始まります。</span>' : "コピーに失敗しました";
+});
+
+/* ---------- バックアップ ---------- */
+$("backupBtn").addEventListener("click", async () => {
+  const ok = await copyText(JSON.stringify(S.notes, null, 1));
+  $("backupStatus").innerHTML = ok ? '<span class="ok">✓ コピーしました(メモアプリ等に貼って保管)</span>' : "コピーに失敗しました";
+});
+
+/* ---------- 初期描画 ---------- */
+renderMarks(); renderSw(); renderNotes();
+</script>
+</body>
+</html>
