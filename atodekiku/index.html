@@ -66,7 +66,14 @@
     line-height: 1.2; margin: 6px 0 2px; letter-spacing: .03em;
   }
   .clock.paused { color: var(--amber); }
-  .clockstate { text-align: center; font-size: 12.5px; color: var(--muted); margin-bottom: 10px; min-height: 1.5em; }
+  .clockstate { text-align: center; font-size: 12.5px; color: var(--muted); margin-bottom: 6px; min-height: 1.5em; }
+  .speedrow { display: flex; justify-content: center; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .chip {
+    padding: 6px 12px; border-radius: 999px; border: 1.5px solid var(--line);
+    background: transparent; font-weight: 700; font-size: 13px; color: var(--muted);
+    cursor: pointer; font-family: inherit; font-variant-numeric: tabular-nums;
+  }
+  .chip.on { background: var(--indigo); border-color: var(--indigo); color: var(--paper); }
   .bigmark {
     width: 100%; padding: 22px 10px; font-size: 19px; border-radius: 14px; margin: 8px 0 4px;
   }
@@ -127,6 +134,15 @@
   <p class="hint" id="swHelp">YouTubeアプリで<b>再生を始めた瞬間</b>に「スタート」。あとは普段どおり聞き流すだけ。途中から聞くときは「途中から」で現在の再生位置(例: 15:20)を入れてください。</p>
   <div class="clock" id="clock">0:00</div>
   <div class="clockstate" id="clockState">まだ止まっています</div>
+  <div class="speedrow" id="speedRow">
+    <span class="hint">再生速度:</span>
+    <button class="chip" data-rate="1">1×</button>
+    <button class="chip" data-rate="1.25">1.25×</button>
+    <button class="chip" data-rate="1.5">1.5×</button>
+    <button class="chip" data-rate="1.75">1.75×</button>
+    <button class="chip" data-rate="2">2×</button>
+  </div>
+  <div class="hint" style="text-align:center;margin-bottom:8px">YouTube側の再生速度と同じものを選んでください(時計がその速さで進みます)。途中で変えてもOK。</div>
 
   <button class="btn btn-green bigmark" id="markBtn">❓ あれ? — いまの位置をメモ</button>
   <div class="hint" style="text-align:center">押した瞬間の「何分ごろ」が記録されます。メモ書きはあとからでOK。</div>
@@ -180,11 +196,20 @@ const STAGE_DAYS = [1, 3, 7, 14, 30, 60];
 let S = {
   video: { url: "", title: "" },
   exam: "",
-  sw: null,      // {startEpoch, offset, pausedAccum, pauseAt}
+  rate: 1,       // 前回使った再生速度(次回の初期値)
+  sw: null,      // {pos0, t0, rate, paused} pos0=チェックポイント時の動画位置(秒), t0=その実時刻
   marks: [],     // [{t, memo}]
   notes: []      // [{id, vtitle, vurl, t, memo, answer, stage, due, done}]
 };
 try { const raw = localStorage.getItem(KEY); if (raw) S = Object.assign(S, JSON.parse(raw)); } catch (e) {}
+// 旧形式のストップウォッチ(速度対応前)からの引き継ぎ
+if (S.sw && S.sw.startEpoch !== undefined) {
+  const old = S.sw;
+  const now = old.pauseAt || Date.now();
+  const pos = (now - old.startEpoch) / 1000 - old.pausedAccum + old.offset;
+  S.sw = { pos0: pos, t0: Date.now(), rate: S.rate || 1, paused: !!old.pauseAt };
+}
+if (!S.rate) S.rate = 1;
 function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
 
 /* ---------- ユーティリティ ---------- */
@@ -217,19 +242,25 @@ $("vUrl").addEventListener("input", () => { S.video.url = $("vUrl").value.trim()
 $("vTitle").addEventListener("input", () => { S.video.title = $("vTitle").value.trim(); save(); });
 $("examName").addEventListener("input", () => { S.exam = $("examName").value.trim(); save(); });
 
-/* ---------- ストップウォッチ ---------- */
+/* ---------- ストップウォッチ(再生速度対応) ---------- */
+/* 動画位置 = pos0 + (実経過時間 × 再生速度)。速度変更・一時停止のたびにチェックポイントを取り直す */
 function elapsed() {
   if (!S.sw) return 0;
-  const now = S.sw.pauseAt || Date.now();
-  return (now - S.sw.startEpoch) / 1000 - S.sw.pausedAccum + S.sw.offset;
+  if (S.sw.paused) return S.sw.pos0;
+  return S.sw.pos0 + (Date.now() - S.sw.t0) / 1000 * S.sw.rate;
 }
+function checkpoint() { S.sw.pos0 = elapsed(); S.sw.t0 = Date.now(); }
 function renderSw() {
-  const running = !!S.sw, paused = running && !!S.sw.pauseAt;
+  const running = !!S.sw, paused = running && S.sw.paused;
   $("clock").textContent = fmt(elapsed());
   $("clock").classList.toggle("paused", paused);
+  const rate = running ? S.sw.rate : S.rate;
   $("clockState").textContent = !running ? "まだ止まっています"
     : paused ? "⏸ 一時停止中(動画を再開したら「▶動画を再開した」を押してね)"
-    : "▶ 動画と並走中…(この画面は閉じてYouTubeに戻ってOK)";
+    : "▶ 動画と並走中(" + rate + "倍速)…この画面は閉じてYouTubeに戻ってOK";
+  document.querySelectorAll("#speedRow .chip").forEach(b => {
+    b.classList.toggle("on", +b.dataset.rate === rate);
+  });
   $("startBtn").disabled = running;
   $("startAtBtn").disabled = running;
   $("pauseBtn").disabled = !running || paused;
@@ -240,29 +271,39 @@ function renderSw() {
 }
 setInterval(renderSw, 500);
 
-$("startBtn").addEventListener("click", () => {
-  S.sw = { startEpoch: Date.now(), offset: 0, pausedAccum: 0, pauseAt: null };
+function startAt(sec) {
+  S.sw = { pos0: sec, t0: Date.now(), rate: S.rate, paused: false };
   save(); renderSw();
-});
+}
+$("startBtn").addEventListener("click", () => startAt(0));
 $("startAtBtn").addEventListener("click", () => {
   const v = prompt("いま動画の再生位置は?(例: 15:20 / 1:02:30 / 15 と入れると15分)");
   if (v === null) return;
   const sec = parseTime(v);
   if (sec === null) { alert("読み取れませんでした(例: 15:20)"); return; }
-  S.sw = { startEpoch: Date.now(), offset: sec, pausedAccum: 0, pauseAt: null };
-  save(); renderSw();
+  startAt(sec);
 });
-$("pauseBtn").addEventListener("click", () => { if (S.sw && !S.sw.pauseAt) { S.sw.pauseAt = Date.now(); save(); renderSw(); } });
+$("pauseBtn").addEventListener("click", () => {
+  if (S.sw && !S.sw.paused) { checkpoint(); S.sw.paused = true; save(); renderSw(); }
+});
 $("resumeBtn").addEventListener("click", () => {
-  if (S.sw && S.sw.pauseAt) { S.sw.pausedAccum += (Date.now() - S.sw.pauseAt) / 1000; S.sw.pauseAt = null; save(); renderSw(); }
+  if (S.sw && S.sw.paused) { S.sw.t0 = Date.now(); S.sw.paused = false; save(); renderSw(); }
 });
 $("syncBtn").addEventListener("click", () => {
   const v = prompt("いま動画の再生位置は?(例: 23:45)ズレをここで直せます");
   if (v === null) return;
   const sec = parseTime(v);
   if (sec === null) { alert("読み取れませんでした(例: 23:45)"); return; }
-  S.sw.offset += sec - elapsed();
+  S.sw.pos0 = sec; S.sw.t0 = Date.now();
   save(); renderSw();
+});
+document.querySelectorAll("#speedRow .chip").forEach(b => {
+  b.addEventListener("click", () => {
+    const r = +b.dataset.rate;
+    S.rate = r;
+    if (S.sw) { checkpoint(); S.sw.rate = r; }
+    save(); renderSw();
+  });
 });
 
 /* ---------- メモ(あれ?ボタン) ---------- */
