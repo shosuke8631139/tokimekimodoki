@@ -163,6 +163,18 @@
     <a class="btn" href="https://gemini.google.com/app" target="_blank" rel="noopener" id="openGeminiBtn">Geminiを開く</a>
   </div>
   <div class="status" id="promptStatus"></div>
+
+  <div id="importRow" hidden style="margin-top:12px">
+    <details class="plain" id="importBox">
+      <summary>📥 Geminiの回答を貼り戻す(自動でメモに振り分けます)</summary>
+      <p class="hint" style="margin-top:8px">Geminiの回答を<b>丸ごとコピー</b>して下に貼り、「取り込む」を押すと、番号(1. 2. …)ごとに切り分けて各メモの「答えの要点」に自動保存します。</p>
+      <textarea id="importInput" rows="5" placeholder="Geminiの回答をそのまま貼り付け"></textarea>
+      <div class="row" style="margin-top:8px">
+        <button class="btn btn-primary" id="importBtn">取り込む</button>
+        <span class="status" id="importStatus"></span>
+      </div>
+    </details>
+  </div>
 </section>
 
 <section class="card">
@@ -198,8 +210,9 @@ let S = {
   exam: "",
   rate: 1,       // 前回使った再生速度(次回の初期値)
   sw: null,      // {pos0, t0, rate, paused} pos0=チェックポイント時の動画位置(秒), t0=その実時刻
-  marks: [],     // [{t, memo}]
-  notes: []      // [{id, vtitle, vurl, t, memo, answer, stage, due, done}]
+  marks: [],     // [{id, t, memo, answer}]
+  notes: [],     // [{id, vtitle, vurl, t, memo, answer, stage, due, done}]
+  lastAsk: null  // 直近の質問プロンプトの番号→メモID対応 {ids: [...]}
 };
 try { const raw = localStorage.getItem(KEY); if (raw) S = Object.assign(S, JSON.parse(raw)); } catch (e) {}
 // 旧形式のストップウォッチ(速度対応前)からの引き継ぎ
@@ -210,6 +223,9 @@ if (S.sw && S.sw.startEpoch !== undefined) {
   S.sw = { pos0: pos, t0: Date.now(), rate: S.rate || 1, paused: !!old.pauseAt };
 }
 if (!S.rate) S.rate = 1;
+function newId() { return Date.now() + "_" + Math.random().toString(36).slice(2, 7); }
+// 旧データのメモにIDがなければ付与
+for (const m of S.marks) { if (!m.id) m.id = newId(); }
 function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
 
 /* ---------- ユーティリティ ---------- */
@@ -268,7 +284,9 @@ function renderSw() {
   $("syncBtn").disabled = !running;
   $("stopBtn").disabled = !running && S.marks.length === 0;
   $("promptRow").hidden = S.marks.length === 0;
+  $("importRow").hidden = !S.lastAsk && !importDone;
 }
+let importDone = false; // 取り込み直後も✓メッセージを見せておくためのフラグ
 setInterval(renderSw, 500);
 
 function startAt(sec) {
@@ -314,6 +332,7 @@ function renderMarks() {
     const div = document.createElement("div");
     div.className = "mark";
     div.innerHTML = '<span class="t">' + fmt(m.t) + '</span>' +
+      (m.answer ? '<span title="回答を取り込み済み">💬</span>' : '') +
       '<input type="text" placeholder="ひとことメモ(任意・例: 根抵当権のとこ)" value="' + esc(m.memo) + '">' +
       '<button title="削除">✕</button>';
     div.querySelector("input").addEventListener("input", e => { S.marks[i].memo = e.target.value; save(); });
@@ -323,7 +342,7 @@ function renderMarks() {
 }
 $("markBtn").addEventListener("click", () => {
   if (!S.sw) { alert("先に「スタート」を押してください(動画の再生開始と同時に)"); return; }
-  S.marks.push({ t: Math.floor(elapsed()), memo: "" });
+  S.marks.push({ id: newId(), t: Math.floor(elapsed()), memo: "", answer: "" });
   save(); renderMarks(); renderSw();
   if (navigator.vibrate) navigator.vibrate(30);
 });
@@ -338,12 +357,77 @@ function buildAskPrompt() {
   S.marks.forEach((m, i) => {
     lines.push((i + 1) + ". [" + fmt(m.t) + "ごろ]" + (m.memo ? " メモ: " + m.memo : ""));
   });
+  lines.push("【回答の形式】各質問への回答の先頭に、見出しとして「■1」「■2」…を付けて分けてください(この記号を使って機械的に振り分けるため、省略しないでください)。");
   return lines.join("\n");
 }
 $("genPromptBtn").addEventListener("click", async () => {
   if (S.marks.length === 0) return;
   const ok = await copyText(buildAskPrompt());
-  $("promptStatus").innerHTML = ok ? '<span class="ok">✓ コピーしました。Geminiに貼るだけ!</span>' : "コピーに失敗しました";
+  if (ok) {
+    // 回答の貼り戻し用に、番号→メモIDの対応を覚えておく
+    S.lastAsk = { ids: S.marks.map(m => m.id) };
+    save();
+  }
+  $("promptStatus").innerHTML = ok ? '<span class="ok">✓ コピーしました。Geminiに貼るだけ!(回答が来たら下の「貼り戻す」へ)</span>' : "コピーに失敗しました";
+  renderSw();
+});
+
+/* ---------- 回答の貼り戻し(番号ごとに自動振り分け) ---------- */
+/* 見出し行の探索: 1から順番に現れた行だけを区切りとして採用する */
+function findStarts(lines, re, n, extraTest) {
+  const starts = [];
+  let expected = 1;
+  lines.forEach((line, idx) => {
+    if (expected > n) return;
+    const m = line.match(re);
+    if (m && +m[1] === expected && (!extraTest || extraTest(line))) {
+      starts.push({ num: expected, idx });
+      expected++;
+    }
+  });
+  return starts;
+}
+function splitAnswer(text, n) {
+  const lines = text.split(/\r?\n/);
+  const NUM = /^\s*(?:[#>\-*・\s]|\*\*)*(?:【)?(\d{1,2})(?:】|[.).。::])/;
+  // 第1候補: プロンプトで指定した「■番号」見出し(最も確実)
+  let starts = findStarts(lines, /^\s*(?:[#>\-*・\s]|\*\*)*■\s*(\d{1,2})/, n);
+  // 第2候補: 太字・時刻・【】付きの番号見出し(Geminiが■を省いた場合)
+  if (starts.length === 0) starts = findStarts(lines, NUM, n, l => /\*\*|【|ごろ|\d{1,2}:\d{2}/.test(l));
+  // 第3候補: 素の番号行(回答内の入れ子リストを拾うリスクはあるが最後の手段)
+  if (starts.length === 0) starts = findStarts(lines, NUM, n);
+  if (starts.length === 0) return null;
+  const out = {};
+  starts.forEach((s, i) => {
+    const end = (i + 1 < starts.length) ? starts[i + 1].idx : lines.length;
+    const seg = lines.slice(s.idx, end);
+    seg[0] = seg[0].replace(/^\s*(?:[#>\-*・\s]|\*\*)*(?:■\s*\d{1,2}|(?:【)?\d{1,2}(?:】|[.).。::]))\s*(?:\*\*)?\s*/, "");
+    out[s.num] = seg.join("\n").trim();
+  });
+  return out;
+}
+$("importBtn").addEventListener("click", () => {
+  const text = $("importInput").value.trim();
+  const st = $("importStatus");
+  if (!text) { st.textContent = "先にGeminiの回答を貼ってください"; return; }
+  if (!S.lastAsk || !S.lastAsk.ids || S.lastAsk.ids.length === 0) { st.textContent = "先に「まとめて質問プロンプトをコピー」を使ってください"; return; }
+  const ids = S.lastAsk.ids;
+  let segs = splitAnswer(text, ids.length);
+  if (!segs && ids.length === 1) segs = { 1: text }; // 質問が1つなら回答を丸ごと割り当て
+  if (!segs) { st.textContent = "番号(1. 2. …)が見つかりませんでした。Geminiの回答を丸ごと貼ってください。"; return; }
+  let count = 0;
+  for (const numStr of Object.keys(segs)) {
+    const id = ids[+numStr - 1];
+    if (!id) continue;
+    const target = S.marks.find(m => m.id === id) || S.notes.find(nn => nn.id === id);
+    if (target) { target.answer = segs[numStr]; count++; }
+  }
+  if (count === 0) { st.textContent = "振り分け先のメモが見つかりませんでした(削除済みかもしれません)"; return; }
+  S.lastAsk = null;
+  importDone = true;
+  $("importInput").value = "";
+  save(); renderMarks(); renderNotes(); renderSw();
+  st.innerHTML = '<span class="ok">✓ ' + count + "件の回答をメモに振り分けました。復習ノートに答え付きで残ります。</span>";
 });
 
 /* ---------- セッション終了 → 復習ノートへ ---------- */
@@ -351,9 +435,9 @@ $("stopBtn").addEventListener("click", () => {
   if (S.marks.length > 0) {
     for (const m of S.marks) {
       S.notes.unshift({
-        id: Date.now() + "_" + Math.random().toString(36).slice(2, 7),
+        id: m.id || newId(),  // IDを引き継ぐ(あとから回答を貼り戻せるように)
         vtitle: S.video.title, vurl: S.video.url,
-        t: m.t, memo: m.memo, answer: "",
+        t: m.t, memo: m.memo, answer: m.answer || "",
         stage: 0, due: addDays(STAGE_DAYS[0]), done: false
       });
     }
