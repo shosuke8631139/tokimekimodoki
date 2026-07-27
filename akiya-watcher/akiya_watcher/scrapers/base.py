@@ -27,6 +27,9 @@ class BaseScraper(ABC):
     # メール型は本文から価格を推定するため、None は読み取り失敗の可能性が高く、
     # 「応相談カット」の対象にしない。
     prices_reliable: bool = True
+    # True = ユーザー指名の追跡物件。常に⭐キープ扱いで、エリア・価格の
+    # 足切りを通らない (指名した本人の意思が最優先)。
+    always_keep: bool = False
 
     def __init__(self, config: dict):
         self.config = config

@@ -80,10 +80,12 @@ def collect(config: dict, dry_run: bool = False,
         print(f"[info] {source_cfg.get('id')}: {len(listings)}件取得")
 
         seen_uids: set[str] = set()
+        pinned = getattr(scraper, "always_keep", False)
         for ls in listings:
             # 足切りで除外しても「サイトにはまだ掲載されている」ので、
             # 掲載終了(売れた)と誤記録しないよう seen には数えておく
-            if (target_areas and ls.address
+            # (指名追跡物件 pinned は本人の意思が最優先なので足切り免除)
+            if (not pinned and target_areas and ls.address
                     and not any(area in ls.address for area in target_areas)):
                 out_of_area += 1
                 seen_uids.add(ls.uid)
@@ -91,11 +93,12 @@ def collect(config: dict, dry_run: bool = False,
             # 「応相談カット」は価格欄が明確なソースのみ。メール型の価格Noneは
             # 読み取り失敗の可能性が高いので、要確認として台帳に残す
             if (ls.price_yen is None and not include_unknown_price
-                    and scraper.prices_reliable):
+                    and scraper.prices_reliable and not pinned):
                 unknown_price += 1
                 seen_uids.add(ls.uid)
                 continue
-            if max_price and ls.price_yen and ls.price_yen > max_price:
+            if (max_price and ls.price_yen and ls.price_yen > max_price
+                    and not pinned):
                 over_price += 1
                 seen_uids.add(ls.uid)
                 continue
@@ -114,7 +117,7 @@ def collect(config: dict, dry_run: bool = False,
                     diff.context.price_changed = True
             score = scorer.score(ls, diff.context)
             if store:
-                store.set_keep(ls.uid, is_keep(score))
+                store.set_keep(ls.uid, True if pinned else is_keep(score))
             items.append((diff, score))
 
         # 一覧型ソースのみ: 今回見えなかった物件を掲載終了(売れた?)として記録
@@ -317,7 +320,8 @@ def run(config_path: str, dry_run: bool = False, report_path: str | None = None,
         # 通常巡回: 通知ゲートを通った物件だけ即時通知 (沈黙デフォルト)
         for diff, score in items:
             d = decide(diff, score, min_score=min_score, ruin_extra=ruin_extra)
-            keep = is_keep(score)
+            # 指名追跡物件 (source="watch") はスコアに関わらずキープ扱い
+            keep = is_keep(score) or diff.listing.source == "watch"
             # ⭐キープ物件は通常なら沈黙する「記載変更」でも知らせる
             if not d.notify and keep and diff.kind == "changed":
                 d = type(d)(True, "keep", "⭐キープ物件に変化あり")

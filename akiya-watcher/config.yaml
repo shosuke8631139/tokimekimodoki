@@ -80,6 +80,15 @@ criteria:
   # convenience_keywords: [スーパー, 小学校, ...]
 
 sources:
+  # ── 追跡リスト: ユーザー指名物件のページ直接ウォッチ ──
+  # 指名物件は常に⭐キープ扱い・足切り免除。値下げ/記載変更/掲載終了を即通知。
+  - id: watchlist
+    type: watch
+    enabled: true
+    entries:
+      - url: "https://akiya.sumai.biz/117604"
+        note: "ユーザー指名 2026-07-27 伊佐市大口牛尾・ステンドグラスの家"
+
   # ── 動作確認用デモソース(ローカルJSON・ネットワーク不要) ──
   # 本番運用ではOFF。判定ロジックの動作確認をしたいときだけtrueに戻す
   - id: demo
