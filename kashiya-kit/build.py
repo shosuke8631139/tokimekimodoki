@@ -99,16 +99,77 @@ def validate(cfg: dict) -> None:
                default="なし")
     if unit not in HOT_WATER_UNIT:
         die(f"utilities.hot_water_unit は {HOT_WATER_UNIT} のいずれかにしてください")
+
+    # 付属物の区分(設備/残置物): 曖昧なまま書面を作らせない
+    fixtures = cfg.get("fixtures") or []
+    if not fixtures:
+        warn(
+            "fixtures(付属物の設備/残置物の区分)が未定義です。エアコン・給湯器・照明・"
+            "物置・カーテンレール等を1点ずつ列挙してください(故障時・退去時の紛争防止の要)。"
+        )
+    for f in fixtures:
+        name = f.get("name", "(名称未記入)")
+        if f.get("kind") not in ("設備", "残置物"):
+            die(f"fixtures「{name}」の kind は 設備/残置物 のいずれかにしてください")
+        if f["kind"] == "残置物" and not f.get("taikyoji"):
+            die(
+                f"fixtures「{name}」は残置物ですが taikyoji(退去時の扱い・撤去義務の有無)が"
+                "未記入です。ここが曖昧だと退去時に必ず揉めるため必須とします。"
+            )
     if unit == "残置物":
-        names = " ".join(z.get("name", "") for z in cfg.get("zanchibutsu") or [])
+        names = " ".join(f.get("name", "") for f in fixtures if f.get("kind") == "残置物")
         if "給湯" not in names and "湯沸" not in names:
             warn(
-                "給湯器を残置物扱いにしていますが zanchibutsu に給湯器の記載がありません。"
-                "物件状況報告書との整合のため追記を推奨します。"
+                "給湯器を残置物扱いにしていますが fixtures に残置物としての給湯器の記載が"
+                "ありません。物件状況報告書との整合のため追記してください。"
             )
+    elif unit == "設備":
+        names = " ".join(f.get("name", "") for f in fixtures if f.get("kind") == "設備")
+        if "給湯" not in names and "湯沸" not in names:
+            warn("給湯器を設備扱いにしていますが fixtures に設備としての給湯器の記載がありません。")
     if hot_water == "プロパン" and not get(cfg, "utilities.propane_contract_holder",
                                            required=False):
         warn("プロパンのボンベ契約名義 utilities.propane_contract_holder が未記入です")
+
+
+def survey_warnings(cfg: dict) -> list:
+    """物件状況報告書の現地調査項目のうち未記入のものを列挙する。
+
+    第9条の免責は報告書に記載した範囲でしか機能しないため、
+    書き漏れ=そのままリスクになる。ビルドは止めないが必ず警告する。
+    """
+    s = cfg.get("survey") or {}
+    missing = []
+
+    def chk(val, label):
+        if val in (None, "", []):
+            missing.append(label)
+
+    chk(s.get("katamuki"), "建物の傾きの実測 (survey.katamuki)")
+    chk(s.get("tenken_yukashita"), "床下点検口の有無 (survey.tenken_yukashita)")
+    chk(s.get("tenken_koyaura"), "小屋裏点検口の有無 (survey.tenken_koyaura)")
+    chk(s.get("asbestos"), "アスベスト含有の可能性 (survey.asbestos)")
+    chk(s.get("gaiju"), "害獣・害虫の実績 (survey.gaiju)")
+    chk(s.get("kouhai"), "降灰の影響 (survey.kouhai)※非該当なら「非該当」と記入")
+    chk(s.get("tv"), "テレビ受信状況 (survey.tv)")
+    chk(s.get("shuraku"), "集落の慣行 (survey.shuraku)")
+    denpa = s.get("denpa") or {}
+    for carrier in ("docomo", "au", "softbank", "rakuten"):
+        chk(denpa.get(carrier), f"携帯電話の電波状況 (survey.denpa.{carrier})")
+
+    kz = cfg.get("kousakubutsu")
+    if not kz:
+        missing.append("ブロック塀・擁壁・門柱・カーポート等 (kousakubutsu)※なければ「なし」の1件を記入")
+    else:
+        for k in kz:
+            name = k.get("name", "(名称未記入)")
+            if k.get("state") in (None, ""):
+                missing.append(f"工作物「{name}」の状態 (state)")
+            if k.get("houkai_risk") and not k.get("sochi"):
+                missing.append(
+                    f"工作物「{name}」は倒壊リスクありですが立入禁止等の措置 (sochi) が未記入"
+                )
+    return missing
 
 
 def check_privacy(config_path: Path) -> None:
@@ -171,12 +232,17 @@ def build_context(cfg: dict, config_stem: str) -> dict:
     unit = utilities.get("hot_water_unit") or "なし"
     pet = cfg.get("pet") or {}
 
+    fixtures = cfg.get("fixtures") or []
     return {
         "p": cfg["property"],
         "hazard": cfg.get("hazard") or {},
         "c": cfg["contract"],
         "u": utilities,
-        "zanchibutsu": cfg.get("zanchibutsu") or [],
+        "fixtures": fixtures,
+        "zanchibutsu": [f for f in fixtures if f.get("kind") == "残置物"],
+        "setsubi_items": [f for f in fixtures if f.get("kind") == "設備"],
+        "kousakubutsu": cfg.get("kousakubutsu") or [],
+        "survey": cfg.get("survey") or {},
         "defects": cfg.get("defects") or [],
         "pet": pet,
         "diy": cfg.get("diy") or {},
@@ -220,6 +286,15 @@ def main() -> None:
 
     cfg = yaml.safe_load(config_path.read_text(encoding="utf-8"))
     validate(cfg)
+    missing = survey_warnings(cfg)
+    if missing:
+        warn(
+            f"物件状況報告書の現地調査項目が未記入です({len(missing)}件)。該当欄は空欄で"
+            "生成されます。第9条の免責は記載した範囲でしか機能しないため、"
+            "現地確認後に config へ記入して再ビルドしてください:"
+        )
+        for m in missing:
+            print(f"  - {m}", file=sys.stderr)
     check_privacy(config_path)
 
     stem = config_path.stem
