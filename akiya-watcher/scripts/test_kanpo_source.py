@@ -13,7 +13,7 @@ import requests
 
 UA = {"User-Agent": "akiya-watcher/0.1 (personal use)"}
 BASE = "https://akiya.sumai.biz"
-TARGET = f"{BASE}/117604"
+TARGET = f"{BASE}/122604"
 
 
 def fetch(url: str):
