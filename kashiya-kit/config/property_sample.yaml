@@ -1,0 +1,120 @@
+# =============================================================
+# kashiya-kit 物件設定サンプル(★全て架空のデータです★)
+# 実物件のconfigはこのファイルをコピーして作成し、
+# ファイル名は property_XXX.yaml とすること(.gitignoreで除外される)。
+# 実データを絶対にコミットしないこと。
+# =============================================================
+
+property:
+  name: サンプル荘             # 架空
+  address: 鹿児島県架空市架空町1234番地5   # 架空の住所
+  structure: 木造瓦葺2階建
+  built_year: 1975
+  land_area_m2: 495.0
+  building_area_m2: 120.5
+
+  # 敷地内の建物構成。leased: true の棟だけが賃貸範囲。
+  # leased: false の棟は自動的に「貸主自用・立入禁止」条項の対象になる。
+  # locked: 施錠して引き渡すか(立入禁止の実効性のため施錠を推奨)
+  buildings:
+    - {id: omoya,  name: 母屋,   leased: true}
+    - {id: hanare, name: 離れ,   leased: false, locked: true}
+    - {id: soko_a, name: 倉庫A, leased: false, locked: true}
+    - {id: soko_b, name: 倉庫B, leased: false, locked: false}  # 施錠不可(建具なし)
+
+  parking_cars: 2
+  garden: true
+  farm: true                    # 家庭菜園程度の畑(農地法対象外の宅地内菜園を想定)
+
+  saikenchiku_fuka: false       # 再建築不可か
+  shigaika_chosei: true         # 市街化調整区域か
+  road:
+    width_m: 3.6                # 前面道路の幅員
+    car_access: true            # 車両進入の可否
+  internet:
+    hikari: false               # 光回線の引込可否
+    note: 提供エリア外。モバイル回線・ホームルーターは利用可(電波状況は借主確認)
+  shared_facilities:            # 近隣と共同利用する設備(ない場合は [])
+    - 進入路の一部が私道(持分あり。補修は共有者間の協議による)
+    - 集落の農業用水利(畑の利用ルールは自治会に確認)
+  jichikai:
+    required: true              # 自治会加入の要否
+    fee_yen_year: 6000          # 年会費
+  garbage:
+    station: 集落入口の共同集積所(徒歩2分)
+    rule: 市指定袋・分別ルールあり。収集曜日は自治会の配布資料による
+  winter_freeze: true           # 冬季の凍結対策の要否
+
+# ハザード情報(説明義務あり。必ず市町村ハザードマップで確認して記入)
+hazard:
+  dosha_keikai: true            # 土砂災害警戒区域(イエロー)該当
+  dosha_tokubetsu: false        # 土砂災害特別警戒区域(レッド)該当
+  shinsui: false                # 浸水想定区域該当
+  shinsui_depth: null           # 該当時は想定浸水深(例 "0.5〜3.0m")
+  checked_on: 2026-07-01        # ハザードマップ確認日
+  note: 架空市ハザードマップ(2025年版)で確認
+
+contract:
+  type: 定期借家                # 定期借家 | 普通借家
+  term_years: 3
+  rent_yen: 25000
+  rent_reason: 現況有姿での引渡し・貸主の修繕義務の限定・既知の不具合を考慮した金額
+  deposit_yen: 50000            # 敷金
+  key_money_yen: 0              # 礼金
+  renewal_fee: なし             # 更新料(定期借家では再契約時の扱い)
+  cancel_notice_days: 30        # 借主からの中途解約予告日数
+  late_charge_rate_percent: 14.6
+  payment: 貸主指定口座への振込(振込手数料は借主負担)
+  guarantee:
+    type: 保証会社              # 保証会社 | 連帯保証人 | 併用
+    company_name: (契約時に決定)
+    gokudogaku_yen: null        # 連帯保証人/併用の場合は必須(未記入はビルドエラー)
+
+utilities:
+  hot_water: プロパン           # プロパン | 都市ガス | 灯油 | 電気 | なし
+  hot_water_unit: 残置物        # 設備(貸主が修繕) | 残置物(修繕なし) | なし
+  propane_contract_holder: 借主 # プロパンのボンベ契約名義: 借主 | 貸主
+  water: 井戸                   # 上水道 | 井戸
+  drainage: 浄化槽              # 公共下水 | 浄化槽 | 汲取り
+  johkaso_size: 5人槽           # 浄化槽の場合
+  electric: 従量電灯 30A(単相)
+  cooling_heating: 造り付けの冷暖房設備なし(残置物のエアコン1台あり)
+  amido: あり(一部破れ・要張替)
+  tategu: あり(経年による建付不良の箇所あり)
+
+# 残置物: 「設備」ではないもの。貸主は修繕義務を負わず、
+# 故障時は借主が任意で修理するか、貸主に連絡のうえ撤去できる。
+zanchibutsu:
+  - {name: エアコン(1階6畳間), condition: 2020年製・動作未確認}
+  - {name: ガス給湯器, condition: 動作確認済(2026年7月時点)・経年13年}
+  - {name: 物置棚(倉庫B内), condition: 使用可}
+
+# 既知の不具合(物件状況報告書・免責特約・漫画シートに自動反映)
+# policy: 現況のまま | 入居前補修 | DIY可
+defects:
+  - {place: 北側和室の天井, desc: 過去の雨漏りによる雨染み跡(現在漏水なしと貸主認識), policy: 現況のまま}
+  - {place: 浴室タイル,     desc: ひび割れ数箇所,                                   policy: DIY可}
+  - {place: 縁側の床,       desc: 一部沈み(踏抜きなし),                             policy: 現況のまま}
+  - {place: 雨樋(南面),     desc: 一部外れ,                                         policy: 入居前補修}
+
+pet:
+  allowed: true
+  kinds: [犬, 猫]
+  max_count: 2
+  conditions: 屋内飼育を基本とし、鳴き声・臭気について近隣に配慮すること。退去時の消毒・清掃費用は借主負担。
+
+diy:
+  # 事前承諾が不要な軽微工事(これ以外は申請書兼承諾書が必要)
+  no_approval_works:
+    - 壁紙の張替・塗装(賃貸範囲内の内装)
+    - 造り付けでない棚・カーテンレール等の設置
+    - 畳をフローリング風マットで覆う等、原状回復可能な床の養生
+  # 明渡し時の取扱いのデフォルト(別表で工事ごとに変更可)
+  default_ownership: 無償で貸主に帰属(残置)。ただし貸主が収去を求めた場合は借主が収去する。
+
+manga:
+  catch_points:
+    - 庭と畑つき。草刈りは自分でやる代わりに誰にも文句を言われない
+    - 内装はDIY自由(承諾制)。失敗しても怒られない古さ
+    - 家賃が安い。その代わり貸主はほとんど直さない
+  target_reader: DIY好き・ペット飼育希望・田舎暮らしに興味のある子育て世帯
