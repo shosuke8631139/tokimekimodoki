@@ -142,8 +142,8 @@ def check_privacy(config_path: Path) -> None:
         if not ignored(probe):
             die(
                 "output/ が .gitignore で除外されていません。生成書面には住所等が"
-                "含まれるため、リポジトリ直下の .gitignore に "
-                "`kashiya-kit/output/` を追加してから再実行してください。"
+                "含まれるため、kashiya-kit/.gitignore に `output/` がある状態に"
+                "戻してから再実行してください。"
             )
     finally:
         probe.unlink()
