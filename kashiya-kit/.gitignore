@@ -1,8 +1,0 @@
-# 実物件のconfigと生成書面には住所・賃料・個人情報が含まれるためコミット禁止。
-# 追跡してよいのは架空データの property_sample.yaml のみ。
-# (このファイルはキット直下に置いてあるため、単独リポジトリに移しても機能する)
-output/
-config/*
-!config/property_sample.yaml
-__pycache__/
-*.pyc

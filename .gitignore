@@ -1,10 +1,3 @@
-# ---- kashiya-kit(賃貸契約書ジェネレータ)のプライバシー保護 ----
-# 実物件のconfigと生成書面には住所・賃料・個人情報が含まれるため
-# 絶対にコミットしない。追跡するのは架空データのサンプルのみ。
-kashiya-kit/output/
-kashiya-kit/config/*
-!kashiya-kit/config/property_sample.yaml
-
 # Python
 __pycache__/
 *.pyc
