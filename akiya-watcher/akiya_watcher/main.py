@@ -181,10 +181,17 @@ def build_digest(items: list[tuple[Diff, Score]], offer_min_age_days: int,
 
 
 def build_heartbeat(items: list[tuple[Diff, Score]], top_n: int = 5,
-                    kanpo_enabled: bool = True) -> str:
-    """生存報告: 何もない日に1日1回だけ送る「動いています+注目上位+官報」。"""
+                    kanpo_enabled: bool = True, notified: int = 0) -> str:
+    """毎日の定期便: 1日1回必ず送る「官報チェック+注目上位」。
+
+    通知が出た日も送る (2026-07-31 修正: 以前は通知が出ると官報コーナーごと
+    消えてしまい「官報情報がメールに載っていない」状態になっていた)。
+    """
     ranked = sorted(items, key=lambda x: x[1].total, reverse=True)
-    lines = ["✅ 巡回は動いています — 今回は通知に値する動きなし", ""]
+    if notified > 0:
+        lines = [f"📮 本日の定期便 — 物件の動き{notified}件は別メールでお知らせ済み", ""]
+    else:
+        lines = ["📮 本日の定期便 — 今回は通知に値する動きなし", ""]
     if kanpo_enabled:
         import datetime
         from .kanpo import daily_lines
@@ -202,8 +209,8 @@ def build_heartbeat(items: list[tuple[Diff, Score]], top_n: int = 5,
     else:
         lines.append("監視中の物件が0件です (情報源の取得失敗が続く場合は要確認)。")
     lines.append("")
-    lines.append("※ この報せは「何もない日」に1日1回だけ。値下げ・高スコア新着・")
-    lines.append("   キープ物件の変化があれば、この報せとは別にすぐ鳴ります。")
+    lines.append("※ この定期便は1日1回。値下げ・高スコア新着・キープ物件の変化は、")
+    lines.append("   これとは別にその都度すぐ鳴ります。")
     return "\n".join(lines)
 
 
@@ -342,22 +349,19 @@ def run(config_path: str, dry_run: bool = False, report_path: str | None = None,
                     f"物件名: {info['title']}\n価格: {price}\nURL: {info['url']}")
                 notified += 1
 
-        # 生存報告: 何も知らせなかった日も、1日1回だけ「動いています+注目上位」を
-        # 送る (2026-07 ユーザー要望)。送った日は meta に記録し、同日の以降の
-        # 巡回では沈黙する。通知が出た日は生存報告は不要なので日付だけ記録する。
+        # 毎日の定期便: 通知の有無に関係なく1日1回必ず送る (2026-07-31 修正)。
+        # 官報チェックと注目上位を毎日届けるのが目的。送った日は meta に記録し、
+        # 同日の以降の巡回では沈黙する (日曜はダイジェストが定期便を兼ねる)。
         if not dry_run and notify_cfg.get("heartbeat", True):
             meta_store = Store(config.get("db_path", "data/listings.db"))
             today = jst_today()
-            if notified > 0:
-                meta_store.set_meta("last_mail_date", today)
-            elif meta_store.get_meta("last_mail_date") != today:
-                # 届く実績のあるダイジェストと同じ構成(レポート添付つき)で送る
-                # (2026-07 生存報告だけ届かない事象の対策。迷惑メール判定回避)
+            if meta_store.get_meta("last_mail_date") != today:
                 kanpo_on = config.get("kanpo", {}).get("enabled", True)
-                notifier.send_text(build_heartbeat(items, kanpo_enabled=kanpo_on),
+                notifier.send_text(build_heartbeat(items, kanpo_enabled=kanpo_on,
+                                                   notified=notified),
                                    attachment=report_path)
                 meta_store.set_meta("last_mail_date", today)
-                print("[info] 生存報告を送信 (本日初回・通知なしのため)")
+                print("[info] 定期便を送信 (本日初回)")
             meta_store.close()
 
     # 通知が出た巡回では、レポート本体もメール添付で届ける

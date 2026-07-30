@@ -15,7 +15,7 @@ def _item(title: str, total: int, price: int | None = 1_000_000):
 def test_生存報告に注目上位が点数順で載る():
     items = [_item("ふつうの家", 3), _item("蔵のある家", 15), _item("安い家", 8)]
     text = build_heartbeat(items)
-    assert "巡回は動いています" in text
+    assert "本日の定期便" in text
     assert text.index("蔵のある家") < text.index("安い家") < text.index("ふつうの家")
     assert "https://example.com/蔵のある家" in text
 
@@ -43,3 +43,9 @@ def test_メタ記録で1日1回を判定できる(tmp_path):
 
 def test_日本時間の日付が返る():
     assert len(jst_today()) == 10  # YYYY-MM-DD
+
+
+def test_通知が出た日の定期便は別送済みの案内になる():
+    text = build_heartbeat([], notified=2)
+    assert "別メールでお知らせ済み" in text
+    assert "2件" in text
