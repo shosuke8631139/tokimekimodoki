@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>自治体「購入希望者登録」の段取り表(注力6市+伊佐)</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans JP", sans-serif;
+    margin: 0; padding: 20px; background: #f4f1ea; color: #2b2b2b; line-height: 1.75;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; }
+  h1 { font-size: 24px; border-bottom: 4px solid #7a6a4f; padding-bottom: 8px; }
+  h2 { font-size: 19px; background: #efe9dc; border-left: 8px solid #7a6a4f; padding: 8px 12px; margin-top: 36px; }
+  h3 { font-size: 16px; margin: 18px 0 6px; }
+  .lead { background: #fff; border: 1px solid #d8cfbc; padding: 14px 18px; border-radius: 8px; }
+  .warn { background: #fdf3e3; border: 1px solid #e0b96a; padding: 10px 14px; border-radius: 8px; font-size: 14px; }
+  .core { background: #fdf6f4; border: 2px solid #a33; padding: 12px 16px; border-radius: 8px; font-size: 15px; }
+  table { width: 100%; border-collapse: collapse; background: #fff; font-size: 13.5px; }
+  th, td { border: 1px solid #c9bfa8; padding: 7px 9px; text-align: left; vertical-align: top; }
+  th { background: #efe9dc; white-space: nowrap; }
+  .score { font-weight: bold; font-size: 15px; white-space: nowrap; }
+  .s9 { color: #b3261e; } .s8 { color: #c05621; } .s7 { color: #8a6d1a; } .s6 { color: #55632a; } .s4 { color: #777; }
+  .city {
+    background: #fff; border: 1px solid #d8cfbc; border-radius: 10px;
+    padding: 16px 20px; margin: 16px 0;
+  }
+  .city h3 { margin-top: 0; font-size: 17px; border-bottom: 2px solid #efe9dc; padding-bottom: 6px; }
+  .tag { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 10px; margin-left: 8px; vertical-align: 2px; }
+  .tag-touroku { background: #e3efd9; color: #365422; border: 1px solid #9dbb84; }
+  .tag-chokusetsu { background: #e5e9f5; color: #2c3e6b; border: 1px solid #94a3cf; }
+  ol.steps { margin: 8px 0 8px 22px; padding: 0; }
+  ol.steps li { margin-bottom: 6px; }
+  ul.ask { margin: 6px 0 6px 22px; padding: 0; font-size: 14px; }
+  ul.ask li { margin-bottom: 4px; }
+  .tel { font-weight: bold; font-size: 15px; color: #1a4a7a; white-space: nowrap; }
+  a { color: #1a4a7a; word-break: break-all; }
+  .script { background: #f7f5f0; border-left: 5px solid #7a6a4f; padding: 10px 14px; font-size: 14.5px; border-radius: 0 8px 8px 0; }
+  .small { font-size: 12.5px; color: #666; }
+  .check { list-style: none; margin: 8px 0; padding: 0; }
+  .check li { margin-bottom: 6px; padding-left: 28px; position: relative; }
+  .check li::before { content: "☐"; position: absolute; left: 4px; font-size: 17px; }
+  @media (max-width: 640px) { body { padding: 10px; } th, td { font-size: 12px; padding: 5px 6px; } }
+  @media (prefers-color-scheme: dark) {
+    body { background: #f4f1ea; }  /* 印刷・閲覧の安定のためライト固定 */
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>自治体「購入希望者登録」の段取り表</h1>
+<p class="small">対象: 注力6市(薩摩川内・鹿屋・出水・都城・霧島・鹿児島)+ 伊佐市 | 調べた日: 2026年7月30日</p>
+
+<div class="lead">
+<b>この表の目的:</b> 役場には「家財が多すぎて空き家バンクに載せられない家」が眠っています。
+そこに出会うために、各市の「買いたい人の登録」を済ませ、担当者に
+<b>「残置物ごと・現状渡しで買う人」として顔を覚えてもらう</b>のがゴールです。
+やることは <b>①電話1本 → ②書類を書く → ③条件カードを同封して郵送</b> の3つだけ。
+</div>
+
+<div class="core" style="margin-top:14px">
+<b>作戦の核心:</b> 登録はあくまで入口。電話と書類送付のときに必ずこう伝える:<br>
+<b>「家財道具が残ったままで掲載できずにいるお家があれば、そのままの状態で買いますので、ぜひご紹介ください」</b><br>
+この一言が、市場に出る前の「上流」への扉です。
+</div>
+
+<div class="warn" style="margin-top:14px">
+<b>正直な注意書き:</b> この表は検索で調べた結果です。市の公式ページはこの開発環境から直接開けなかったため、
+「要確認」と書いた項目(郵送できるか・登録の有効期間など)は<b>最初の電話で必ず確認</b>してください。
+電話で聞くことリストを市ごとに用意してあります。
+</div>
+
+<h2>一覧表(おすすめ順)</h2>
+<table>
+<tr><th>市</th><th>方式</th><th>窓口</th><th>電話</th><th>郵送</th><th>おすすめ度</th></tr>
+<tr>
+  <td><b>伊佐市</b></td><td>登録型</td><td>地域振興課 コミュニティ活力推進係</td><td class="tel">0995-23-1311(代表)</td>
+  <td>要確認</td><td class="score s9">9/10</td>
+</tr>
+<tr>
+  <td><b>鹿屋市</b></td><td>登録型</td><td>地域活力推進課</td><td class="tel">0994-45-6930</td>
+  <td><b>郵送OK</b></td><td class="score s8">8/10</td>
+</tr>
+<tr>
+  <td><b>出水市</b></td><td>登録型</td><td>建築住宅課 住宅政策係</td><td class="tel">0996-63-4066</td>
+  <td>要確認</td><td class="score s8">8/10</td>
+</tr>
+<tr>
+  <td><b>薩摩川内市</b></td><td>登録型</td><td>建築住宅課 空き家政策グループ</td><td class="tel">0996-23-5111(代表)</td>
+  <td>要確認</td><td class="score s7">7/10</td>
+</tr>
+<tr>
+  <td><b>霧島市</b>(地元)</td><td>直接型</td><td>地域政策課 地域活性化グループ</td><td class="tel">0995-45-5111(内線1544)</td>
+  <td>―(登録なし)</td><td class="score s6">6/10</td>
+</tr>
+<tr>
+  <td><b>都城市</b></td><td>登録型</td><td>空き家相談センター(市役所本庁舎5階)</td><td class="tel">0986-23-8067</td>
+  <td>要確認</td><td class="score s6">6/10</td>
+</tr>
+<tr>
+  <td><b>鹿児島市</b></td><td>直接型</td><td>建築指導課</td><td class="tel">099-216-1358</td>
+  <td>―(登録なし)</td><td class="score s4">4/10</td>
+</tr>
+</table>
+<p class="small">
+おすすめ度の考え方: 「上流(掲載前の物件)に近いか」「担当者と顔つなぎしやすいか」「手間が少ないか」で採点。
+<b>登録型</b>=書類を出せば買いたい人として登録される市。<b>直接型</b>=登録の仕組みがなく、物件ごとに仲介業者へ問い合わせる市
+(この2市は電話で条件を伝えて覚えてもらう作戦に切り替え)。
+</p>
+
+<h2>共通の電話トーク台本(全市これでOK)</h2>
+<div class="script">
+「もしもし、霧島市在住の(お名前)と申します。空き家バンクの<b>買いたい側の登録</b>をしたくてお電話しました。
+古い戸建てを買って直して、賃貸住宅として活用しています。<br><br>
+3つ教えてください。<br>
+<b>①</b> 登録の書類は郵送で送ってもいいですか?<br>
+<b>②</b> 登録すると、新しい物件が出たときに連絡はもらえますか?<br>
+<b>③</b> <u>家財道具が多くてバンクに載せられずにいるお家</u>はありませんか?
+私は家財がそのままでも、現状のままで買い取りますので、そういうお家があればぜひご紹介いただきたいんです。」
+</div>
+<p class="small">③が本丸です。①②は事務確認のついでに聞く形にすると自然です。</p>
+
+<h2>市ごとの段取り</h2>
+
+<div class="city">
+<h3>1. 伊佐市 <span class="tag tag-touroku">登録型</span> <span class="score s9">9/10</span></h3>
+<p><b>なぜ本命か:</b> 1軒目の成功の型(過疎エリア×裕福だった家系)に一番近い土地柄。大口牛尾の件で土地勘・実戦経験あり。</p>
+<ol class="steps">
+<li><span class="tel">0995-23-1311</span>(代表)に電話し「地域振興課 コミュニティ活力推進係」につないでもらう</li>
+<li>台本どおり3つ質問。特に<b>「掲載前・掲載保留の物件を紹介してもらえるか」</b>は必ず聞く</li>
+<li>利用希望者の登録様式をもらう(定住促進サイト「ここがい〜さ」<a href="https://www.city.isa.kagoshima.jp/teiju/bank/">city.isa.kagoshima.jp/teiju/bank/</a> にも様式あり)</li>
+<li>記入して条件カードを同封し、提出(郵送可なら郵送)</li>
+</ol>
+<ul class="ask">
+<li>電話で確認: 利用希望者登録の必要書類/郵送可否/有効期間/新着連絡の有無/<b>未掲載物件の紹介可否</b></li>
+</ul>
+</div>
+
+<div class="city">
+<h3>2. 鹿屋市 <span class="tag tag-touroku">登録型</span> <span class="score s8">8/10</span></h3>
+<p><b>なぜ高評価か:</b> 7市で唯一<b>郵送OKが確認済み</b>で、必要書類もはっきりしている(一番ラクに終わる)。LINE問い合わせも可。</p>
+<ol class="steps">
+<li>様式を入手: <a href="https://www.city.kanoya.lg.jp/iju/akiyabank/riyoutouroku.html">city.kanoya.lg.jp/iju/akiyabank/riyoutouroku.html</a> から「利用登録申請書」と「誓約書」(Word)をダウンロード</li>
+<li>記入し、<b>身分証明書のコピー</b>を用意</li>
+<li>条件カードを同封して郵送: <b>〒893-8501 鹿屋市共栄町20-1 地域活力推進課 宛</b></li>
+<li>後日 <span class="tel">0994-45-6930</span> に電話して台本の③(残置物ごと買います)を口頭でも伝える</li>
+</ol>
+<ul class="ask">
+<li>電話で確認: 登録の有効期間/新着連絡の有無/未掲載物件の紹介可否</li>
+</ul>
+</div>
+
+<div class="city">
+<h3>3. 出水市 <span class="tag tag-touroku">登録型</span> <span class="score s8">8/10</span></h3>
+<p><b>なぜ高評価か:</b> すでに1軒所有している実績エリアで話が通じやすい。様式も明確(利用登録申込書=第9号様式+誓約書=第10号様式)。</p>
+<ol class="steps">
+<li><span class="tel">0996-63-4066</span>(建築住宅課 住宅政策係)に電話。台本どおり3つ質問+「出水市内に1軒所有して賃貸再生している」と伝えると信用されやすい</li>
+<li>様式を入手: <a href="https://www.city.kagoshima-izumi.lg.jp/page/page_00815.html">city.kagoshima-izumi.lg.jp/page/page_00815.html</a> の「空き家バンク利用登録申込書・誓約書(PDF)」</li>
+<li>記入して条件カードを同封し、提出(郵送可なら郵送。FAX 0996-63-5814・メール jyutaku_c@city.izumi.kagoshima.jp もあり)</li>
+</ol>
+<ul class="ask">
+<li>電話で確認: 郵送可否/有効期間/新着連絡の有無/未掲載物件の紹介可否</li>
+</ul>
+</div>
+
+<div class="city">
+<h3>4. 薩摩川内市 <span class="tag tag-touroku">登録型</span> <span class="score s7">7/10</span></h3>
+<p><b>ポイント:</b> 「空き家政策グループ」という専任チームがあり、成約奨励金など空き家施策に熱心な市。</p>
+<ol class="steps">
+<li><span class="tel">0996-23-5111</span>(代表)に電話し「建築住宅課 空き家政策グループ」につないでもらう。台本どおり3つ質問</li>
+<li>様式を入手: <a href="https://www.city.satsumasendai.lg.jp/ijuteiju/sumai/2/10187.html">city.satsumasendai.lg.jp/ijuteiju/sumai/2/10187.html</a> の「空家バンク利用登録申込書」+誓約書</li>
+<li>記入して条件カードを同封し、提出(郵送可なら郵送)</li>
+</ol>
+<ul class="ask">
+<li>電話で確認: 郵送可否/身分証の要否/有効期間/新着連絡の有無/未掲載物件の紹介可否</li>
+</ul>
+</div>
+
+<div class="city">
+<h3>5. 霧島市(地元) <span class="tag tag-chokusetsu">直接型</span> <span class="score s6">6/10</span></h3>
+<p><b>ポイント:</b> 買いたい人の登録制度は<b>ない</b>(物件ごとに仲介業者へ問い合わせる方式)。ただし<b>地元</b>なので、市役所(国分中央)へ行くついでに窓口で条件カードを手渡しして顔を覚えてもらうのが一番効く市。</p>
+<ol class="steps">
+<li><span class="tel">0995-45-5111(内線1544)</span>(地域政策課 地域活性化グループ)に電話、または市役所窓口へ直接(自宅から近い)</li>
+<li>「登録制度がないのは承知の上で」と前置きし、台本の③(残置物ごと買います)を伝えて<b>条件カードを渡す/送る</b>(メール t-seisaku@city-kirishima.jp)</li>
+<li>市サイトの地区別一覧(<a href="https://www.city-kirishima.jp/kyodo/shise/ijuteju/akiya/akiyabankriyoukibounokata.html">利用希望の方のページ</a>)は自動巡回の対象化を検討(次の開発課題)</li>
+</ol>
+<ul class="ask">
+<li>窓口で確認: 掲載前・相談段階の物件を紹介してもらう方法はあるか/こういう買い手情報を控えておいてもらえるか</li>
+</ul>
+</div>
+
+<div class="city">
+<h3>6. 都城市 <span class="tag tag-touroku">登録型</span> <span class="score s6">6/10</span></h3>
+<p><b>ポイント:</b> 「空き家相談センター」という専用窓口があり相談体制は手厚い。ただし現在の掲載数は少なめの様子。</p>
+<ol class="steps">
+<li><span class="tel">0986-23-8067</span>(空き家相談センター、平日8:45〜16:30)に電話。台本どおり3つ質問</li>
+<li>利用登録の様式をもらう(案内ページ: <a href="https://www.city.miyakonojo.miyazaki.jp/soshiki/106/56080.html">city.miyakonojo.miyazaki.jp/soshiki/106/56080.html</a>)</li>
+<li>記入して条件カードを同封し、提出。農地付き物件は追加書類が要る点だけ頭に入れておく</li>
+</ol>
+<ul class="ask">
+<li>電話で確認: 利用登録の様式名と必要書類/郵送可否/有効期間/新着連絡の有無/未掲載物件の紹介可否</li>
+</ul>
+</div>
+
+<div class="city">
+<h3>7. 鹿児島市 <span class="tag tag-chokusetsu">直接型</span> <span class="score s4">4/10</span></h3>
+<p><b>ポイント:</b> 登録制度なし・市は交渉に関与せず・物件ごとに業者へ直接、という一番「市場寄り」の市。掲載物件はすでに自動巡回でカバー済みなので、<b>急いで動く必要はない</b>。</p>
+<ol class="steps">
+<li>余力があるときに <span class="tel">099-216-1358</span>(建築指導課)へ電話し、台本の③だけ伝えておく(ダメ元の種まき)</li>
+<li>掲載物件は毎日の自動巡回が拾うので、それを待つ</li>
+</ol>
+</div>
+
+<h2>郵送するときの同封チェックリスト(共通)</h2>
+<ul class="check">
+<li>登録申込書(記入・押印は市の指示どおり)</li>
+<li>誓約書(様式がある市のみ)</li>
+<li>身分証明書のコピー(鹿屋市は必須。他市は電話で確認)</li>
+<li><b>条件カード</b>(「残置物ごと・現状渡しで買います」の紙。docs/条件カード_残置物ごと買います.html を印刷して氏名・連絡先を手書き)</li>
+<li>返信用封筒(切手貼付)を入れておくと親切で印象が良い</li>
+</ul>
+
+<h2>進め方のおすすめ(週1時間×3週間)</h2>
+<ol class="steps">
+<li><b>1週目:</b> 伊佐市・鹿屋市・出水市の3市(電話3本+鹿屋は書類郵送まで)</li>
+<li><b>2週目:</b> 薩摩川内市・都城市(電話2本+届いた様式の記入・郵送)</li>
+<li><b>3週目:</b> 霧島市(市役所ついで訪問)+残りの郵送。鹿児島市はダメ元電話のみ</li>
+</ol>
+<p class="small">電話の結果(郵送可否・有効期間・未掲載物件の扱い)が分かったら、チャットで教えてください。この表を更新します。</p>
+
+</div>
+</body>
+</html>
