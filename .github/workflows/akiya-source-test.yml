@@ -20,6 +20,6 @@ jobs:
       - name: さつま町 空き家バンク接続テスト
         working-directory: akiya-watcher
         run: python scripts/test_satsuma_source.py
-      - name: 拡張候補の偵察 (鹿屋・都城・霧島)
+      - name: 霧島市 空き家バンク接続テスト
         working-directory: akiya-watcher
-        run: python scripts/test_bank_expansion.py
+        run: python scripts/test_kirishima_source.py
