@@ -146,6 +146,15 @@ sources:
       address:     {selector: "dl.bukken-info dd:nth-of-type(4)", attr: "text"}
       description: {selector: "dl.bukken-info", attr: "text"}
 
+  # ── さつま町 空き家情報バンク(売買) (2026-07 構造・robots確認済み) ──
+  # robots.txt は存在しない(404)=クロール制限なし。町公式の公開一覧。
+  # 値下げは「◯万円から変更」と明示されるため初回取得でも値下げバッジが付く。
+  # 50万〜100万円台の格安帯が常時数件あり、足切り(300万)内の物件が多い。
+  - id: satsuma_akiya_bank
+    type: satsuma_bank
+    enabled: true
+    list_url: "https://www.satsuma-net.jp/teiju/akiya/1/5623.html"
+
   # ── Gmailメール解析(楽待・アットホーム・SUUMO等のポータルを規約違反なしにカバー) ──
   # アドレスは環境変数 GMAIL_USERNAME、パスワードは GMAIL_APP_PASSWORD から読む。
   - id: gmail_portal_mail

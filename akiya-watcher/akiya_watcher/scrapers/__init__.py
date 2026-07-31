@@ -6,6 +6,7 @@ from .demo import DemoScraper
 from .generic_html import GenericHtmlScraper
 from .mailbox import GmailImapScraper
 from .rss_feed import RssScraper
+from .satsuma_bank import SatsumaBankScraper
 from .sumai_akiya import SumaiAkiyaScraper
 from .watch import WatchScraper
 
@@ -14,6 +15,7 @@ REGISTRY: dict[str, type[BaseScraper]] = {
     "generic_html": GenericHtmlScraper,
     "gmail_imap": GmailImapScraper,
     "rss": RssScraper,
+    "satsuma_bank": SatsumaBankScraper,
     "sumai_akiya": SumaiAkiyaScraper,
     "watch": WatchScraper,
 }
