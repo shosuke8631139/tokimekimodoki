@@ -13,7 +13,9 @@
 from __future__ import annotations
 
 import re
+import time
 
+import requests
 from bs4 import BeautifulSoup
 
 from ..criteria import parse_price_yen
@@ -30,11 +32,23 @@ class KirishimaBankScraper(BaseScraper):
         super().__init__(config)
         self.source_id = config.get("id", self.source_id)
         self.list_urls: list[str] = config.get("list_urls") or [config["list_url"]]
+        # 市サーバは巡回間隔(10秒)の間に keep-alive を切ることがあり、
+        # 死んだ接続の再利用で RemoteDisconnected になる。毎回張り直す。
+        self.session.headers["Connection"] = "close"
+
+    def _get_with_retry(self, url: str, attempts: int = 3):
+        for i in range(attempts):
+            try:
+                return self.get(url)
+            except requests.exceptions.ConnectionError:
+                if i == attempts - 1:
+                    raise
+                time.sleep(3)
 
     def fetch_listings(self) -> list[Listing]:
         listings: list[Listing] = []
         for url in self.list_urls:
-            res = self.get(url)
+            res = self._get_with_retry(url)
             res.encoding = res.apparent_encoding
             listings.extend(self.parse(res.text, url))
         return listings
