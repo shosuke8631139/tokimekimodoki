@@ -37,6 +37,12 @@ FIXTURE = """
   <p>問い合わせ：白石商事（0996-53-1775）</p>
   <p>備考：町の中心部に位置し、役場本庁まで徒歩3分程度です。</p>
  </div>
+
+ <h2><span class="bg"><span class="bg2"><span class="bg3">No.67【売買】</span></span></span></h2>
+ <p class="file-link-item"><a class="pdf" href="//www.satsuma-net.jp/material/files/group/15/hp_yatitetsukasyou.pdf">No.67 (PDF)</a></p>
+ <div class="wysiwyg">
+  <p>場所：宮之城屋地 価格： 2,000万円 （R7.10月14日、2,500万円から変更） 問い合わせ：さつま町役場さつまPR課 備考：市街地中心部にあり、建物、敷地とも十分な広さがあります。</p>
+ </div>
 </div>
 """
 
@@ -50,7 +56,8 @@ def make_scraper() -> SatsumaBankScraper:
 
 def test_parse_count_and_ids():
     listings = make_scraper().parse(FIXTURE)
-    assert [l.listing_id for l in listings] == ["satsuma-186", "satsuma-163", "satsuma-106"]
+    assert [l.listing_id for l in listings] == [
+        "satsuma-186", "satsuma-163", "satsuma-106", "satsuma-67"]
 
 
 def test_plain_price_listing():
@@ -80,3 +87,12 @@ def test_target_area_filter_accepts_satsuma_address():
     """収集フィルタ(target_areas: さつま町)が住所で通ることの確認。"""
     l = make_scraper().parse(FIXTURE)[0]
     assert "さつま町" in l.address
+
+
+def test_one_paragraph_variant():
+    """全ラベルが1段落に詰め込まれた物件(実サイトNo.67の書式)も読める。"""
+    l = make_scraper().parse(FIXTURE)[3]
+    assert l.price_yen == 20_000_000
+    assert l.advertised_previous_price_yen == 25_000_000
+    assert l.address == "鹿児島県薩摩郡さつま町宮之城屋地"
+    assert "宮之城屋地" in l.title and "問い合わせ" not in l.title

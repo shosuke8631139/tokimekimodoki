@@ -74,11 +74,14 @@ class SatsumaBankScraper(BaseScraper):
                         if text:
                             lines.append(text)
 
-            fields = {}
-            for line in lines:
-                key, sep, value = line.partition("：")
-                if sep:
-                    fields.setdefault(key.strip(), value.strip())
+            # 「場所：」等のラベルで区切る。通常は1ラベル=1つの<p>だが、
+            # No.67 のように1段落へ全ラベルが詰め込まれた物件もあるため、
+            # 行単位ではなく全文をラベルで分割して読む
+            blob = "\n".join(lines)
+            parts = re.split(r"(場所|売買|価格|問い合わせ|備考)\s*：", blob)
+            fields: dict[str, str] = {}
+            for key, value in zip(parts[1::2], parts[2::2]):
+                fields.setdefault(key, " ".join(value.split()).strip())
 
             place = fields.get("場所", "")
             price_line = fields.get("売買") or fields.get("価格") or ""
