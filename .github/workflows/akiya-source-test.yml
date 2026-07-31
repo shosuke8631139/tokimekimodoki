@@ -14,6 +14,9 @@ jobs:
           python-version: '3.12'
       - name: 依存インストール
         run: pip install -r akiya-watcher/requirements.txt pypdf
-      - name: さつま町 空き家バンク構造偵察
+      - name: 官報 構造偵察
+        working-directory: akiya-watcher
+        run: python scripts/test_kanpo_source.py
+      - name: さつま町 空き家バンク接続テスト
         working-directory: akiya-watcher
         run: python scripts/test_satsuma_source.py
