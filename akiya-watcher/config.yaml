@@ -151,6 +151,30 @@ sources:
       address:     {selector: "dl.bukken-info dd:nth-of-type(4)", attr: "text"}
       description: {selector: "dl.bukken-info", attr: "text"}
 
+  # ── さつま町 空き家情報バンク(売買) (2026-07 構造・robots確認済み) ──
+  # robots.txt は存在しない(404)=クロール制限なし。町公式の公開一覧。
+  # 値下げは「◯万円から変更」と明示されるため初回取得でも値下げバッジが付く。
+  # 50万〜100万円台の格安帯が常時数件あり、足切り(300万)内の物件が多い。
+  - id: satsuma_akiya_bank
+    type: satsuma_bank
+    enabled: true
+    list_url: "https://www.satsuma-net.jp/teiju/akiya/1/5623.html"
+
+  # ── 霧島市 空き家バンク(地区別一覧・売買のみ) (2026-07 構造確認済み) ──
+  # 市サーバはkeep-aliveを切ることがあるためアダプタ側で毎回接続を張り直す。
+  # 300万以下は少なめだが、地元(本拠地)の一次情報として価値が高い。
+  - id: kirishima_akiya_bank
+    type: kirishima_bank
+    enabled: true
+    list_urls:
+      - "https://www.city-kirishima.jp/kyodo/shise/ijuteju/akiya/akiyabankkokubu.html"
+      - "https://www.city-kirishima.jp/kyodo/shise/ijuteju/akiya/akiyabankmizobe.html"
+      - "https://www.city-kirishima.jp/kyodo/shise/ijuteju/akiya/akiyabankmakizono.html"
+      - "https://www.city-kirishima.jp/kyodo/shise/ijuteju/akiya/akiyabankyokogawa.html"
+      - "https://www.city-kirishima.jp/kyodo/shise/ijuteju/akiya/akiyabankhayato.html"
+      - "https://www.city-kirishima.jp/kyodo/shise/ijuteju/akiya/akiyabankutourokuhukuyama.html"
+      - "https://www.city-kirishima.jp/kyodo/shise/ijuteju/akiya/akiyabankkirishima.html"
+
   # ── Gmailメール解析(楽待・アットホーム・SUUMO等のポータルを規約違反なしにカバー) ──
   # アドレスは環境変数 GMAIL_USERNAME、パスワードは GMAIL_APP_PASSWORD から読む。
   - id: gmail_portal_mail
