@@ -90,6 +90,28 @@ def test_通知が複数でも送信は1回だけ(tmp_path):
     assert "📮 本日の定期便" in sent[0]        # 定期便も同梱
 
 
+def test_プレビュー送信は1通だけで見た目確認できる(tmp_path):
+    cfg = _run_config(tmp_path, _notifiable_rows(2))
+    sent = []
+    with patch.object(Notifier, "send_text",
+                      lambda self, text, attachment=None: sent.append(text)):
+        run(cfg, preview_bundle=True)
+    assert len(sent) == 1
+    assert "巡回まとめ(プレビュー)" in sent[0]
+    assert "📮 本日の定期便" in sent[0]
+
+
+def test_プレビューは定期便の1日1回メタを消費しない(tmp_path):
+    cfg = _run_config(tmp_path, _notifiable_rows(1))
+    sent = []
+    with patch.object(Notifier, "send_text",
+                      lambda self, text, attachment=None: sent.append(text)):
+        run(cfg, preview_bundle=True)   # プレビュー
+        run(cfg)                        # 直後の通常巡回
+    # 通常巡回側でも定期便がちゃんと出る (プレビューがメタを食っていない)
+    assert any("📮 本日の定期便" in t and "プレビュー" not in t for t in sent)
+
+
 def test_同日2回目の巡回では定期便は同梱されない(tmp_path):
     cfg = _run_config(tmp_path, _notifiable_rows(1))
     sent = []
