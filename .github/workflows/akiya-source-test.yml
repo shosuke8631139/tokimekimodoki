@@ -17,3 +17,9 @@ jobs:
       - name: 官報 構造偵察
         working-directory: akiya-watcher
         run: python scripts/test_kanpo_source.py
+      - name: さつま町 空き家バンク接続テスト
+        working-directory: akiya-watcher
+        run: python scripts/test_satsuma_source.py
+      - name: 霧島市 空き家バンク接続テスト
+        working-directory: akiya-watcher
+        run: python scripts/test_kirishima_source.py
