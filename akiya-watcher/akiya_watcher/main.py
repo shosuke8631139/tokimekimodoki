@@ -147,6 +147,15 @@ def collect(config: dict, dry_run: bool = False,
     return items, delisted, deals, deal_history, keep_gone
 
 
+def _car(d: Diff) -> str:
+    """一覧行に添える車の所要時間 (例: ' 🚗60分○')。地名不明なら空文字。"""
+    from .travel import drive_minutes, zone_label
+    mins = drive_minutes(d.listing.address)
+    if mins is None:
+        return ""
+    return f" 🚗{mins}分{zone_label(mins)[0]}"
+
+
 def build_digest(items: list[tuple[Diff, Score]], offer_min_age_days: int,
                  kanpo_enabled: bool = True) -> str:
     """週次ダイジェスト: 上位物件と指値候補のまとめ + 官報チェック便。"""
@@ -169,7 +178,7 @@ def build_digest(items: list[tuple[Diff, Score]], offer_min_age_days: int,
         price = (f"{d.listing.price_yen:,}円" if d.listing.price_yen is not None
                  else "価格応談")
         badges = " ".join(s.badges) or "情報少・要確認"
-        lines.append(f"・{s.out_of_ten}/10点 {d.listing.title} {price}")
+        lines.append(f"・{s.out_of_ten}/10点 {d.listing.title} {price}{_car(d)}")
         lines.append(f"  [{badges}]")
         lines.append(f"  {d.listing.url}")
     lines.append("")
@@ -207,7 +216,7 @@ def build_heartbeat(items: list[tuple[Diff, Score]], top_n: int = 5,
             price = (f"{d.listing.price_yen:,}円" if d.listing.price_yen is not None
                      else "価格応談")
             badges = " ".join(s.badges) or "情報少・要確認"
-            lines.append(f"・{s.out_of_ten}/10点 {d.listing.title} {price}")
+            lines.append(f"・{s.out_of_ten}/10点 {d.listing.title} {price}{_car(d)}")
             lines.append(f"  [{badges}]")
             lines.append(f"  {d.listing.url}")
     else:
