@@ -44,19 +44,16 @@ def probe_aira(path: str) -> None:
     except Exception as exc:  # noqa: BLE001
         print(f"!! 取得失敗: {exc}")
         return
-    res.encoding = res.apparent_encoding
+    res.encoding = "utf-8"   # apparent_encodingの誤判定で文字化けするため固定
     print(f"status={res.status_code} bytes={len(res.text)}")
     soup = BeautifulSoup(res.text, "html.parser")
 
-    # 既存セレクタ(鹿児島市と同じ)での一致数を直接確認
-    items = soup.select("ul.property-simple > li")
-    print(f"property-simple: {len(items)}件")
-    for li in items[:5]:
-        name = li.select_one(".property-name a")
-        price = li.select_one("dl.bukken-info dd.price-strong")
-        print(f"  [{name.get_text(strip=True)[:40] if name else '?'}] "
-              f"{price.get_text(strip=True) if price else '?'} "
-              f"{name.get('href') if name else ''}")
+    # 一覧カードの実体 (property-list-one) を丸ごとダンプ
+    cards = soup.select("ul.property-list-one")
+    print(f"property-list-one: {len(cards)}個")
+    if cards:
+        print("--- 最初のカードの全構造 ---")
+        print(cards[0].prettify()[:6000])
 
     # 物件らしき要素のクラス名を観察
     print("--- クラス観察 (property/bukken/item/card/list) ---")
@@ -102,10 +99,8 @@ def verify_yusui() -> None:
 
 
 def main() -> None:
-    # 3回目で発見した「姶良市」リンクの一覧本体を精査する
+    # 4回目で発見した property-list-one カードの中身を精査する
     probe_aira("/buy/house/area/kagoshimaken/airashi/list?gyosei_cd[]=46225")
-    probe_aira("/buy/land/area/kagoshimaken/airashi/list?gyosei_cd[]=46225")
-    verify_yusui()
     print("=" * 78)
     print("偵察おわり")
 
