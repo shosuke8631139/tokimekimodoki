@@ -20,6 +20,7 @@ from email.message import EmailMessage
 
 from .models import Score
 from .storage import Diff
+from .travel import location_line
 
 _URL_RE = re.compile(r"https?://[^\s<>\"]+")
 
@@ -50,6 +51,11 @@ def format_message(diff: Diff, score: Score) -> str:
         f"物件名: {ls.title}",
         f"価格: {price}",
         f"所在地: {ls.address or '不明'}",
+    ]
+    loc = location_line(ls.address)
+    if loc:
+        lines.append(loc)
+    lines += [
         f"シグナル: {' '.join(score.badges) or 'なし'}",
         f"要確認: {'、'.join(score.unknowns) or 'なし'}",
         f"URL: {ls.url}",
