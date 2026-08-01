@@ -102,8 +102,9 @@ def verify_yusui() -> None:
 
 
 def main() -> None:
-    for path in ["/buy/house/area/", "/buy/land/area/", "/buy/house/rail/"]:
-        probe_aira(path)
+    # 3回目で発見した「姶良市」リンクの一覧本体を精査する
+    probe_aira("/buy/house/area/kagoshimaken/airashi/list?gyosei_cd[]=46225")
+    probe_aira("/buy/land/area/kagoshimaken/airashi/list?gyosei_cd[]=46225")
     verify_yusui()
     print("=" * 78)
     print("偵察おわり")

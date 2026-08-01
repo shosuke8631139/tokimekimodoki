@@ -66,7 +66,9 @@ class YusuiBankScraper(BaseScraper):
                 continue
             seen.add(number)
 
-            price_part = head.split("売買", 1)[1]
+            # 売買と賃貸が併記される物件があるため、売買の後ろだけを読む
+            # (賃貸額を売買価格と誤読しない。実地確認: No.92)
+            price_part = head.split("売買", 1)[1].split("賃貸")[0]
             price_yen = parse_price_yen(price_part)  # 「応相談」は None になる
 
             td_text = unicodedata.normalize("NFKC", td.get_text(" ", strip=True))

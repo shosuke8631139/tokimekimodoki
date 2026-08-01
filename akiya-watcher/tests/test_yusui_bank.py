@@ -43,6 +43,10 @@ SAMPLE = """
     <p><strong>No.232 売買応相談</strong>［般若寺］</p>
     <p><a href="/soshiki/34/10382.html"><img alt="外観" src="/v.jpg"/></a></p>
   </td>
+  <td>
+    <p><strong>No.92 売買応相談 賃貸3.5万円/月</strong>［田尾原］</p>
+    <p><a href="/soshiki/34/4397.html"><img alt="外観" src="/u.jpg"/></a></p>
+  </td>
 </tr>
 </tbody></table>
 </body></html>
@@ -62,7 +66,12 @@ def test_売買物件だけ読み取れる():
     ids = [l.listing_id for l in listings]
     assert "yusui-250" in ids
     assert "yusui-240" not in ids     # 賃貸のみは収集しない
-    assert len(listings) == 6
+    assert len(listings) == 7
+
+
+def test_売買と賃貸の併記物件で賃貸額を誤読しない():
+    by_id = {l.listing_id: l for l in _scrape()}
+    assert by_id["yusui-92"].price_yen is None   # 売買は応相談 (3.5万円は賃貸額)
 
 
 def test_全角数字とカンマの価格が読める():
