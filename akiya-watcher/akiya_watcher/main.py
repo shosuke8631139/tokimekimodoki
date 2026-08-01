@@ -181,14 +181,18 @@ def build_digest(items: list[tuple[Diff, Score]], offer_min_age_days: int,
 
 
 def build_heartbeat(items: list[tuple[Diff, Score]], top_n: int = 5,
-                    kanpo_enabled: bool = True, notified: int = 0) -> str:
+                    kanpo_enabled: bool = True, notified: int = 0,
+                    bundled: bool = False) -> str:
     """毎日の定期便: 1日1回必ず送る「官報チェック+注目上位」。
 
     通知が出た日も送る (2026-07-31 修正: 以前は通知が出ると官報コーナーごと
     消えてしまい「官報情報がメールに載っていない」状態になっていた)。
+    bundled=True はまとめメールに同梱される場合 (見出しだけ変える)。
     """
     ranked = sorted(items, key=lambda x: x[1].total, reverse=True)
-    if notified > 0:
+    if bundled:
+        lines = ["📮 本日の定期便", ""]
+    elif notified > 0:
         lines = [f"📮 本日の定期便 — 物件の動き{notified}件は別メールでお知らせ済み", ""]
     else:
         lines = ["📮 本日の定期便 — 今回は通知に値する動きなし", ""]
@@ -212,6 +216,45 @@ def build_heartbeat(items: list[tuple[Diff, Score]], top_n: int = 5,
     lines.append("※ この定期便は1日1回。値下げ・高スコア新着・キープ物件の変化は、")
     lines.append("   これとは別にその都度すぐ鳴ります。")
     return "\n".join(lines)
+
+
+def build_patrol_summary(to_send: list[tuple[Diff, Score]],
+                         keep_gone_texts: list[str] | None = None,
+                         heartbeat_text: str | None = None) -> str:
+    """1回の巡回の通知を1通にまとめる (2026-08-01 ユーザー要望:
+    「メールが一気に何件も来て見づらい」対策)。
+
+    並び順: ⭐キープ関連 → 値下げ(下げ幅の大きい順) → その他(評価の高い順)。
+    1行目が件名になる。
+    """
+    from .notify import format_message
+    keep_gone_texts = keep_gone_texts or []
+
+    drops = [(d, s) for d, s in to_send
+             if d.context.price_changed and d.context.drop_pct]
+    others = [(d, s) for d, s in to_send if (d, s) not in drops]
+    drops.sort(key=lambda x: x[0].context.drop_pct or 0, reverse=True)
+    others.sort(key=lambda x: x[1].total, reverse=True)
+
+    parts = []
+    if keep_gone_texts:
+        parts.append(f"⭐掲載終了{len(keep_gone_texts)}件")
+    if drops:
+        parts.append(f"値下げ{len(drops)}件(最大▼{drops[0][0].context.drop_pct}%)")
+    news = sum(1 for d, _ in others if d.kind == "new")
+    changed = len(others) - news
+    if news:
+        parts.append(f"新着{news}件")
+    if changed:
+        parts.append(f"変更{changed}件")
+    subject = "🏠 巡回まとめ: " + "・".join(parts)
+
+    blocks = [subject]
+    blocks.extend(keep_gone_texts)
+    blocks.extend(format_message(d, s) for d, s in drops + others)
+    if heartbeat_text:
+        blocks.append(heartbeat_text)
+    return "\n\n――――――――――\n\n".join(blocks)
 
 
 def jst_today() -> str:
@@ -325,6 +368,8 @@ def run(config_path: str, dry_run: bool = False, report_path: str | None = None,
             meta_store.close()
     else:
         # 通常巡回: 通知ゲートを通った物件だけ即時通知 (沈黙デフォルト)
+        bundle = notify_cfg.get("bundle", True)
+        to_send: list[tuple[Diff, Score]] = []
         for diff, score in items:
             d = decide(diff, score, min_score=min_score, ruin_extra=ruin_extra)
             # 指名追跡物件 (source="watch") はスコアに関わらずキープ扱い
@@ -333,30 +378,60 @@ def run(config_path: str, dry_run: bool = False, report_path: str | None = None,
             if not d.notify and keep and diff.kind == "changed":
                 d = type(d)(True, "keep", "⭐キープ物件に変化あり")
             if d.notify and not dry_run:
-                notifier.send(diff, score)
+                to_send.append((diff, score))
                 notified += 1
             elif d.kind == "silent" and diff.kind in ("new", "changed"):
                 suppressed += 1
                 print(f"[silent] {diff.listing.title}: {d.reason}")
 
         # ⭐キープ物件の掲載終了 = 売れた可能性大。逃した事実も速報する
+        keep_gone_texts: list[str] = []
         for info in keep_gone:
             if not dry_run:
                 price = (f"{info['price_yen']:,}円" if info["price_yen"] is not None
                          else "価格不明")
-                notifier.send_text(
+                keep_gone_texts.append(
                     f"⭐ キープ物件が掲載終了(売れた可能性)\n"
                     f"物件名: {info['title']}\n価格: {price}\nURL: {info['url']}")
                 notified += 1
 
+        kanpo_on = config.get("kanpo", {}).get("enabled", True)
+        attach = notify_cfg.get("email", {}).get("attach_report", True) \
+            if notify_cfg.get("email") is not None else False
+        heartbeat_on = notify_cfg.get("heartbeat", True)
+
+        if bundle and (to_send or keep_gone_texts):
+            # まとめ送信 (2026-08-01 ユーザー要望): 1回の巡回 = 最大1通。
+            # 定期便が未送信の日なら同じメールに同梱し、台帳レポートも添付する
+            heartbeat_text = None
+            if not dry_run and heartbeat_on:
+                meta_store = Store(config.get("db_path", "data/listings.db"))
+                today = jst_today()
+                if meta_store.get_meta("last_mail_date") != today:
+                    heartbeat_text = build_heartbeat(items, kanpo_enabled=kanpo_on,
+                                                     bundled=True)
+                    meta_store.set_meta("last_mail_date", today)
+                    print("[info] 定期便をまとめメールに同梱 (本日初回)")
+                meta_store.close()
+            if not dry_run:
+                notifier.send_text(
+                    build_patrol_summary(to_send, keep_gone_texts, heartbeat_text),
+                    attachment=report_path if attach else None)
+        elif not bundle:
+            # 従来モード (config の notify.bundle: false で戻せる): 1件1通
+            for diff, score in to_send:
+                notifier.send(diff, score)
+            for text in keep_gone_texts:
+                notifier.send_text(text)
+
         # 毎日の定期便: 通知の有無に関係なく1日1回必ず送る (2026-07-31 修正)。
         # 官報チェックと注目上位を毎日届けるのが目的。送った日は meta に記録し、
         # 同日の以降の巡回では沈黙する (日曜はダイジェストが定期便を兼ねる)。
-        if not dry_run and notify_cfg.get("heartbeat", True):
+        # まとめ送信で同梱済みの日は meta が更新されているのでここは沈黙する。
+        if not dry_run and heartbeat_on:
             meta_store = Store(config.get("db_path", "data/listings.db"))
             today = jst_today()
             if meta_store.get_meta("last_mail_date") != today:
-                kanpo_on = config.get("kanpo", {}).get("enabled", True)
                 notifier.send_text(build_heartbeat(items, kanpo_enabled=kanpo_on,
                                                    notified=notified),
                                    attachment=report_path)
@@ -364,9 +439,9 @@ def run(config_path: str, dry_run: bool = False, report_path: str | None = None,
                 print("[info] 定期便を送信 (本日初回)")
             meta_store.close()
 
-    # 通知が出た巡回では、レポート本体もメール添付で届ける
-    # (スマホのGmailから添付を開けばブラウザで見られる)
-    if report_path and not digest:
+    # 従来モードのみ: 通知が出た巡回でレポート本体を別メール添付で届ける
+    # (まとめ送信モードではまとめメールに添付済み)
+    if report_path and not digest and not notify_cfg.get("bundle", True):
         attach = notify_cfg.get("email", {}).get("attach_report", True) \
             if notify_cfg.get("email") is not None else False
         if attach and not dry_run and (notified > 0):
