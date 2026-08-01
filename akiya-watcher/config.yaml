@@ -175,6 +175,15 @@ sources:
       - "https://www.city-kirishima.jp/kyodo/shise/ijuteju/akiya/akiyabankutourokuhukuyama.html"
       - "https://www.city-kirishima.jp/kyodo/shise/ijuteju/akiya/akiyabankkirishima.html"
 
+  # ── 湧水町 空家バンク(売買のみ) (2026-08 構造確認済み・◎30分圏) ──
+  # No.xxx+売買価格+［地区名］が表セルで並ぶ町独自ページ。
+  # 全角数字・「応相談」・Noと価格が別strongの物件あり(アダプタで吸収)。
+  # 空地バンク(789.html)は土地のみのため対象外。
+  - id: yusui_akiya_bank
+    type: yusui_bank
+    enabled: true
+    list_url: "https://www.town.yusui.kagoshima.jp/soshiki/34/787.html"
+
   # ── Gmailメール解析(楽待・アットホーム・SUUMO等のポータルを規約違反なしにカバー) ──
   # アドレスは環境変数 GMAIL_USERNAME、パスワードは GMAIL_APP_PASSWORD から読む。
   - id: gmail_portal_mail

@@ -10,6 +10,7 @@ from .rss_feed import RssScraper
 from .satsuma_bank import SatsumaBankScraper
 from .sumai_akiya import SumaiAkiyaScraper
 from .watch import WatchScraper
+from .yusui_bank import YusuiBankScraper
 
 REGISTRY: dict[str, type[BaseScraper]] = {
     "demo": DemoScraper,
@@ -20,6 +21,7 @@ REGISTRY: dict[str, type[BaseScraper]] = {
     "satsuma_bank": SatsumaBankScraper,
     "sumai_akiya": SumaiAkiyaScraper,
     "watch": WatchScraper,
+    "yusui_bank": YusuiBankScraper,
 }
 
 
