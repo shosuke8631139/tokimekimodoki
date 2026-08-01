@@ -334,7 +334,7 @@ def self_check(config_path: str) -> int:
 
 
 def run(config_path: str, dry_run: bool = False, report_path: str | None = None,
-        digest: bool = False) -> int:
+        digest: bool = False, preview_bundle: bool = False) -> int:
     config = load_config(config_path)
     notify_cfg = config.get("notify", {})
     min_score = notify_cfg.get("min_score", 8)
@@ -353,6 +353,27 @@ def run(config_path: str, dry_run: bool = False, report_path: str | None = None,
                           deals=deals, deal_history=deal_history),
             encoding="utf-8")
         print(f"[info] 台帳レポート生成: {report_path}")
+
+    if preview_bundle:
+        # まとめメールの見た目確認用に1通だけ送る (通知ゲート・1日1回の
+        # 定期便メタは触らない。値下げ履歴のある物件を値下げ枠で見せる)
+        kanpo_on = config.get("kanpo", {}).get("enabled", True)
+        drops, others = [], []
+        for d, s in items:
+            if d.context.drop_pct:
+                d.context.price_changed = True  # まとめの値下げ枠に入れる
+                drops.append((d, s))
+            else:
+                others.append((d, s))
+        others.sort(key=lambda x: x[1].total, reverse=True)
+        picked = drops if drops else others[:3]
+        hb = build_heartbeat(items, kanpo_enabled=kanpo_on, bundled=True)
+        text = build_patrol_summary(picked, heartbeat_text=hb)
+        text = text.replace("🏠 巡回まとめ:", "🏠 巡回まとめ(プレビュー):", 1)
+        if not dry_run:
+            notifier.send_text(text, attachment=report_path)
+        print(f"[info] まとめメールのプレビューを送信 ({len(picked)}件)")
+        return 0
 
     notified = suppressed = 0
     if digest:
@@ -463,6 +484,8 @@ def main() -> None:
     ap.add_argument("--report", help="台帳レポートHTMLの出力先パス")
     ap.add_argument("--digest", action="store_true",
                     help="即時通知の代わりに週次ダイジェストを送る")
+    ap.add_argument("--preview-bundle", action="store_true",
+                    help="まとめメールの見た目確認用に1通だけ送る")
     ap.add_argument("--check", action="store_true",
                     help="設定の健康診断 (何が足りないかを日本語で表示)")
     ap.add_argument("--dry-run", action="store_true",
@@ -472,7 +495,7 @@ def main() -> None:
         sys.exit(self_check(args.config))
     try:
         sys.exit(run(args.config, dry_run=args.dry_run, report_path=args.report,
-                     digest=args.digest))
+                     digest=args.digest, preview_bundle=args.preview_bundle))
     except ConfigError as e:
         print(f"[設定エラー] {e}", file=sys.stderr)
         sys.exit(1)

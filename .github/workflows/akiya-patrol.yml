@@ -23,7 +23,13 @@ on:
     # あるため朝だけ三段構え。生存報告は1日1回ガードがあり重複しない
     - cron: '53 0 * * *'
     - cron: '23 1 * * *'
-  workflow_dispatch: {}          # 手動実行も可能
+  workflow_dispatch:             # 手動実行も可能
+    inputs:
+      preview_bundle:
+        description: 'まとめメールのプレビューを1通送る(通知ゲートを通さない)'
+        required: false
+        default: false
+        type: boolean
 
 concurrency:
   group: akiya-watcher-db
@@ -53,7 +59,7 @@ jobs:
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           # 通知の宛先を送信元と別にしたい場合のみ設定 (未設定なら自分宛て)
           NOTIFY_TO: ${{ secrets.NOTIFY_TO }}
-        run: python -m akiya_watcher.main --config config.yaml --report data/report.html
+        run: python -m akiya_watcher.main --config config.yaml --report data/report.html ${{ inputs.preview_bundle == true && '--preview-bundle' || '' }}
       - name: 巡回データを保存 (値下げ検知は履歴が命)
         if: always()
         uses: actions/cache/save@v4
