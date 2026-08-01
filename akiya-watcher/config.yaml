@@ -175,6 +175,23 @@ sources:
       - "https://www.city-kirishima.jp/kyodo/shise/ijuteju/akiya/akiyabankutourokuhukuyama.html"
       - "https://www.city-kirishima.jp/kyodo/shise/ijuteju/akiya/akiyabankkirishima.html"
 
+  # ── 姶良市 空き家バンク(売買・戸建) (2026-08 構造確認済み・◎30分圏) ──
+  # アットホーム共通システムの新型(メニュー型)。一覧は /buy/house/... 配下。
+  # 売買戸建のみ監視(土地のみは対象外の方針)。robots.txtなし(404)確認済み。
+  - id: aira_akiya_bank
+    type: generic_html
+    enabled: true
+    list_url: "https://aira-c46225.akiya-athome.jp/buy/house/area/kagoshimaken/airashi/list?gyosei_cd[]=46225"
+    item_selector: "ul.property-list-one > li"
+    fields:
+      title:       {selector: 'dt a', attr: "text"}
+      url:         {selector: 'dt a', attr: "href"}
+      price:       {selector: 'td.price-strong', attr: "text"}
+      layout:      {selector: 'td[data-column="madori"]', attr: "text"}
+      land_area:   {selector: 'td[data-column="menseki"]', attr: "text"}
+      address:     {selector: 'li[data-column="address"]', attr: "text"}
+      description: {selector: 'dd.detail-info', attr: "text"}
+
   # ── 湧水町 空家バンク(売買のみ) (2026-08 構造確認済み・◎30分圏) ──
   # No.xxx+売買価格+［地区名］が表セルで並ぶ町独自ページ。
   # 全角数字・「応相談」・Noと価格が別strongの物件あり(アダプタで吸収)。
