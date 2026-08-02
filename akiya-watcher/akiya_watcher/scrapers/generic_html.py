@@ -39,7 +39,10 @@ class GenericHtmlScraper(BaseScraper):
     def __init__(self, config: dict):
         super().__init__(config)
         self.source_id = config["id"]
-        self.list_url = config["list_url"]
+        # 複数ページの一覧に対応 (list_urls)。単一なら list_url でよい
+        self.list_urls: list[str] = (config.get("list_urls")
+                                     or [config["list_url"]])
+        self.list_url = self.list_urls[0]
         self.item_selector = config["item_selector"]
         self.fields: dict = config.get("fields", {})
         # この文字列を含む物件だけ採用 (例: "売" で賃貸を除外)
@@ -55,14 +58,20 @@ class GenericHtmlScraper(BaseScraper):
         return el.get(attr, "")
 
     def fetch_listings(self) -> list[Listing]:
-        res = self.get(self.list_url)
+        listings: list[Listing] = []
+        for url in self.list_urls:
+            listings.extend(self._fetch_page(url))
+        return listings
+
+    def _fetch_page(self, page_url: str) -> list[Listing]:
+        res = self.get(page_url)
         soup = BeautifulSoup(res.text, "html.parser")
         listings: list[Listing] = []
         for node in soup.select(self.item_selector):
             f = {name: self._extract(node, spec) for name, spec in self.fields.items()}
             if self.must_include and self.must_include not in node.get_text(" "):
                 continue
-            url = urljoin(self.list_url, f.get("url", ""))
+            url = urljoin(page_url, f.get("url", ""))
             # ID列がないサイトが多いのでURL(なければ内容)から安定IDを作る
             id_basis = url or (f.get("title", "") + f.get("address", ""))
             listing_id = hashlib.sha256(id_basis.encode("utf-8")).hexdigest()[:16]

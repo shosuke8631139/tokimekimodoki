@@ -183,7 +183,7 @@ sources:
     enabled: true
     list_url: "https://aira-c46225.akiya-athome.jp/buy/house/area/kagoshimaken/airashi/list?gyosei_cd[]=46225"
     item_selector: "ul.property-list-one > li"
-    fields:
+    fields: &athome_new_fields
       title:       {selector: 'dt a', attr: "text"}
       url:         {selector: 'dt a', attr: "href"}
       price:       {selector: 'td.price-strong', attr: "text"}
@@ -191,6 +191,49 @@ sources:
       land_area:   {selector: 'td[data-column="menseki"]', attr: "text"}
       address:     {selector: 'li[data-column="address"]', attr: "text"}
       description: {selector: 'dd.detail-info', attr: "text"}
+
+  # ── 出水市 空き家バンク(売買・戸建) (2026-08 構造確認済み・21件稼働中) ──
+  # 1ページ20件表示のため2ページまで読む(20件超が続くなら3ページ目を足す)。
+  # 50万4DK・70万3LDKなど格安帯が常時ある優良ソース。
+  - id: izumi_akiya_bank
+    type: generic_html
+    enabled: true
+    list_urls:
+      - "https://izumi-c46208.akiya-athome.jp/buy/house/area/kagoshimaken/izumishi/list?gyosei_cd[]=46208"
+      - "https://izumi-c46208.akiya-athome.jp/buy/house/area/kagoshimaken/izumishi/list?gyosei_cd[]=46208&page=2"
+    item_selector: "ul.property-list-one > li"
+    fields: *athome_new_fields
+
+  # ── 鹿屋・伊佐・曽於・都城 (2026-08 偵察済み: 現在売戸建の掲載0件) ──
+  # システムは出水・姶良と同型で読めることを確認済み(伊佐の賃貸で実証)。
+  # 掲載が現れた瞬間に自動で拾うための「待ち網」として登録しておく。
+  - id: kanoya_akiya_bank
+    type: generic_html
+    enabled: true
+    list_url: "https://kanoya-c46203.akiya-athome.jp/buy/house/area/kagoshimaken/kanoyashi/list?gyosei_cd[]=46203"
+    item_selector: "ul.property-list-one > li"
+    fields: *athome_new_fields
+
+  - id: isa_akiya_bank
+    type: generic_html
+    enabled: true
+    list_url: "https://isa-c46224.akiya-athome.jp/buy/house/area/kagoshimaken/isashi/list?gyosei_cd[]=46224"
+    item_selector: "ul.property-list-one > li"
+    fields: *athome_new_fields
+
+  - id: soo_akiya_bank
+    type: generic_html
+    enabled: true
+    list_url: "https://soo-c46217.akiya-athome.jp/buy/house/area/kagoshimaken/sooshi/list?gyosei_cd[]=46217"
+    item_selector: "ul.property-list-one > li"
+    fields: *athome_new_fields
+
+  - id: miyakonojo_akiya_bank
+    type: generic_html
+    enabled: true
+    list_url: "https://miyakonojo-c45202.akiya-athome.jp/buy/house/area/miyazakiken/miyakonojoshi/list?gyosei_cd[]=45202"
+    item_selector: "ul.property-list-one > li"
+    fields: *athome_new_fields
 
   # ── 湧水町 空家バンク(売買のみ) (2026-08 構造確認済み・◎30分圏) ──
   # No.xxx+売買価格+［地区名］が表セルで並ぶ町独自ページ。
