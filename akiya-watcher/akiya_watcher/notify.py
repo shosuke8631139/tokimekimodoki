@@ -55,6 +55,8 @@ def format_message(diff: Diff, score: Score) -> str:
     loc = location_line(ls.address)
     if loc:
         lines.append(loc)
+    from .ai_reader import read_listing
+    lines.append(read_listing(ls, ctx).line)
     lines += [
         f"シグナル: {' '.join(score.badges) or 'なし'}",
         f"要確認: {'、'.join(score.unknowns) or 'なし'}",
