@@ -53,9 +53,69 @@ def load_config(config_path: str) -> dict:
     return config
 
 
-def collect(config: dict, dry_run: bool = False,
-            ) -> tuple[list[tuple[Diff, Score]], list[dict]]:
-    """全ソースから収集し、((Diff, Score) のリスト, 掲載終了リスト) を返す。"""
+def merge_keep_entries(sources: list[dict], keeps: list[dict]) -> int:
+    """メール⭐キープ登録を追跡リスト(watch)の entries に合流させる。
+
+    config直書きの指名物件と同じ扱いになる (毎巡回ページ直接確認・
+    ⭐キープ・足切り免除)。戻り値 = 新たに合流した件数。
+    """
+    watch = next((s for s in sources
+                  if s.get("type") == "watch" and s.get("enabled", True)), None)
+    if watch is None or not keeps:
+        return 0
+    entries = watch.setdefault("entries", [])
+    existing = {e.get("url", "").strip().rstrip("/") for e in entries}
+    added = 0
+    for k in keeps:
+        url = k.get("url", "").strip()
+        if not url or url.rstrip("/") in existing:
+            continue
+        note = f"⭐メールでキープ登録 {k.get('added_on', '')}".strip()
+        if k.get("note"):
+            note += f" — {k['note']}"
+        entries.append({"url": url, "note": note})
+        existing.add(url.rstrip("/"))
+        added += 1
+    return added
+
+
+def _pull_keep_mail(config: dict, store) -> list[dict]:
+    """keepメールを確認して台帳へ登録し、追跡リストに合流させる。
+
+    戻り値 = 今回新規登録の一覧 (まとめメールでの受付報告用。
+    キャッシュ消失で再読込した古い登録まで報告しないよう、メールの
+    日付が confirm_within_days 以内のものだけ)。IMAP不通でも巡回は止めない。
+    """
+    from datetime import date, timedelta
+    cfg = config.get("keep_mail", {})
+    if not cfg.get("enabled") or store is None:
+        return []
+    try:
+        from .keep_mail import fetch_keep_entries
+        fetched = fetch_keep_entries(cfg)
+    except Exception as e:
+        print(f"[warn] keepメール確認をスキップ: {e}", file=sys.stderr)
+        fetched = []
+    cutoff = (date.today()
+              - timedelta(days=cfg.get("confirm_within_days", 7))).isoformat()
+    keep_new = []
+    for e in fetched:
+        if (store.upsert_keep(e["url"], e.get("note", ""), e.get("added_on", ""))
+                and e.get("added_on", "") >= cutoff):
+            keep_new.append(e)
+    merged = merge_keep_entries(config.get("sources", []), store.keep_entries())
+    if fetched or merged:
+        print(f"[info] keepメール: 登録{len(fetched)}件確認 / "
+              f"追跡リストへ{merged}件合流")
+    return keep_new
+
+
+def collect(config: dict, dry_run: bool = False) -> tuple:
+    """全ソースから収集する。
+
+    戻り値: (items=(Diff, Score)のリスト, 掲載終了, 商談状態, 商談履歴,
+    ⭐キープ物件の掲載終了, ⭐メールキープの新規登録)
+    """
     criteria = config.get("criteria", {})
     scorer = Scorer(criteria)
     # リサーチ範囲: 指定があれば範囲外の市町村は収集しない。
@@ -65,6 +125,8 @@ def collect(config: dict, dry_run: bool = False,
     max_price = criteria.get("max_price_yen")
     include_unknown_price = criteria.get("include_price_unknown", True)
     store = None if dry_run else Store(config.get("db_path", "data/listings.db"))
+    # メール1タップの⭐キープ登録を追跡リストへ合流させてから巡回する
+    keep_new = _pull_keep_mail(config, store)
 
     items: list[tuple[Diff, Score]] = []
     gone_uids: list[str] = []
@@ -145,7 +207,7 @@ def collect(config: dict, dry_run: bool = False,
         print(f"[info] 価格上限({max_price:,}円)超のためスキップ: {over_price}件")
     if unknown_price:
         print(f"[info] 価格応相談のためスキップ: {unknown_price}件")
-    return items, delisted, deals, deal_history, keep_gone
+    return items, delisted, deals, deal_history, keep_gone, keep_new
 
 
 def _top_uids(items: list[tuple[Diff, Score]], n: int = 5) -> list[str]:
@@ -163,6 +225,15 @@ def _car(d: Diff) -> str:
     return f" 🚗{mins}分{zone_label(mins)[0]}"
 
 
+def _keep_lines(d: Diff) -> list[str]:
+    """一覧行に添える「⭐キープ」1タップ登録リンク。追跡済みには付けない。"""
+    from .notify import keep_mailto_line
+    if d.listing.source == "watch":
+        return []
+    kl = keep_mailto_line(d.listing.url)
+    return [f"  {kl}"] if kl else []
+
+
 def build_digest(items: list[tuple[Diff, Score]], offer_min_age_days: int,
                  kanpo_enabled: bool = True) -> str:
     """週次ダイジェスト: 上位物件と指値候補のまとめ + 官報チェック便。"""
@@ -178,6 +249,7 @@ def build_digest(items: list[tuple[Diff, Score]], offer_min_age_days: int,
                  else "価格応談")
         lines.append(f"・{d.listing.title} {price} ({r})")
         lines.append(f"  {d.listing.url}")
+        lines.extend(_keep_lines(d))
     lines.append("")
 
     lines.append("🏆 評価上位 (10点満点):")
@@ -188,6 +260,7 @@ def build_digest(items: list[tuple[Diff, Score]], offer_min_age_days: int,
         lines.append(f"・{s.out_of_ten}/10点 {d.listing.title} {price}{_car(d)}")
         lines.append(f"  [{badges}]")
         lines.append(f"  {d.listing.url}")
+        lines.extend(_keep_lines(d))
     lines.append("")
     if kanpo_enabled:
         lines.extend(kanpo_digest_lines())
@@ -243,6 +316,7 @@ def build_heartbeat(items: list[tuple[Diff, Score]], top_n: int = 5,
                              f"{d.listing.title} {price}{_car(d)}{tail_mark}")
                 lines.append(f"  [{badges}]")
                 lines.append(f"  {d.listing.url}")
+                lines.extend(_keep_lines(d))
     else:
         lines.append("監視中の物件が0件です (情報源の取得失敗が続く場合は要確認)。")
     lines.append("")
@@ -254,7 +328,8 @@ def build_heartbeat(items: list[tuple[Diff, Score]], top_n: int = 5,
 def build_patrol_summary(to_send: list[tuple[Diff, Score]],
                          keep_gone_texts: list[str] | None = None,
                          heartbeat_text: str | None = None,
-                         quiet_new: list[tuple[Diff, Score]] | None = None) -> str:
+                         quiet_new: list[tuple[Diff, Score]] | None = None,
+                         keep_added_texts: list[str] | None = None) -> str:
     """1回の巡回の通知を1通にまとめる (2026-08-01 ユーザー要望:
     「メールが一気に何件も来て見づらい」対策)。
 
@@ -265,6 +340,7 @@ def build_patrol_summary(to_send: list[tuple[Diff, Score]],
     from .notify import format_message
     keep_gone_texts = keep_gone_texts or []
     quiet_new = quiet_new or []
+    keep_added_texts = keep_added_texts or []
 
     drops = [(d, s) for d, s in to_send
              if d.context.price_changed and d.context.drop_pct]
@@ -273,6 +349,8 @@ def build_patrol_summary(to_send: list[tuple[Diff, Score]],
     others.sort(key=lambda x: x[1].total, reverse=True)
 
     parts = []
+    if keep_added_texts:
+        parts.append(f"⭐キープ登録{len(keep_added_texts)}件")
     if keep_gone_texts:
         parts.append(f"⭐掲載終了{len(keep_gone_texts)}件")
     if drops:
@@ -290,6 +368,7 @@ def build_patrol_summary(to_send: list[tuple[Diff, Score]],
     subject = "🏠 巡回まとめ: " + "・".join(parts)
 
     blocks = [subject]
+    blocks.extend(keep_added_texts)
     blocks.extend(keep_gone_texts)
     blocks.extend(format_message(d, s) for d, s in drops + others)
     if quiet_new:
@@ -299,6 +378,7 @@ def build_patrol_summary(to_send: list[tuple[Diff, Score]],
                      if d.listing.price_yen is not None else "価格応談")
             qlines.append(f"・{s.out_of_ten}/10 {d.listing.title} {price}{_car(d)}")
             qlines.append(f"  {d.listing.url}")
+            qlines.extend(_keep_lines(d))
         blocks.append("\n".join(qlines))
     if heartbeat_text:
         blocks.append(heartbeat_text)
@@ -362,6 +442,17 @@ def self_check(config_path: str) -> int:
             bad(f"アプリパスワードが未設定です (環境変数 {env}。"
                 "windows/set_gmail_password.bat で設定できます)")
 
+    km = config.get("keep_mail", {})
+    if km.get("enabled"):
+        user = km.get("username") or os.environ.get(
+            km.get("username_env", "GMAIL_USERNAME"), "")
+        if user:
+            good(f"⭐メールキープ受付: 有効 (件名 "
+                 f"'{km.get('subject_keyword', 'keep')}' を巡回ごとに確認)")
+        else:
+            bad("⭐メールキープ: Gmailアドレスが未設定です "
+                "(環境変数 GMAIL_USERNAME)")
+
     email = config.get("notify", {}).get("email")
     email_user = ""
     if email is not None:
@@ -389,7 +480,8 @@ def run(config_path: str, dry_run: bool = False, report_path: str | None = None,
     ruin_extra = notify_cfg.get("ruin_extra_score", 5)
     offer_age = config.get("offer_list", {}).get("min_age_days", 90)
 
-    items, delisted, deals, deal_history, keep_gone = collect(config, dry_run=dry_run)
+    (items, delisted, deals, deal_history, keep_gone,
+     keep_new) = collect(config, dry_run=dry_run)
     notifier = Notifier(config.get("slack_webhook_url"),
                         email=notify_cfg.get("email"))
 
@@ -427,9 +519,12 @@ def run(config_path: str, dry_run: bool = False, report_path: str | None = None,
     if digest:
         if not dry_run:
             kanpo_on = config.get("kanpo", {}).get("enabled", True)
-            notifier.send_text(build_digest(items, offer_age,
-                                            kanpo_enabled=kanpo_on),
-                               attachment=report_path)
+            text = build_digest(items, offer_age, kanpo_enabled=kanpo_on)
+            if keep_new:
+                head = "\n".join("⭐ キープ登録を受け付けました: " + e["url"]
+                                 for e in keep_new)
+                text = head + "\n\n" + text
+            notifier.send_text(text, attachment=report_path)
             notified = 1
             # ダイジェスト自体がメールなので、同日の生存報告は不要と記録する
             meta_store = Store(config.get("db_path", "data/listings.db"))
@@ -470,12 +565,24 @@ def run(config_path: str, dry_run: bool = False, report_path: str | None = None,
                     f"物件名: {info['title']}\n価格: {price}\nURL: {info['url']}")
                 notified += 1
 
+        # メール1タップの⭐キープ登録の受付報告 (登録した瞬間の安心のため)
+        keep_added_texts: list[str] = []
+        for e in keep_new:
+            if not dry_run:
+                note = f"\nメモ: {e['note']}" if e.get("note") else ""
+                keep_added_texts.append(
+                    f"⭐ キープ登録を受け付けました (メール1タップ登録)\n"
+                    f"URL: {e['url']}{note}\n"
+                    "→ 追跡リスト入り。値下げ・記載変更・掲載終了を見張ります")
+                notified += 1
+
         kanpo_on = config.get("kanpo", {}).get("enabled", True)
         attach = notify_cfg.get("email", {}).get("attach_report", True) \
             if notify_cfg.get("email") is not None else False
         heartbeat_on = notify_cfg.get("heartbeat", True)
 
-        if bundle and (to_send or keep_gone_texts or quiet_new):
+        if bundle and (to_send or keep_gone_texts or quiet_new
+                       or keep_added_texts):
             # まとめ送信 (2026-08-01 ユーザー要望): 1回の巡回 = 最大1通。
             # 定期便が未送信の日なら同じメールに同梱し、台帳レポートも添付する
             heartbeat_text = None
@@ -495,13 +602,14 @@ def run(config_path: str, dry_run: bool = False, report_path: str | None = None,
             if not dry_run:
                 notifier.send_text(
                     build_patrol_summary(to_send, keep_gone_texts, heartbeat_text,
-                                         quiet_new=quiet_new),
+                                         quiet_new=quiet_new,
+                                         keep_added_texts=keep_added_texts),
                     attachment=report_path if attach else None)
         elif not bundle:
             # 従来モード (config の notify.bundle: false で戻せる): 1件1通
             for diff, score in to_send:
                 notifier.send(diff, score)
-            for text in keep_gone_texts:
+            for text in keep_gone_texts + keep_added_texts:
                 notifier.send_text(text)
 
         # 毎日の定期便: 通知の有無に関係なく1日1回必ず送る (2026-07-31 修正)。

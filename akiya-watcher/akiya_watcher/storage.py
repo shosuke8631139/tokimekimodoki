@@ -48,6 +48,12 @@ CREATE TABLE IF NOT EXISTS meta (
     key   TEXT PRIMARY KEY,
     value TEXT
 );
+CREATE TABLE IF NOT EXISTS keeps (
+    url            TEXT PRIMARY KEY,
+    note           TEXT,
+    added_on       TEXT,
+    first_recorded INTEGER
+);
 """
 
 # 商談ステータス (番号は deals CLI の選択肢)
@@ -187,6 +193,33 @@ class Store:
             return None
         return {"title": row[0], "url": row[1], "price_yen": row[2],
                 "is_keep": bool(row[3])}
+
+    # ------------------------------------------------- メール⭐キープ登録
+    # 正本はGmailに残るkeepメール。DBは追跡リストへ合流させるための写し。
+
+    def upsert_keep(self, url: str, note: str = "", added_on: str = "") -> bool:
+        """keepメールの登録を記録する。戻り値 = 今回が新規登録だったか。"""
+        row = self.conn.execute(
+            "SELECT note FROM keeps WHERE url = ?", (url,)).fetchone()
+        if row is None:
+            self.conn.execute(
+                "INSERT INTO keeps (url, note, added_on, first_recorded)"
+                " VALUES (?, ?, ?, ?)", (url, note, added_on, self.now()))
+            self.conn.commit()
+            return True
+        if note and note != (row[0] or ""):
+            self.conn.execute(
+                "UPDATE keeps SET note = ? WHERE url = ?", (note, url))
+            self.conn.commit()
+        return False
+
+    def keep_entries(self) -> list[dict]:
+        """メール登録されたキープ物件 (追跡リストへの合流用・登録順)。"""
+        rows = self.conn.execute(
+            "SELECT url, note, added_on FROM keeps"
+            " ORDER BY first_recorded, url").fetchall()
+        return [{"url": u, "note": n or "", "added_on": a or ""}
+                for u, n, a in rows]
 
     def set_deal(self, uid: str, status: str, offer_yen: int | None = None,
                  note: str = "") -> None:
