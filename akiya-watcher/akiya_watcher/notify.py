@@ -20,7 +20,7 @@ from email.message import EmailMessage
 
 from .models import Score
 from .storage import Diff
-from .travel import location_line
+from .travel import location_line, map_link, nearby_line
 
 _URL_RE = re.compile(r"https?://[^\s<>\"]+")
 
@@ -55,8 +55,14 @@ def format_message(diff: Diff, score: Score) -> str:
     loc = location_line(ls.address)
     if loc:
         lines.append(loc)
+    near = nearby_line(f"{ls.title} {ls.description}")
+    if near:
+        lines.append(near)
     from .ai_reader import read_listing
     lines.append(read_listing(ls, ctx).line)
+    gmap = map_link(ls.address)
+    if gmap:
+        lines.append(gmap)
     lines += [
         f"シグナル: {' '.join(score.badges) or 'なし'}",
         f"要確認: {'、'.join(score.unknowns) or 'なし'}",

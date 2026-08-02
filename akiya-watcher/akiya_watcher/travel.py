@@ -11,6 +11,8 @@
 from __future__ import annotations
 
 import math
+import re
+import unicodedata
 
 # 自宅の基点: 霧島市国分の市街地代表点
 HOME = (31.74, 130.76)
@@ -93,3 +95,61 @@ def location_line(address: str | None) -> str | None:
     if minutes is None:
         return None
     return f"立地: 国分から車およそ{minutes}分 {zone_label(minutes)}"
+
+
+# ── 周辺情報の掘り出し (2026-08-02 ユーザー要望「地名だけではピンとこない。
+#    小学校やスーパーまでの距離が見たい」) ──
+# 掲載サイトの説明文には「市役所まで5.3km」「帖佐駅/車13分」等の周辺情報が
+# 既に埋まっていることが多い。捨てずに抽出して1行にまとめる。
+
+_FACILITY = (r"スーパー|コンビニ|小学校|中学校|高校|保育園|幼稚園|病院|医院|"
+             r"診療所|役場|市役所|支所|郵便局|温泉|海|港|バス停")
+
+# 「施設 まで 500m / 徒歩10分 / 車5分 / 約1.2km」の形
+_NEAR_WITH_DIST = re.compile(
+    rf"({_FACILITY})(?:まで)?[^、。\s]{{0,4}}?"
+    r"((?:約)?[0-9][0-9.,]*\s*k?m|徒歩\s*[0-9]+\s*分|車\s*[0-9]+\s*分)")
+# 「◯◯駅 / 車13分」「◯◯駅 徒歩16分」の形 (アットホーム系の交通欄)
+_STATION = re.compile(r"([^\s/、。]{1,10}駅)\s*/?\s*((?:徒歩|車)\s*[0-9]+\s*分)")
+# 距離なしの言及 (「スーパー近く」等) は控えめに拾う
+_NEAR_BARE = re.compile(rf"({_FACILITY})(?:が)?(?:すぐ)?(近く|至近|そば|隣)")
+
+
+def nearby_line(text: str | None) -> str | None:
+    """説明文から周辺情報を抽出して1行にする。無ければ None。
+
+    例: 「周辺: 帖佐駅 車13分・市役所まで5.3km・スーパー近く」
+    """
+    if not text:
+        return None
+    t = unicodedata.normalize("NFKC", text)
+    found: list[str] = []
+    seen: set[str] = set()
+
+    for m in _STATION.finditer(t):
+        name, dist = m.group(1), " ".join(m.group(2).split())
+        if "駅" not in seen:
+            found.append(f"{name} {dist}")
+            seen.add("駅")
+    for m in _NEAR_WITH_DIST.finditer(t):
+        fac, dist = m.group(1), " ".join(m.group(2).split())
+        if fac not in seen:
+            found.append(f"{fac}まで{dist}")
+            seen.add(fac)
+    for m in _NEAR_BARE.finditer(t):
+        fac = m.group(1)
+        if fac not in seen:
+            found.append(f"{fac}近く")
+            seen.add(fac)
+
+    if not found:
+        return None
+    return "周辺: " + "・".join(found[:4])
+
+
+def map_link(address: str | None) -> str | None:
+    """住所をGoogleマップで開くリンク。タップすれば周辺施設・衛星写真が見える。"""
+    if not address:
+        return None
+    from urllib.parse import quote
+    return f"地図: https://www.google.com/maps/search/?api=1&query={quote(address)}"
