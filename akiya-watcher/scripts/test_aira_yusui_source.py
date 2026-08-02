@@ -39,6 +39,40 @@ def robots() -> None:
         print(f"取得失敗: {exc}")
 
 
+def dump_cards() -> None:
+    """一覧の物件カード構造を丸ごとダンプ (リンクはURL側に管理番号がある)。"""
+    print("=" * 78)
+    print("### /residence/ 物件カードのダンプ")
+    r = requests.get(BASE + "/residence/", timeout=30, headers=UA)
+    r.encoding = "utf-8"
+    soup = BeautifulSoup(r.text, "html.parser")
+    from urllib.parse import unquote
+    cards = []
+    seen = set()
+    for a in soup.find_all("a", href=True):
+        href = a["href"]
+        if "/residence/" not in href:
+            continue
+        decoded = unquote(href)
+        if "管理番号" not in decoded and "%e7%ae%a1" not in href.lower():
+            continue
+        if href in seen:
+            continue
+        seen.add(href)
+        cards.append((a, decoded))
+    print(f"物件詳細リンク: {len(cards)}件")
+    for a, decoded in cards[:8]:
+        print(f"  {decoded[:90]}")
+    if cards:
+        a = cards[0][0]
+        node = a
+        for _ in range(4):
+            if node.parent is not None and node.parent.name not in ("body", "html"):
+                node = node.parent
+        print("--- 最初のカードの構造 (親4段) ---")
+        print(node.prettify()[:3500])
+
+
 def probe(path: str) -> None:
     print("=" * 78)
     print(f"### {BASE}{path}")
@@ -104,10 +138,7 @@ def probe(path: str) -> None:
 
 
 def main() -> None:
-    robots()
-    for path in CANDIDATES:
-        probe(path)
-        time.sleep(1)
+    dump_cards()
     print("=" * 78)
     print("偵察おわり")
 
