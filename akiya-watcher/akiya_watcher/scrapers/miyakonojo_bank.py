@@ -27,9 +27,13 @@ from .base import BaseScraper
 
 # NFKC正規化で全角括弧（）は半角()になるため両対応で読む
 _SLUG = re.compile(r"管理番号(\d+)】([^（）()/]*)[（(]([^（）()]+)[）)]")
-_PRICE = re.compile(
+# 実表記 (2026-08 実地確認): 「価格 5,800,000円」の円建て。万円建てにも両対応
+_PRICE_MAN = re.compile(
     r"(?:価格|販売価格|売買価格|希望価格|売却価格)[^0-9応交]{0,8}"
     r"([0-9,]+(?:\.[0-9]+)?)\s*万円")
+_PRICE_YEN = re.compile(
+    r"(?:価格|販売価格|売買価格|希望価格|売却価格)[^0-9応交]{0,8}"
+    r"([0-9][0-9,]{4,})\s*円")
 _INFO_HINT = re.compile(r"間取|築|構造|価格|残置|接道|駐車|土地|建物|万円|㎡|平米"
                         r"|現状|渡し|相続|スーパー|コンビニ|学校|病院|役場|駅|バス")
 
@@ -103,10 +107,14 @@ class MiyakonojoBankScraper(BaseScraper):
         for form in soup.find_all("form"):
             form.decompose()
         text = unicodedata.normalize("NFKC", soup.get_text(" ", strip=True))
-        m = _PRICE.search(text)
         price_yen = None
+        m = _PRICE_MAN.search(text)
         if m:
             price_yen = int(float(m.group(1).replace(",", "")) * 10_000)
+        else:
+            m = _PRICE_YEN.search(text)
+            if m:
+                price_yen = int(m.group(1).replace(",", ""))
         # 物件情報らしい文だけを説明文として拾う (仕入れ点・周辺抽出の材料)
         parts = [seg.strip() for seg in re.split(r"[。\n]", text)
                  if _INFO_HINT.search(seg)]

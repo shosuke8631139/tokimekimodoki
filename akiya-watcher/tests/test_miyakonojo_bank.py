@@ -43,6 +43,16 @@ def test_詳細から価格と説明が読める():
     assert "100万円以上" not in desc      # 検索フォームの選択肢は混ざらない
 
 
+def test_円建て表記の価格が読める():
+    # 実サイトの表記 (2026-08 実地確認): dl形式で「価格 5,800,000円」
+    html = """<dl><dt>価格</dt><dd>5,800,000円</dd>
+    <dt>敷地面積</dt><dd>248.54平米（75.2坪）</dd>
+    <dt>間取り</dt><dd>4DK</dd></dl>"""
+    price, desc = MiyakonojoBankScraper.parse_detail(html)
+    assert price == 5_800_000
+    assert "4DK" in desc
+
+
 def test_検索フォームの万円は価格として誤読しない():
     html = "<form><option>100万円以上</option></form><p>価格は応相談です</p>"
     price, _ = MiyakonojoBankScraper.parse_detail(html)
