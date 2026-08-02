@@ -1,11 +1,14 @@
-"""巡回網拡張の偵察: 薩摩川内市・いちき串木野市(新型アットホーム)。
+"""偵察: 都城市の空き家バンク移行先「住めば住むほど都城」の構造確認。
 
-出水・姶良で実証済みの直接URL方式で売戸建一覧を確認する。
-20件超なら page=2 も読む(出水と同じ)。
+判明事項: 都城のアットホーム系サイト(miyakonojo-c45202)は空。
+本当の物件は移住特設サイト sumeba-sumuhodo-miyakonojo.jp の
+/residence/ 配下に「【管理番号280】空き家（梅北町）」形式で載っている。
+robots.txt と一覧ページの構造を確認する。
 """
 
 from __future__ import annotations
 
+import re
 import sys
 import time
 from pathlib import Path
@@ -16,45 +19,94 @@ from bs4 import BeautifulSoup
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 UA = {"User-Agent": "akiya-watcher/0.1 (structure test)"}
+BASE = "https://www.sumeba-sumuhodo-miyakonojo.jp"
 
-LISTS = [
-    ("satsumasendai",
-     "https://satsumasendai-c46215.akiya-athome.jp/buy/house/area/kagoshimaken/satsumasendaishi/list?gyosei_cd[]=46215"),
-    ("satsumasendai(p2)",
-     "https://satsumasendai-c46215.akiya-athome.jp/buy/house/area/kagoshimaken/satsumasendaishi/list?gyosei_cd[]=46215&page=2"),
-    ("ichikikushikino",
-     "https://ichikikushikino-c46219.akiya-athome.jp/buy/house/area/kagoshimaken/ichikikushikinoshi/list?gyosei_cd[]=46219"),
-    ("ichikikushikino(p2)",
-     "https://ichikikushikino-c46219.akiya-athome.jp/buy/house/area/kagoshimaken/ichikikushikinoshi/list?gyosei_cd[]=46219&page=2"),
+CANDIDATES = [
+    "/residence/",
+    "/category/residence/",
+    "/akiya/",
 ]
 
 
-def probe(name: str, url: str) -> None:
+def robots() -> None:
     print("=" * 78)
-    print(f"### {name}")
+    print("### robots.txt")
     try:
-        r = requests.get(url, timeout=30, headers=UA)
+        r = requests.get(BASE + "/robots.txt", timeout=20, headers=UA)
+        print(f"status={r.status_code}")
+        print(r.text[:600])
+    except Exception as exc:  # noqa: BLE001
+        print(f"取得失敗: {exc}")
+
+
+def probe(path: str) -> None:
+    print("=" * 78)
+    print(f"### {BASE}{path}")
+    try:
+        r = requests.get(BASE + path, timeout=30, headers=UA)
         r.encoding = "utf-8"
     except Exception as exc:  # noqa: BLE001
         print(f"!! {exc}")
         return
+    print(f"status={r.status_code} bytes={len(r.text)}")
+    if r.status_code != 200:
+        return
     soup = BeautifulSoup(r.text, "html.parser")
-    items = soup.select("ul.property-list-one > li")
-    print(f"status={r.status_code} property-list-one>li: {len(items)}件")
-    for li in items[:6]:
-        a = li.select_one("dt a")
-        price = li.select_one("td.price-strong")
-        addr = li.select_one('li[data-column="address"]')
-        madori = li.select_one('td[data-column="madori"]')
-        print(f"  [{a.get_text(strip=True)[:30] if a else '?'}] "
-              f"{price.get_text(' ', strip=True) if price else '?'} "
-              f"{madori.get_text(strip=True) if madori else '?'} "
-              f"{addr.get_text(' ', strip=True) if addr else '?'}")
+    title = soup.title.get_text(strip=True) if soup.title else "?"
+    print(f"title={title[:60]}")
+
+    # 物件リンク (管理番号◯◯) を数える
+    links = []
+    for a in soup.find_all("a", href=True):
+        text = " ".join(a.get_text(" ", strip=True).split())
+        if re.search(r"管理番号|空き家|空家", text):
+            links.append((text[:50], a["href"]))
+    print(f"物件らしきリンク: {len(links)}件")
+    for text, href in links[:10]:
+        print(f"  [{text}] {href[:90]}")
+
+    # カード構造の観察 (最初の物件リンクの祖先をダンプ)
+    if links:
+        first = soup.find("a", string=re.compile("管理番号"))
+        if first is None:
+            for a in soup.find_all("a", href=True):
+                if "管理番号" in a.get_text():
+                    first = a
+                    break
+        if first is not None:
+            node = first
+            for _ in range(3):
+                if node.parent is not None and node.parent.name not in ("body", "html"):
+                    node = node.parent
+            print("--- 物件カードとおぼしき構造 ---")
+            print(node.prettify()[:2500])
+
+    # 価格・間取りの気配
+    hits = 0
+    for s in soup.find_all(string=re.compile("万円|価格|賃料")):
+        node = s.parent
+        chain = []
+        for _ in range(3):
+            if node is None or node.name is None:
+                break
+            chain.append(f"{node.name}.{'.'.join(node.get('class', []) or [])}")
+            node = node.parent
+        print(f"  [{' '.join(str(s).split())[:35]}] {' < '.join(chain)}")
+        hits += 1
+        if hits >= 8:
+            break
+    # ページ送りの気配
+    for a in soup.find_all("a", href=True):
+        if re.search(r"page|次へ|next|2", a.get("href", "")) and re.search(
+                r"/residence|page", a["href"]):
+            print(f"  ページ送り候補: {a['href'][:80]}")
+            break
 
 
 def main() -> None:
-    for name, url in LISTS:
-        probe(name, url)
+    robots()
+    for path in CANDIDATES:
+        probe(path)
         time.sleep(1)
     print("=" * 78)
     print("偵察おわり")
