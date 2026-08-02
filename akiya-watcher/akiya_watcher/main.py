@@ -253,15 +253,18 @@ def build_heartbeat(items: list[tuple[Diff, Score]], top_n: int = 5,
 
 def build_patrol_summary(to_send: list[tuple[Diff, Score]],
                          keep_gone_texts: list[str] | None = None,
-                         heartbeat_text: str | None = None) -> str:
+                         heartbeat_text: str | None = None,
+                         quiet_new: list[tuple[Diff, Score]] | None = None) -> str:
     """1回の巡回の通知を1通にまとめる (2026-08-01 ユーザー要望:
     「メールが一気に何件も来て見づらい」対策)。
 
-    並び順: ⭐キープ関連 → 値下げ(下げ幅の大きい順) → その他(評価の高い順)。
-    1行目が件名になる。
+    並び順: ⭐キープ関連 → 値下げ(下げ幅の大きい順) → その他(評価の高い順)
+    → 通知基準未満の新着(1行ずつ。2026-08-02 ユーザー要望:
+    「新着はどれもその都度目に入るように」)。1行目が件名になる。
     """
     from .notify import format_message
     keep_gone_texts = keep_gone_texts or []
+    quiet_new = quiet_new or []
 
     drops = [(d, s) for d, s in to_send
              if d.context.price_changed and d.context.drop_pct]
@@ -280,11 +283,23 @@ def build_patrol_summary(to_send: list[tuple[Diff, Score]],
         parts.append(f"新着{news}件")
     if changed:
         parts.append(f"変更{changed}件")
+    if quiet_new:
+        label = (f"ほか新着{len(quiet_new)}件" if parts
+                 else f"新着(注目度低め){len(quiet_new)}件")
+        parts.append(label)
     subject = "🏠 巡回まとめ: " + "・".join(parts)
 
     blocks = [subject]
     blocks.extend(keep_gone_texts)
     blocks.extend(format_message(d, s) for d, s in drops + others)
+    if quiet_new:
+        qlines = ["── その他の新着(通知基準未満・詳細は添付の台帳で) ──"]
+        for d, s in sorted(quiet_new, key=lambda x: x[1].total, reverse=True):
+            price = (f"{d.listing.price_yen:,}円"
+                     if d.listing.price_yen is not None else "価格応談")
+            qlines.append(f"・{s.out_of_ten}/10 {d.listing.title} {price}{_car(d)}")
+            qlines.append(f"  {d.listing.url}")
+        blocks.append("\n".join(qlines))
     if heartbeat_text:
         blocks.append(heartbeat_text)
     return "\n\n――――――――――\n\n".join(blocks)
@@ -424,6 +439,7 @@ def run(config_path: str, dry_run: bool = False, report_path: str | None = None,
         # 通常巡回: 通知ゲートを通った物件だけ即時通知 (沈黙デフォルト)
         bundle = notify_cfg.get("bundle", True)
         to_send: list[tuple[Diff, Score]] = []
+        quiet_new: list[tuple[Diff, Score]] = []
         for diff, score in items:
             d = decide(diff, score, min_score=min_score, ruin_extra=ruin_extra)
             # 指名追跡物件 (source="watch") はスコアに関わらずキープ扱い
@@ -437,6 +453,11 @@ def run(config_path: str, dry_run: bool = False, report_path: str | None = None,
             elif d.kind == "silent" and diff.kind in ("new", "changed"):
                 suppressed += 1
                 print(f"[silent] {diff.listing.title}: {d.reason}")
+                # 通知基準未満の新着もまとめメール末尾に1行で載せる
+                # (2026-08-02 ユーザー要望。土地のみ等はここにも載せない)
+                if (diff.kind == "new" and not dry_run
+                        and d.reason.startswith("新着だがスコア")):
+                    quiet_new.append((diff, score))
 
         # ⭐キープ物件の掲載終了 = 売れた可能性大。逃した事実も速報する
         keep_gone_texts: list[str] = []
@@ -454,7 +475,7 @@ def run(config_path: str, dry_run: bool = False, report_path: str | None = None,
             if notify_cfg.get("email") is not None else False
         heartbeat_on = notify_cfg.get("heartbeat", True)
 
-        if bundle and (to_send or keep_gone_texts):
+        if bundle and (to_send or keep_gone_texts or quiet_new):
             # まとめ送信 (2026-08-01 ユーザー要望): 1回の巡回 = 最大1通。
             # 定期便が未送信の日なら同じメールに同梱し、台帳レポートも添付する
             heartbeat_text = None
@@ -473,7 +494,8 @@ def run(config_path: str, dry_run: bool = False, report_path: str | None = None,
                 meta_store.close()
             if not dry_run:
                 notifier.send_text(
-                    build_patrol_summary(to_send, keep_gone_texts, heartbeat_text),
+                    build_patrol_summary(to_send, keep_gone_texts, heartbeat_text,
+                                         quiet_new=quiet_new),
                     attachment=report_path if attach else None)
         elif not bundle:
             # 従来モード (config の notify.bundle: false で戻せる): 1件1通

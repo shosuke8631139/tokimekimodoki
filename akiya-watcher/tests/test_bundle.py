@@ -90,6 +90,48 @@ def test_通知が複数でも送信は1回だけ(tmp_path):
     assert "📮 本日の定期便" in sent[0]        # 定期便も同梱
 
 
+def test_通知基準未満の新着は末尾に1行で載り件名にも件数が出る():
+    main_items = [_item("目玉の家", "new", total=20)]
+    quiet = [_item("静かな新着A", "new", total=5, price=1_000_000),
+             _item("静かな新着B", "new", total=6, price=2_500_000)]
+    text = build_patrol_summary(main_items, quiet_new=quiet)
+    subject = text.splitlines()[0]
+    assert "ほか新着2件" in subject
+    assert "その他の新着" in text
+    # 高スコア順に並び、フル形式でなく1行
+    assert text.index("静かな新着B") < text.index("静かな新着A")
+    assert text.index("目玉の家") < text.index("その他の新着")
+
+
+def test_低評価の新着だけでも1通になる():
+    quiet = [_item("静かな新着", "new", total=5)]
+    text = build_patrol_summary([], quiet_new=quiet)
+    assert "新着(注目度低め)1件" in text.splitlines()[0]
+
+
+def _quiet_rows(n=2):
+    # スコアが閾値未満になる、情報の薄い新着 (300万以下・住所あり)
+    return [{
+        "id": f"q-{i}",
+        "title": f"静かな家{i}",
+        "url": f"https://example.com/q{i}",
+        "price": "250万円",
+        "address": "鹿児島県薩摩川内市",
+        "layout": "4DK",
+    } for i in range(n)]
+
+
+def test_低評価新着だけの巡回でも1通送られる(tmp_path):
+    cfg = _run_config(tmp_path, _quiet_rows(2))
+    sent = []
+    with patch.object(Notifier, "send_text",
+                      lambda self, text, attachment=None: sent.append(text)):
+        run(cfg)
+    assert len(sent) == 1
+    assert "その他の新着" in sent[0]
+    assert "静かな家0" in sent[0] and "静かな家1" in sent[0]
+
+
 def test_プレビュー送信は1通だけで見た目確認できる(tmp_path):
     cfg = _run_config(tmp_path, _notifiable_rows(2))
     sent = []
