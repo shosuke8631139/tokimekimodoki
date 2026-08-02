@@ -13,6 +13,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -147,6 +148,12 @@ def collect(config: dict, dry_run: bool = False,
     return items, delisted, deals, deal_history, keep_gone
 
 
+def _top_uids(items: list[tuple[Diff, Score]], n: int = 5) -> list[str]:
+    """定期便の上位n件のuid。「前回も紹介した物件」の記録に使う。"""
+    ranked = sorted(items, key=lambda x: x[1].total, reverse=True)
+    return [d.listing.uid for d, _ in ranked[:n]]
+
+
 def _car(d: Diff) -> str:
     """一覧行に添える車の所要時間 (例: ' 🚗60分○')。地名不明なら空文字。"""
     from .travel import drive_minutes, zone_label
@@ -191,14 +198,19 @@ def build_digest(items: list[tuple[Diff, Score]], offer_min_age_days: int,
 
 def build_heartbeat(items: list[tuple[Diff, Score]], top_n: int = 5,
                     kanpo_enabled: bool = True, notified: int = 0,
-                    bundled: bool = False) -> str:
+                    bundled: bool = False,
+                    prev_uids: set[str] | None = None) -> str:
     """毎日の定期便: 1日1回必ず送る「官報チェック+注目上位」。
 
     通知が出た日も送る (2026-07-31 修正: 以前は通知が出ると官報コーナーごと
     消えてしまい「官報情報がメールに載っていない」状態になっていた)。
     bundled=True はまとめメールに同梱される場合 (見出しだけ変える)。
+    prev_uids = 前回の定期便で紹介済みの物件uid (2026-08-02 ユーザー要望
+    「同じ物件を何回も送られると混乱する」対策)。🆕/（既出）を明示し、
+    全員が前回と同じ顔ぶれなら一覧を畳んで1行にする。
     """
     ranked = sorted(items, key=lambda x: x[1].total, reverse=True)
+    prev_uids = prev_uids or set()
     if bundled:
         lines = ["📮 本日の定期便", ""]
     elif notified > 0:
@@ -211,14 +223,26 @@ def build_heartbeat(items: list[tuple[Diff, Score]], top_n: int = 5,
         lines += daily_lines(datetime.date.fromisoformat(jst_today()))
         lines.append("")
     if ranked:
-        lines.append(f"監視中 {len(items)}件。いま熱い物件 上位{min(top_n, len(ranked))}件:")
-        for d, s in ranked[:top_n]:
-            price = (f"{d.listing.price_yen:,}円" if d.listing.price_yen is not None
-                     else "価格応談")
-            badges = " ".join(s.badges) or "情報少・要確認"
-            lines.append(f"・{s.out_of_ten}/10点 {d.listing.title} {price}{_car(d)}")
-            lines.append(f"  [{badges}]")
-            lines.append(f"  {d.listing.url}")
+        top = ranked[:top_n]
+        all_seen = prev_uids and all(d.listing.uid in prev_uids for d, _ in top)
+        if all_seen:
+            # 新顔ゼロの日は畳む — 同じ一覧を毎日繰り返さない
+            lines.append(f"監視中 {len(items)}件。注目上位{len(top)}件は"
+                         "前回と同じ顔ぶれ(新顔なし)。詳細は添付の台帳で。")
+        else:
+            lines.append(f"監視中 {len(items)}件。いま熱い物件 上位{len(top)}件:")
+            for d, s in top:
+                price = (f"{d.listing.price_yen:,}円"
+                         if d.listing.price_yen is not None else "価格応談")
+                badges = " ".join(s.badges) or "情報少・要確認"
+                mark = "" if not prev_uids else (
+                    "（既出）" if d.listing.uid in prev_uids else "🆕 ")
+                head_mark = mark if mark == "🆕 " else ""
+                tail_mark = mark if mark == "（既出）" else ""
+                lines.append(f"・{head_mark}{s.out_of_ten}/10点 "
+                             f"{d.listing.title} {price}{_car(d)}{tail_mark}")
+                lines.append(f"  [{badges}]")
+                lines.append(f"  {d.listing.url}")
     else:
         lines.append("監視中の物件が0件です (情報源の取得失敗が続く場合は要確認)。")
     lines.append("")
@@ -438,9 +462,13 @@ def run(config_path: str, dry_run: bool = False, report_path: str | None = None,
                 meta_store = Store(config.get("db_path", "data/listings.db"))
                 today = jst_today()
                 if meta_store.get_meta("last_mail_date") != today:
+                    prev = set(json.loads(
+                        meta_store.get_meta("heartbeat_uids") or "[]"))
                     heartbeat_text = build_heartbeat(items, kanpo_enabled=kanpo_on,
-                                                     bundled=True)
+                                                     bundled=True, prev_uids=prev)
                     meta_store.set_meta("last_mail_date", today)
+                    meta_store.set_meta("heartbeat_uids",
+                                        json.dumps(_top_uids(items)))
                     print("[info] 定期便をまとめメールに同梱 (本日初回)")
                 meta_store.close()
             if not dry_run:
@@ -462,10 +490,15 @@ def run(config_path: str, dry_run: bool = False, report_path: str | None = None,
             meta_store = Store(config.get("db_path", "data/listings.db"))
             today = jst_today()
             if meta_store.get_meta("last_mail_date") != today:
+                prev = set(json.loads(
+                    meta_store.get_meta("heartbeat_uids") or "[]"))
                 notifier.send_text(build_heartbeat(items, kanpo_enabled=kanpo_on,
-                                                   notified=notified),
+                                                   notified=notified,
+                                                   prev_uids=prev),
                                    attachment=report_path)
                 meta_store.set_meta("last_mail_date", today)
+                meta_store.set_meta("heartbeat_uids",
+                                    json.dumps(_top_uids(items)))
                 print("[info] 定期便を送信 (本日初回)")
             meta_store.close()
 

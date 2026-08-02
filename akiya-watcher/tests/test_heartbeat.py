@@ -49,3 +49,34 @@ def test_通知が出た日の定期便は別送済みの案内になる():
     text = build_heartbeat([], notified=2)
     assert "別メールでお知らせ済み" in text
     assert "2件" in text
+
+
+def test_初登場には新マーク_既出には既出マーク():
+    items = [_item("常連の家", 15), _item("新顔の家", 12)]
+    prev = {items[0][0].listing.uid}          # 常連だけ前回紹介済み
+    text = build_heartbeat(items, prev_uids=prev)
+    assert "🆕 " in text and "新顔の家" in text
+    assert "（既出）" in text
+    # マークの対応が正しい (新顔に🆕、常連に既出)。物件の箇条書き行だけ見る
+    for line in text.splitlines():
+        if not line.startswith("・"):
+            continue
+        if "新顔の家" in line:
+            assert "🆕" in line and "既出" not in line
+        if "常連の家" in line:
+            assert "既出" in line and "🆕" not in line
+
+
+def test_全員既出なら一覧を畳んで1行にする():
+    items = [_item("常連A", 15), _item("常連B", 12)]
+    prev = {d.listing.uid for d, _ in items}
+    text = build_heartbeat(items, prev_uids=prev)
+    assert "前回と同じ顔ぶれ" in text
+    assert "https://example.com/常連A" not in text   # 一覧は出さない
+
+
+def test_初回はマークなしで従来どおり():
+    items = [_item("初日の家", 15)]
+    text = build_heartbeat(items)                    # prev_uids なし
+    assert "🆕" not in text and "既出" not in text
+    assert "初日の家" in text
