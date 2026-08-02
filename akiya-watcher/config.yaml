@@ -254,6 +254,14 @@ sources:
     item_selector: "ul.property-list-one > li"
     fields: *athome_new_fields
 
+  # ── 都城市 空き家バンク(移住サイト「住めば住むほど都城」) (2026-08 構造確認済み) ──
+  # アットホーム系(下の待ち網)は空で、本体はこちらに移行していた。
+  # URLに管理番号・種別・地区が入る形式。売買のみ・詳細ページから価格取得。
+  - id: miyakonojo_sumeba_bank
+    type: miyakonojo_bank
+    enabled: true
+    list_url: "https://www.sumeba-sumuhodo-miyakonojo.jp/residence/"
+
   # ── 湧水町 空家バンク(売買のみ) (2026-08 構造確認済み・◎30分圏) ──
   # No.xxx+売買価格+［地区名］が表セルで並ぶ町独自ページ。
   # 全角数字・「応相談」・Noと価格が別strongの物件あり(アダプタで吸収)。
