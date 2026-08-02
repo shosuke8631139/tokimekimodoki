@@ -1,14 +1,14 @@
-"""巡回網拡張の偵察(2回目): 直接URL方式+表示件数パラメータの探索。
+"""巡回網拡張の偵察(3回目): 鹿屋・伊佐・曽於・都城の「0件」の原因診断。
 
-判明: 新型アットホームの一覧URLは
-  {site}/buy/house/area/{kenローマ字}/{市ローマ字}shi/list?gyosei_cd[]={市コード}
-の規則。エリアページにリンクが出ないサイトがあるため直接叩く。
-出水は21件中20件しか出ない(表示件数selectはJS)ため、
-クエリパラメータで100件表示にできるか候補を試す。
+仮説A: 売戸建の掲載が本当に0件(サイトはあるが空)
+仮説B: 別カテゴリ(土地・賃貸)や別サイト(市の公式ページ)に載っている
+これを、ページの中身(タイトル・件数文言・カテゴリ別リンク)で判定する。
+伊佐は市公式サイト(city.isa)にブログ形式の物件ページがある事も確認する。
 """
 
 from __future__ import annotations
 
+import re
 import sys
 import time
 from pathlib import Path
@@ -20,70 +20,95 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 UA = {"User-Agent": "akiya-watcher/0.1 (structure test)"}
 
-LISTS = [
-    ("kanoya", "https://kanoya-c46203.akiya-athome.jp/buy/house/area/kagoshimaken/kanoyashi/list?gyosei_cd[]=46203"),
-    ("isa", "https://isa-c46224.akiya-athome.jp/buy/house/area/kagoshimaken/isashi/list?gyosei_cd[]=46224"),
-    ("soo", "https://soo-c46217.akiya-athome.jp/buy/house/area/kagoshimaken/sooshi/list?gyosei_cd[]=46217"),
-    ("miyakonojo", "https://miyakonojo-c45202.akiya-athome.jp/buy/house/area/miyazakiken/miyakonojoshi/list?gyosei_cd[]=45202"),
+SITES = [
+    ("kanoya", "https://kanoya-c46203.akiya-athome.jp",
+     "/buy/house/area/kagoshimaken/kanoyashi/list?gyosei_cd[]=46203"),
+    ("isa", "https://isa-c46224.akiya-athome.jp",
+     "/buy/house/area/kagoshimaken/isashi/list?gyosei_cd[]=46224"),
+    ("soo", "https://soo-c46217.akiya-athome.jp",
+     "/buy/house/area/kagoshimaken/sooshi/list?gyosei_cd[]=46217"),
+    ("miyakonojo", "https://miyakonojo-c45202.akiya-athome.jp",
+     "/buy/house/area/miyazakiken/miyakonojoshi/list?gyosei_cd[]=45202"),
 ]
 
-IZUMI = "https://izumi-c46208.akiya-athome.jp/buy/house/area/kagoshimaken/izumishi/list?gyosei_cd[]=46208"
 
-
-def count_items(url: str) -> tuple[int, BeautifulSoup | None]:
-    try:
-        res = requests.get(url, timeout=30, headers=UA)
-        res.encoding = "utf-8"
-    except Exception as exc:  # noqa: BLE001
-        print(f"  !! 取得失敗: {exc}")
-        return -1, None
-    soup = BeautifulSoup(res.text, "html.parser")
-    return len(soup.select("ul.property-list-one > li")), soup
-
-
-def probe(name: str, url: str) -> None:
+def diagnose(name: str, base: str, path: str) -> None:
     print("=" * 78)
     print(f"### {name}")
-    n, soup = count_items(url)
-    print(f"{url}\n  → {n}件")
-    if soup is None or n <= 0:
-        return
-    for li in soup.select("ul.property-list-one > li")[:4]:
-        a = li.select_one("dt a")
-        price = li.select_one("td.price-strong")
-        addr = li.select_one('li[data-column="address"]')
-        madori = li.select_one('td[data-column="madori"]')
-        print(f"  [{a.get_text(strip=True)[:30] if a else '?'}] "
-              f"{price.get_text(' ', strip=True) if price else '?'} "
-              f"{madori.get_text(strip=True) if madori else '?'} "
-              f"{addr.get_text(' ', strip=True) if addr else '?'}")
-    # 総件数の表示(「◯棟」等)があれば拾う
-    for s in soup.stripped_strings:
-        if ("棟" in s or "該当" in s) and any(c.isdigit() for c in s):
-            print(f"  件数表示らしき文言: {s[:40]}")
+    ses = requests.Session()
+    ses.headers.update(UA)
+    # 一覧ページの中身を診断
+    r = ses.get(base + path, timeout=30)
+    r.encoding = "utf-8"
+    soup = BeautifulSoup(r.text, "html.parser")
+    title = soup.title.get_text(strip=True) if soup.title else "?"
+    print(f"一覧: status={r.status_code} bytes={len(r.text)} title={title[:50]}")
+    body_text = " ".join(soup.get_text(" ", strip=True).split())
+    for pat in ["該当", "物件が見つかり", "ありません", "0件", "棟"]:
+        m = re.search(rf".{{0,25}}{pat}.{{0,25}}", body_text)
+        if m:
+            print(f"  文言[{pat}]: …{m.group(0)}…")
+    print(f"  property-list-one > li: {len(soup.select('ul.property-list-one > li'))}件")
+
+    # トップページでカテゴリごとの掲載件数の気配を見る
+    time.sleep(1)
+    r2 = ses.get(base + "/", timeout=30)
+    r2.encoding = "utf-8"
+    s2 = BeautifulSoup(r2.text, "html.parser")
+    print("  トップの新着・物件らしき要素:")
+    for el in s2.find_all(class_=re.compile("new|property|bukken|list"))[:8]:
+        txt = " ".join(el.get_text(" ", strip=True).split())[:70]
+        if txt:
+            print(f"    <{el.name} class={el.get('class')}> {txt}")
+    # 万円を含む本文 (新着物件が載っていれば拾える)
+    hits = 0
+    for s in s2.find_all(string=re.compile("万円")):
+        node = s.parent
+        chain = []
+        for _ in range(3):
+            if node is None or node.name is None:
+                break
+            chain.append(f"{node.name}.{'.'.join(node.get('class', []) or [])}")
+            node = node.parent
+        print(f"    [万円] {' '.join(str(s).split())[:40]} 祖先: {' < '.join(chain)}")
+        hits += 1
+        if hits >= 5:
             break
+    if hits == 0:
+        print("    (トップに価格表示なし)")
 
 
-def probe_limit_params() -> None:
+def recon_isa_city() -> None:
     print("=" * 78)
-    print("### 出水: 表示件数パラメータの探索 (現状20件/実物21件)")
-    for param in ["&limit=100", "&pageD=100", "&count=100", "&disp=100",
-                  "&view=100", "&per_page=100"]:
-        n, _ = count_items(IZUMI + param)
-        print(f"  {param}: {n}件")
-        time.sleep(1)
-    # ページ2の形式も試す
-    for suffix in ["&page=2", "&p=2"]:
-        n, _ = count_items(IZUMI + suffix)
-        print(f"  {suffix}: {n}件")
-        time.sleep(1)
+    print("### 伊佐市公式(city.isa)の空き家バンクページ")
+    url = "https://www.city.isa.kagoshima.jp/teiju/bank/"
+    try:
+        r = requests.get(url, timeout=30, headers=UA)
+        r.encoding = r.apparent_encoding
+    except Exception as exc:  # noqa: BLE001
+        print(f"!! 取得失敗: {exc}")
+        return
+    soup = BeautifulSoup(r.text, "html.parser")
+    print(f"status={r.status_code} bytes={len(r.text)}")
+    # 物件リンク(blog形式 No.xxx)を探す
+    count = 0
+    for a in soup.find_all("a", href=True):
+        text = " ".join(a.get_text(" ", strip=True).split())
+        if re.search(r"No\.?\s*\d|物件|万円|空き家バンク", text):
+            print(f"  [{text[:60]}] {a['href'][:80]}")
+            count += 1
+            if count >= 25:
+                break
+    if count == 0:
+        print("  (物件らしきリンクなし。本文冒頭:)")
+        print(" ".join(soup.get_text(" ", strip=True).split())[:800])
 
 
 def main() -> None:
-    for name, url in LISTS:
-        probe(name, url)
+    for name, base, path in SITES:
+        diagnose(name, base, path)
         time.sleep(1)
-    probe_limit_params()
+    recon_isa_city()
     print("=" * 78)
     print("偵察おわり")
 
