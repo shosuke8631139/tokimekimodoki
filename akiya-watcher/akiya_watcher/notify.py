@@ -15,6 +15,7 @@ import json
 import os
 import re
 import smtplib
+import urllib.parse
 import urllib.request
 from email.message import EmailMessage
 
@@ -23,13 +24,31 @@ from .storage import Diff
 from .travel import location_line, map_link, nearby_line
 
 _URL_RE = re.compile(r"https?://[^\s<>\"]+")
+# ⭐キープ行 (keep_mailto_line が生成)。HTML版では短い日本語ボタンにする
+_KEEP_RE = re.compile(r"⭐キープ: (mailto:[^\s<]+)")
+_KEEP_LABEL = "⭐この物件をキープ(タップ→開いたメールをそのまま送信)"
+
+
+def keep_mailto_line(url: str) -> str:
+    """「⭐キープ」行を作る。タップすると件名keep・本文=物件URLの
+    メール下書きが開き、送信するだけで追跡リスト入りする (keep_mail.py が受ける)。
+    宛先はGmail連携と同じアドレス。未設定環境 (テスト等) では空文字。
+    """
+    addr = os.environ.get("GMAIL_USERNAME", "")
+    if not addr or not url:
+        return ""
+    return (f"⭐キープ: mailto:{addr}?subject=keep"
+            f"&body={urllib.parse.quote(url, safe='')}")
 
 
 def text_to_html(text: str) -> str:
     """通知文をHTMLメール本文に変換する。URLはタップできるリンクにする。"""
     escaped = html_escape.escape(text)
+    # ⭐キープ行を先に短いラベルのリンクへ (&amp; は href 内でも正しい書き方)
+    linked = _KEEP_RE.sub(
+        lambda m: f'<a href="{m.group(1)}">{_KEEP_LABEL}</a>', escaped)
     linked = _URL_RE.sub(
-        lambda m: f'<a href="{m.group(0)}">{m.group(0)}</a>', escaped)
+        lambda m: f'<a href="{m.group(0)}">{m.group(0)}</a>', linked)
     body = linked.replace("\n", "<br>\n")
     return (f'<div style="font-family:sans-serif; line-height:1.7; '
             f'font-size:15px;">{body}</div>')
@@ -68,6 +87,11 @@ def format_message(diff: Diff, score: Score) -> str:
         f"要確認: {'、'.join(score.unknowns) or 'なし'}",
         f"URL: {ls.url}",
     ]
+    # 指名追跡済み (watch) 以外には1タップキープの入口を付ける
+    if ls.source != "watch":
+        kl = keep_mailto_line(ls.url)
+        if kl:
+            lines.append(kl)
     return "\n".join(lines)
 
 
