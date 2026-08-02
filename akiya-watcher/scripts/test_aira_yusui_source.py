@@ -1,11 +1,7 @@
-"""巡回網拡張の偵察(5回目・決定打): 「売戸建0件」仮説の検証。
+"""巡回網拡張の偵察: 薩摩川内市・いちき串木野市(新型アットホーム)。
 
-同システムの出水・姶良はサーバー描画で読めた。4市の売戸建一覧が空なのは
-「JSの壁」ではなく「掲載が本当に0件」ではないか?
-→ 物件が確実に存在する伊佐の賃貸一覧が素のHTTPで読めるかで判定する。
-  読めれば: システムは読める・売戸建が空なだけ → configに登録しておけば
-  掲載された瞬間に自動で拾える。
-あわせて出水の2ページ目(page=2)の中身も確認する。
+出水・姶良で実証済みの直接URL方式で売戸建一覧を確認する。
+20件超なら page=2 も読む(出水と同じ)。
 """
 
 from __future__ import annotations
@@ -21,12 +17,15 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 UA = {"User-Agent": "akiya-watcher/0.1 (structure test)"}
 
-RENT_LISTS = [
-    ("isa(賃貸)", "https://isa-c46224.akiya-athome.jp/rent/live/area/kagoshimaken/isashi/list?gyosei_cd[]=46224"),
-    ("kanoya(賃貸)", "https://kanoya-c46203.akiya-athome.jp/rent/live/area/kagoshimaken/kanoyashi/list?gyosei_cd[]=46203"),
-    ("soo(賃貸)", "https://soo-c46217.akiya-athome.jp/rent/live/area/kagoshimaken/sooshi/list?gyosei_cd[]=46217"),
-    ("miyakonojo(賃貸)", "https://miyakonojo-c45202.akiya-athome.jp/rent/live/area/miyazakiken/miyakonojoshi/list?gyosei_cd[]=45202"),
-    ("izumi(売買p2)", "https://izumi-c46208.akiya-athome.jp/buy/house/area/kagoshimaken/izumishi/list?gyosei_cd[]=46208&page=2"),
+LISTS = [
+    ("satsumasendai",
+     "https://satsumasendai-c46215.akiya-athome.jp/buy/house/area/kagoshimaken/satsumasendaishi/list?gyosei_cd[]=46215"),
+    ("satsumasendai(p2)",
+     "https://satsumasendai-c46215.akiya-athome.jp/buy/house/area/kagoshimaken/satsumasendaishi/list?gyosei_cd[]=46215&page=2"),
+    ("ichikikushikino",
+     "https://ichikikushikino-c46219.akiya-athome.jp/buy/house/area/kagoshimaken/ichikikushikinoshi/list?gyosei_cd[]=46219"),
+    ("ichikikushikino(p2)",
+     "https://ichikikushikino-c46219.akiya-athome.jp/buy/house/area/kagoshimaken/ichikikushikinoshi/list?gyosei_cd[]=46219&page=2"),
 ]
 
 
@@ -42,19 +41,19 @@ def probe(name: str, url: str) -> None:
     soup = BeautifulSoup(r.text, "html.parser")
     items = soup.select("ul.property-list-one > li")
     print(f"status={r.status_code} property-list-one>li: {len(items)}件")
-    for li in items[:5]:
+    for li in items[:6]:
         a = li.select_one("dt a")
         price = li.select_one("td.price-strong")
         addr = li.select_one('li[data-column="address"]')
+        madori = li.select_one('td[data-column="madori"]')
         print(f"  [{a.get_text(strip=True)[:30] if a else '?'}] "
               f"{price.get_text(' ', strip=True) if price else '?'} "
+              f"{madori.get_text(strip=True) if madori else '?'} "
               f"{addr.get_text(' ', strip=True) if addr else '?'}")
-        if a:
-            print(f"      {a.get('href')}")
 
 
 def main() -> None:
-    for name, url in RENT_LISTS:
+    for name, url in LISTS:
         probe(name, url)
         time.sleep(1)
     print("=" * 78)
