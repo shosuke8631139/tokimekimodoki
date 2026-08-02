@@ -204,6 +204,25 @@ sources:
     item_selector: "ul.property-list-one > li"
     fields: *athome_new_fields
 
+  # ── 薩摩川内市 空き家バンク(売買・戸建) (2026-08 構造確認済み・3件稼働) ──
+  - id: satsumasendai_akiya_bank
+    type: generic_html
+    enabled: true
+    list_url: "https://satsumasendai-c46215.akiya-athome.jp/buy/house/area/kagoshimaken/satsumasendaishi/list?gyosei_cd[]=46215"
+    item_selector: "ul.property-list-one > li"
+    fields: *athome_new_fields
+
+  # ── いちき串木野市 空き家バンク(売買・戸建) (2026-08 構造確認済み・20件稼働) ──
+  # 50万7DK・150万4K等の格安帯が厚い。ちょうど20件=1頁上限のため2頁目も読む。
+  - id: ichikikushikino_akiya_bank
+    type: generic_html
+    enabled: true
+    list_urls:
+      - "https://ichikikushikino-c46219.akiya-athome.jp/buy/house/area/kagoshimaken/ichikikushikinoshi/list?gyosei_cd[]=46219"
+      - "https://ichikikushikino-c46219.akiya-athome.jp/buy/house/area/kagoshimaken/ichikikushikinoshi/list?gyosei_cd[]=46219&page=2"
+    item_selector: "ul.property-list-one > li"
+    fields: *athome_new_fields
+
   # ── 鹿屋・伊佐・曽於・都城 (2026-08 偵察済み: 現在売戸建の掲載0件) ──
   # システムは出水・姶良と同型で読めることを確認済み(伊佐の賃貸で実証)。
   # 掲載が現れた瞬間に自動で拾うための「待ち網」として登録しておく。
