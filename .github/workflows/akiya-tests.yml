@@ -1,0 +1,28 @@
+# 機械の番人: どのブランチにpushされても全テストを自動実行する。
+# 目的: 「テスト全緑の確認」を人(AI)の注意力から切り離し、
+# どのAIツール(Codex/Cursor/Claude)が作業しても同じ検問を通す。
+# 赤いままのブランチを本流にマージしない、が唯一のルール。
+name: akiya-tests
+
+on:
+  push:
+    paths:
+      - 'akiya-watcher/**'
+      - '.github/workflows/akiya-tests.yml'
+  pull_request:
+    paths:
+      - 'akiya-watcher/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: 依存インストール
+        run: pip install -r akiya-watcher/requirements.txt
+      - name: 全テスト実行 (終了コードがそのまま合否)
+        working-directory: akiya-watcher
+        run: python -m pytest tests/ -q
