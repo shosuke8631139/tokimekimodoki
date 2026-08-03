@@ -1,7 +1,7 @@
 """官報チェック便のテスト。ネットワークは一切使わない(リンク生成のみ)。"""
 import datetime
 
-from akiya_watcher.kanpo import digest_lines, issue_toc_url, weekday_issues
+from akiya_watcher.kanpo import daily_lines, digest_lines, issue_toc_url, weekday_issues
 from akiya_watcher.main import build_digest
 
 
@@ -23,6 +23,10 @@ def test_チェック便の本文にリンクと手順が入る():
     assert "官報チェック便" in text
     assert "裁判所" in text
     assert "相続財産清算人" in text
+    assert "破産管財人" in text
+    assert "限定承認" in text
+    assert "借金を返せなくなった" in text
+    assert "相続した財産より多い借金" in text
     assert text.count("fullcontents.html") == 5  # 平日5日分
     assert "手順書" in text
 
@@ -38,12 +42,15 @@ def test_設定でオフにできる():
 
 
 def test_平日の今日の官報チェックにリンクとチュートリアルが入る():
-    from akiya_watcher.kanpo import daily_lines
     lines = daily_lines(datetime.date(2026, 7, 24))  # 金曜
     text = "\n".join(lines)
     assert "今日の官報チェック" in text
     assert "20260724.fullcontents.html" in text
     assert "相続財産清算人" in text
+    assert "破産管財人" in text
+    assert "限定承認" in text
+    assert "借金を返せなくなった" in text
+    assert "相続した財産より多い借金" in text
     assert "スクショ" in text
 
 
