@@ -87,6 +87,7 @@ criteria:
   # 注力エリア (範囲内でもさらに点数を上乗せする市)
   priority_cities:
     - 薩摩川内市
+    - いちき串木野市   # 2026-08-03 外国人社宅戦略の注力エリアに昇格(格安大型帯が厚い)
     - 鹿屋市
     - 出水市
     - 都城市
@@ -221,7 +222,10 @@ sources:
   - id: satsumasendai_akiya_bank
     type: generic_html
     enabled: true
-    list_url: "https://satsumasendai-c46215.akiya-athome.jp/buy/house/area/kagoshimaken/satsumasendaishi/list?gyosei_cd[]=46215"
+    # 注力エリアのため2頁目も先回りで登録 (20件/頁。現状3件だが増えても取り漏らさない)
+    list_urls:
+      - "https://satsumasendai-c46215.akiya-athome.jp/buy/house/area/kagoshimaken/satsumasendaishi/list?gyosei_cd[]=46215"
+      - "https://satsumasendai-c46215.akiya-athome.jp/buy/house/area/kagoshimaken/satsumasendaishi/list?gyosei_cd[]=46215&page=2"
     item_selector: "ul.property-list-one > li"
     fields: *athome_new_fields
 
