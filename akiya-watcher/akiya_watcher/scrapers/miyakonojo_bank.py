@@ -41,7 +41,10 @@ _INFO_HINT = re.compile(r"間取|築|構造|価格|残置|接道|駐車|土地|�
 class MiyakonojoBankScraper(BaseScraper):
     source_id = "miyakonojo_sumeba"
     full_snapshot = False     # ページ送り未確認のため掲載終了判定はしない
-    prices_reliable = False   # 詳細から推定するため None を応相談カットしない
+    # 2026-08-03 ユーザー要望「300万超が混ざる」対応: 価格が読めなかった物件を
+    # 「価格不明(指値候補)」として台帳に通すと、実際は高額の物件が紛れ込む。
+    # 価格Noneは応相談カットで落とす (=売買価格が読めた物件だけ採用)
+    prices_reliable = True
     MAX_DETAILS = 8           # 1巡回で詳細ページを開く上限 (礼儀)
 
     def __init__(self, config: dict):
