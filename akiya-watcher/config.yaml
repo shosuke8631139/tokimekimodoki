@@ -229,6 +229,26 @@ sources:
     item_selector: "ul.property-list-one > li"
     fields: *athome_new_fields
 
+  # ── 薩摩川内市 空き家バンク(市直営CGI) (2026-08-03 実地確認・約20件) ──
+  # アットホーム系(3件)とは別の実体。100万・50万・200万等の格安帯が主力。
+  # 売買価格が読めた物件のみ採用(賃貸のみは対象外)。
+  - id: satsumasendai_city_bank
+    type: satsumasendai_city
+    enabled: true
+    list_url: "https://www.city.satsumasendai.lg.jp/cgi-bin/recruit.php/3/list"
+
+  # ── 日置市 空き家バンク(市直営・地域別4ページ) (2026-08-03 実地確認) ──
+  # 値下げ表記・蔵付き・納屋の文言が一覧に載る宝の山。円建て価格。
+  # 市に家財処分支援・入居者申請可のDIY改修補助あり(設計書の補助金マップ参照)。
+  - id: hioki_akiya_bank
+    type: hioki_bank
+    enabled: true
+    list_urls:
+      - "https://www.city.hioki.kagoshima.jp/teiju/ijuteju/akiya/akiyabank/akiyabank_higashiichiki.html"
+      - "https://www.city.hioki.kagoshima.jp/teiju/ijuteju/akiya/akiyabank/akiyabank_ijuin.html"
+      - "https://www.city.hioki.kagoshima.jp/teiju/ijuteju/akiya/akiyabank/akiyabank_hiyoshi.html"
+      - "https://www.city.hioki.kagoshima.jp/teiju/ijuteju/akiya/akiyabank/akiyabank_fukiage.html"
+
   # ── いちき串木野市 空き家バンク(売買・戸建) (2026-08 構造確認済み・20件稼働) ──
   # 50万7DK・150万4K等の格安帯が厚い。ちょうど20件=1頁上限のため2頁目も読む。
   - id: ichikikushikino_akiya_bank

@@ -4,11 +4,13 @@ from __future__ import annotations
 from .base import BaseScraper
 from .demo import DemoScraper
 from .generic_html import GenericHtmlScraper
+from .hioki_bank import HiokiBankScraper
 from .mailbox import GmailImapScraper
 from .miyakonojo_bank import MiyakonojoBankScraper
 from .kirishima_bank import KirishimaBankScraper
 from .rss_feed import RssScraper
 from .satsuma_bank import SatsumaBankScraper
+from .satsumasendai_city import SatsumasendaiCityScraper
 from .sumai_akiya import SumaiAkiyaScraper
 from .watch import WatchScraper
 from .yusui_bank import YusuiBankScraper
@@ -17,10 +19,12 @@ REGISTRY: dict[str, type[BaseScraper]] = {
     "demo": DemoScraper,
     "generic_html": GenericHtmlScraper,
     "gmail_imap": GmailImapScraper,
+    "hioki_bank": HiokiBankScraper,
     "kirishima_bank": KirishimaBankScraper,
     "miyakonojo_bank": MiyakonojoBankScraper,
     "rss": RssScraper,
     "satsuma_bank": SatsumaBankScraper,
+    "satsumasendai_city": SatsumasendaiCityScraper,
     "sumai_akiya": SumaiAkiyaScraper,
     "watch": WatchScraper,
     "yusui_bank": YusuiBankScraper,
