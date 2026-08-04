@@ -139,6 +139,16 @@ def test_parse_pdf_details_handles_real_satsuma_checkbox_form():
     }
 
 
+def test_parse_pdf_details_handles_concatenated_room_counts():
+    """pypdfが空白を落とした実サイトの「×24.5帖」「×12階」を分離する。"""
+    text = (
+        "間取り1階\uf052居間\uf052台所\uf052和室6帖×24.5帖×1"
+        "\uf052板間5帖×12階☐洋室☐和室☐トイレ"
+        "建築面積(延床面積)73.55m2"
+    )
+    assert parse_pdf_details(text)["layout"] == "4室+台所"
+
+
 def test_apply_pdf_details_adds_email_line():
     listing = Listing(
         source="satsuma_akiya_bank",

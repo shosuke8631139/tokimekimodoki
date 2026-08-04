@@ -64,15 +64,20 @@ def _pdf_layout(text: str, compact: str) -> str:
         return re.sub(r"\s+", "", standard.group(1)).upper()
     # さつま町のPDFは「和室6帖×2、4.5帖×1」のような部屋明細型もある。
     section = re.search(
-        r"間取り(.{0,500}?)(?:建築面積|延床面積|建築時期)", text,
-        re.DOTALL)
+        r"間取り(.{0,500}?)(?:建築面積|延床面積|建築時期)", compact)
     if section is None:
         return ""
-    counts = [int(count or "1") for _, count in re.findall(
-        r"([0-9]+(?:\.[0-9]+)?)帖(?:×([0-9]+))?", section.group(1))]
+    # PDF抽出では「6帖×2 4.5帖」が「6帖×24.5帖」と連結されることがある。
+    # 次の畳数・チェック欄・階数を境界にして、×の直後だけを部屋数として読む。
+    count_pattern = (
+        r"帖×([0-9]+?)(?=(?:[0-9]+(?:\.[0-9]+)?帖|"
+        + _CHECKED + r"|☐|[0-9]+階|$))"
+    )
+    counts = [int(count) for count in re.findall(
+        count_pattern, section.group(1))]
     if not counts:
         return ""
-    suffix = "+台所" if re.search(_CHECKED + r"\s*台所", section.group(1)) else ""
+    suffix = "+台所" if re.search(_CHECKED + r"台所", section.group(1)) else ""
     return f"{sum(counts)}室{suffix}"
 
 
