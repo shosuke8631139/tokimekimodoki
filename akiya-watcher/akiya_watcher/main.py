@@ -165,6 +165,26 @@ def collect(config: dict, dry_run: bool = False) -> tuple:
                 over_price += 1
                 seen_uids.add(ls.uid)
                 continue
+            # PDF等の詳細資料は、新着または一覧の内容・価格・URLが変わった時だけ読む。
+            # 変化がなければDBの読み取り結果を戻し、毎巡回の再取得を避ける。
+            enrich = getattr(scraper, "enrich_listing", None)
+            apply_cached = getattr(scraper, "apply_enrichment", None)
+            export = getattr(scraper, "export_enrichment", None)
+            if store and all(callable(x) for x in (enrich, apply_cached, export)):
+                source_hash = ls.content_hash()
+                cached = store.get_listing_enrichment(
+                    ls.uid, ls.url, source_hash)
+                if cached is not None:
+                    ls = apply_cached(ls, cached)
+                else:
+                    try:
+                        ls = enrich(ls)
+                    except Exception as e:
+                        print(f"[warn] {ls.uid}: 詳細資料を読めませんでした - {e}",
+                              file=sys.stderr)
+                    else:
+                        store.save_listing_enrichment(
+                            ls.uid, ls.url, source_hash, export(ls))
             if store:
                 diff = store.upsert(ls)
                 seen_uids.add(ls.uid)

@@ -74,6 +74,17 @@ def format_message(diff: Diff, score: Score) -> str:
     loc = location_line(ls.address)
     if loc:
         lines.append(loc)
+    details = []
+    if ls.layout:
+        details.append(f"間取り {ls.layout}")
+    if ls.parking_slots is not None:
+        details.append(f"駐車 {ls.parking_slots}台")
+    if ls.land_area_sqm is not None:
+        details.append(f"土地 {ls.land_area_sqm:g}㎡")
+    if ls.floor_area_sqm is not None:
+        details.append(f"建物 {ls.floor_area_sqm:g}㎡")
+    if details:
+        lines.append(f"物件情報: {' / '.join(details)}")
     near = nearby_line(f"{ls.title} {ls.description}")
     if near:
         lines.append(near)
