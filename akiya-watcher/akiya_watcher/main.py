@@ -366,6 +366,14 @@ def build_patrol_summary(to_send: list[tuple[Diff, Score]],
                  else f"新着(注目度低め){len(quiet_new)}件")
         parts.append(label)
     subject = "🏠 巡回まとめ: " + "・".join(parts)
+    subject_items = to_send + quiet_new
+    has_ichikikushikino = any(
+        d.listing.source == "ichikikushikino_akiya_bank"
+        or "いちき串木野市" in d.listing.address
+        for d, _ in subject_items
+    )
+    if has_ichikikushikino:
+        subject = "【一木串木野あり】" + subject
 
     blocks = [subject]
     blocks.extend(keep_added_texts)
