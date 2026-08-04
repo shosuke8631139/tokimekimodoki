@@ -278,3 +278,24 @@ def test_low_score_new_listing_stays_silent(tmp_path, capsys):
     assert "🆕 新着物件" not in out          # 通知は鳴らない
     assert "[silent]" in out                 # 抑制ログには残る
     assert "情報の少ない家" in report.read_text(encoding="utf-8")  # 台帳には載る
+
+
+def test_always_notify_source_sends_low_score_new_listing(tmp_path, capsys):
+    """注力市に明示したソースは、新着を点数で止めない。"""
+    from akiya_watcher.main import run
+    demo = tmp_path / "demo.json"
+    rows = [{"id": "ichiki-1", "title": "情報の少ない家", "url": "https://example.com/ichiki",
+             "price": "250万円", "layout": "3K"}]
+    demo.write_text(json.dumps(rows, ensure_ascii=False), encoding="utf-8")
+    config = {
+        "db_path": str(tmp_path / "db.sqlite"),
+        "notify": {"bundle": True, "heartbeat": False},
+        "criteria": {"max_price_yen": 3_000_000},
+        "sources": [{"id": "ichiki", "type": "demo", "path": str(demo),
+                     "always_notify": True}],
+    }
+    cfg = tmp_path / "config.yaml"
+    cfg.write_text(yaml.safe_dump(config, allow_unicode=True), encoding="utf-8")
+
+    run(str(cfg))
+    assert "監視 1件 / 通知 1件 / 抑制 0件" in capsys.readouterr().out

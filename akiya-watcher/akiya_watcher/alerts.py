@@ -10,6 +10,9 @@
   3. 「土地のみ・山林・原野」は通知しない (台帳には残る)
   4. 倒壊級の記載がある物件は通知の閾値を上げる (廃墟スパム防止)
   5. 値下げを伴わない掲載変更は通知しない (台帳で追える)
+
+市ごとの注力設定(always_notify)がある場合だけ、新着・値下げは点数や
+損壊記載によって抑制しない。ただし土地のみの掲載は常に通知しない。
 """
 from __future__ import annotations
 
@@ -52,7 +55,7 @@ class AlertDecision:
 
 
 def decide(diff: Diff, score: Score, min_score: int = 8,
-           ruin_extra: int = 5) -> AlertDecision:
+           ruin_extra: int = 5, always_notify: bool = False) -> AlertDecision:
     ls, ctx = diff.listing, diff.context
 
     if looks_land_only(ls):
@@ -62,13 +65,15 @@ def decide(diff: Diff, score: Score, min_score: int = 8,
 
     # 値下げの瞬間 — 原則通知。廃墟級のみ閾値を課す
     if ctx.price_changed and ctx.drop_pct:
-        if looks_ruin(ls) and score.total < threshold:
+        if not always_notify and looks_ruin(ls) and score.total < threshold:
             return AlertDecision(False, "silent",
                                  f"値下げだが損壊記載あり・スコア{score.total}<閾値{threshold}")
         return AlertDecision(True, "drop", f"値下げ▼{ctx.drop_pct}%")
 
     # 新着 — スコア閾値以上のみ
     if diff.kind == "new":
+        if always_notify:
+            return AlertDecision(True, "new", "注力市の新着")
         if score.total >= threshold:
             return AlertDecision(True, "new", f"新着 スコア{score.total}≥{threshold}")
         return AlertDecision(False, "silent",

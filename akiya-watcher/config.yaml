@@ -251,9 +251,11 @@ sources:
 
   # ── いちき串木野市 空き家バンク(売買・戸建) (2026-08 構造確認済み・20件稼働) ──
   # 50万7DK・150万4K等の格安帯が厚い。ちょうど20件=1頁上限のため2頁目も読む。
+  # 外国人社宅・広い家の候補地として注力。300万円以下の新着・値下げは必ず通知する。
   - id: ichikikushikino_akiya_bank
     type: generic_html
     enabled: true
+    always_notify: true  # 新着・値下げを点数や損壊記載で抑制しない(土地のみは除外)
     list_urls:
       - "https://ichikikushikino-c46219.akiya-athome.jp/buy/house/area/kagoshimaken/ichikikushikinoshi/list?gyosei_cd[]=46219"
       - "https://ichikikushikino-c46219.akiya-athome.jp/buy/house/area/kagoshimaken/ichikikushikinoshi/list?gyosei_cd[]=46219&page=2"
