@@ -121,6 +121,24 @@ def test_parse_pdf_details_handles_split_labels_and_full_width_text():
     }
 
 
+def test_parse_pdf_details_handles_real_satsuma_checkbox_form():
+    """実サイトNo.185で確認した、チェック欄・部屋明細型の書式。"""
+    text = (
+        "間取り 1階 \uf052居間 \uf052台所 \uf052風呂 \uf052トイレ "
+        "\uf052和室 6帖×2 4.5帖×1 \uf052板間 5帖×1 "
+        "2階 ☐洋室 ☐和室 ☐トイレ "
+        "建築面積（延床面積）73.55m2 建築時期 昭和27年築 "
+        "駐車場 ☐有（約 台） \uf052無 庭 ☐有 \uf052無 "
+        "敷地面積 138.8m2"
+    )
+    assert parse_pdf_details(text) == {
+        "layout": "4室+台所",
+        "parking_slots": 0,
+        "land_area_sqm": 138.8,
+        "floor_area_sqm": 73.55,
+    }
+
+
 def test_apply_pdf_details_adds_email_line():
     listing = Listing(
         source="satsuma_akiya_bank",

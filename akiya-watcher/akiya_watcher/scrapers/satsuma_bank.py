@@ -37,18 +37,19 @@ _HEAD = re.compile(r"N[Oo]\.?\s*(\d+)")
 _PREV_PRICE = re.compile(r"([0-9,]+(?:\.[0-9]+)?)\s*万円?\s*から(?:変更|値下げ)")
 _LAYOUT = re.compile(r"間取り\s*[:：]?\s*([0-9]+\s*(?:S?LDK|DK|K|R)(?:\s*\+\s*S)?)",
                      re.IGNORECASE)
+_CHECKED = r"[☑✓✔■●\uf052]"
 _MAX_PDF_BYTES = 10 * 1024 * 1024
 
 
 def _normalize_pdf_text(text: str) -> str:
     text = unicodedata.normalize("NFKC", text or "")
-    return re.sub(r"\s+", "", text)
+    return re.sub(r"\s+", " ", text).strip()
 
 
 def _labeled_area(text: str, labels: tuple[str, ...]) -> float | None:
     for label in labels:
         match = re.search(
-            rf"(?:{label})\s*[:：]?\s*([0-9,]+(?:\.[0-9]+)?)"
+            rf"(?:{re.escape(label)})\s*[:：]?\s*([0-9,]+(?:\.[0-9]+)?)"
             r"\s*(?:㎡|m2|平米|平方メートル)",
             text, re.IGNORECASE,
         )
@@ -57,18 +58,46 @@ def _labeled_area(text: str, labels: tuple[str, ...]) -> float | None:
     return None
 
 
+def _pdf_layout(text: str, compact: str) -> str:
+    standard = _LAYOUT.search(compact)
+    if standard:
+        return re.sub(r"\s+", "", standard.group(1)).upper()
+    # さつま町のPDFは「和室6帖×2、4.5帖×1」のような部屋明細型もある。
+    section = re.search(
+        r"間取り(.{0,500}?)(?:建築面積|延床面積|建築時期)", text,
+        re.DOTALL)
+    if section is None:
+        return ""
+    counts = [int(count or "1") for _, count in re.findall(
+        r"([0-9]+(?:\.[0-9]+)?)帖(?:×([0-9]+))?", section.group(1))]
+    if not counts:
+        return ""
+    suffix = "+台所" if re.search(_CHECKED + r"\s*台所", section.group(1)) else ""
+    return f"{sum(counts)}室{suffix}"
+
+
+def _pdf_parking_slots(text: str) -> int | None:
+    section = re.search(r"駐車場(.{0,80}?)(?:庭|物置|その他)", text)
+    if section:
+        value = section.group(1)
+        if re.search(_CHECKED + r"無", value):
+            return 0
+        if re.search(_CHECKED + r"有", value):
+            return parse_parking_slots("駐車場" + value) or 1
+    return parse_parking_slots(text)
+
+
 def parse_pdf_details(text: str) -> dict:
     """物件PDFの抽出文字列から、判断に必要な項目だけを読む。"""
     normalized = _normalize_pdf_text(text)
-    layout_match = _LAYOUT.search(normalized)
+    compact = re.sub(r"\s+", "", normalized)
     return {
-        "layout": re.sub(r"\s+", "", layout_match.group(1)).upper()
-        if layout_match else "",
-        "parking_slots": parse_parking_slots(normalized),
+        "layout": _pdf_layout(normalized, compact),
+        "parking_slots": _pdf_parking_slots(compact),
         "land_area_sqm": _labeled_area(
-            normalized, ("土地面積", "敷地面積", "宅地面積")),
+            compact, ("土地面積", "敷地面積", "宅地面積")),
         "floor_area_sqm": _labeled_area(
-            normalized, ("延床面積", "建物面積", "床面積")),
+            compact, ("建築面積(延床面積)", "延床面積", "建物面積", "床面積")),
     }
 
 
