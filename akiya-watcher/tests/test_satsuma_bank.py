@@ -3,7 +3,14 @@
 フィクスチャは 2026-07 に GitHub Actions で取得した実HTMLの構造を縮約したもの
 (h2見出し + a.pdf + div.wysiwyg がフラットに並ぶ)。
 """
-from akiya_watcher.scrapers.satsuma_bank import SatsumaBankScraper
+from akiya_watcher.models import Listing, Score
+from akiya_watcher.notify import format_message
+from akiya_watcher.scrapers.satsuma_bank import (
+    SatsumaBankScraper,
+    parse_pdf_details,
+)
+from akiya_watcher.storage import Diff
+from akiya_watcher.models import ListingContext
 
 FIXTURE = """
 <div>
@@ -96,3 +103,113 @@ def test_one_paragraph_variant():
     assert l.advertised_previous_price_yen == 25_000_000
     assert l.address == "鹿児島県薩摩郡さつま町宮之城屋地"
     assert "宮之城屋地" in l.title and "問い合わせ" not in l.title
+
+
+def test_parse_pdf_details_handles_split_labels_and_full_width_text():
+    """PDFで項目名と値が改行されても、必要な4項目を読める。"""
+    text = """
+    間 取 り：６ＤＫ
+    駐車場 有（普通車２台）
+    土地\n面積：３２１．５０㎡
+    延床\n面積：１２３．４㎡
+    """
+    assert parse_pdf_details(text) == {
+        "layout": "6DK",
+        "parking_slots": 2,
+        "land_area_sqm": 321.5,
+        "floor_area_sqm": 123.4,
+    }
+
+
+def test_parse_pdf_details_handles_real_satsuma_checkbox_form():
+    """実サイトNo.185で確認した、チェック欄・部屋明細型の書式。"""
+    text = (
+        "間取り 1階 \uf052居間 \uf052台所 \uf052風呂 \uf052トイレ "
+        "\uf052和室 6帖×2 4.5帖×1 \uf052板間 5帖×1 "
+        "2階 ☐洋室 ☐和室 ☐トイレ "
+        "建築面積（延床面積）73.55m2 建築時期 昭和27年築 "
+        "駐車場 ☐有（約 台） \uf052無 庭 ☐有 \uf052無 "
+        "敷地面積 138.8m2"
+    )
+    assert parse_pdf_details(text) == {
+        "layout": "4室+台所",
+        "parking_slots": 0,
+        "land_area_sqm": 138.8,
+        "floor_area_sqm": 73.55,
+    }
+
+
+def test_parse_pdf_details_handles_concatenated_room_counts():
+    """pypdfが空白を落とした実サイトの「×24.5帖」「×12階」を分離する。"""
+    text = (
+        "間取り1階\uf052居間\uf052台所\uf052和室6帖×24.5帖×1"
+        "\uf052板間5帖×12階☐洋室☐和室☐トイレ"
+        "建築面積(延床面積)73.55m2"
+    )
+    assert parse_pdf_details(text)["layout"] == "4室+台所"
+
+
+def test_apply_pdf_details_adds_email_line():
+    listing = Listing(
+        source="satsuma_akiya_bank",
+        listing_id="satsuma-200",
+        title="さつま町の架空物件",
+        url="https://example.com/200.pdf",
+        price_yen=2_000_000,
+        address="鹿児島県薩摩郡さつま町",
+    )
+    make_scraper().apply_enrichment(listing, {
+        "layout": "5DK",
+        "parking_slots": 3,
+        "land_area_sqm": 400.0,
+        "floor_area_sqm": 110.5,
+    })
+    text = format_message(
+        Diff("new", listing, ListingContext(is_new=True)), Score(total=10))
+    assert "物件情報: 間取り 5DK / 駐車 3台 / 土地 400㎡ / 建物 110.5㎡" in text
+
+
+def test_collect_reads_pdf_only_when_listing_changes(tmp_path, monkeypatch):
+    """同じPDFを毎巡回読まず、価格変更時だけ読み直す。"""
+    from akiya_watcher.main import collect
+
+    price = {"yen": 2_000_000}
+    pdf_fetches: list[int] = []
+
+    def fake_fetch_listings(self):
+        return [Listing(
+            source=self.source_id,
+            listing_id="satsuma-200",
+            title="さつま町の架空物件",
+            url="https://example.com/200.pdf",
+            price_yen=price["yen"],
+            address="鹿児島県薩摩郡さつま町",
+        )]
+
+    def fake_enrich(self, listing):
+        pdf_fetches.append(listing.price_yen)
+        return self.apply_enrichment(listing, {
+            "layout": "5DK", "parking_slots": 2,
+            "land_area_sqm": 350.0, "floor_area_sqm": 100.0,
+        })
+
+    monkeypatch.setattr(SatsumaBankScraper, "fetch_listings", fake_fetch_listings)
+    monkeypatch.setattr(SatsumaBankScraper, "enrich_listing", fake_enrich)
+    config = {
+        "db_path": str(tmp_path / "db.sqlite"),
+        "criteria": {"max_price_yen": 3_000_000},
+        "sources": [{
+            "id": "satsuma_akiya_bank", "type": "satsuma_bank",
+            "list_url": "https://example.com/list",
+        }],
+    }
+
+    first, *_ = collect(config)
+    second, *_ = collect(config)
+    price["yen"] = 1_800_000
+    third, *_ = collect(config)
+
+    assert pdf_fetches == [2_000_000, 1_800_000]
+    assert first[0][0].listing.parking_slots == 2
+    assert second[0][0].listing.parking_slots == 2  # DBから復元
+    assert third[0][0].context.price_changed

@@ -17,7 +17,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: 依存インストール
-        run: pip install -r akiya-watcher/requirements.txt pypdf
-      - name: 都城の移行先サイト偵察
+        run: pip install -r akiya-watcher/requirements.txt
+      - name: さつま町PDF詳細の実地確認
         working-directory: akiya-watcher
         run: python scripts/test_aira_yusui_source.py

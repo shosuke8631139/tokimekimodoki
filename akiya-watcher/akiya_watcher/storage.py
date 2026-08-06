@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import sqlite3
 import time
+import json
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -53,6 +54,13 @@ CREATE TABLE IF NOT EXISTS keeps (
     note           TEXT,
     added_on       TEXT,
     first_recorded INTEGER
+);
+CREATE TABLE IF NOT EXISTS listing_enrichment (
+    uid          TEXT PRIMARY KEY,
+    document_url TEXT NOT NULL,
+    source_hash  TEXT NOT NULL,
+    data_json    TEXT NOT NULL,
+    updated_at   INTEGER NOT NULL
 );
 """
 
@@ -102,6 +110,41 @@ class Store:
         self.conn.execute(
             "INSERT INTO meta (key, value) VALUES (?, ?) "
             "ON CONFLICT(key) DO UPDATE SET value = excluded.value", (key, value))
+        self.conn.commit()
+
+    # ------------------------------------------------------ 詳細資料の読み取り結果
+    # PDF等の重い詳細資料は、新着・掲載内容変更時だけ読む。同じ一覧状態なら
+    # ここに保存した結果を再利用し、相手サイトへ余計なアクセスをしない。
+
+    def get_listing_enrichment(self, uid: str, document_url: str,
+                               source_hash: str) -> dict | None:
+        row = self.conn.execute(
+            "SELECT data_json FROM listing_enrichment"
+            " WHERE uid=? AND document_url=? AND source_hash=?",
+            (uid, document_url, source_hash),
+        ).fetchone()
+        if row is None:
+            return None
+        try:
+            data = json.loads(row[0])
+        except (TypeError, json.JSONDecodeError):
+            return None
+        return data if isinstance(data, dict) else None
+
+    def save_listing_enrichment(self, uid: str, document_url: str,
+                                source_hash: str, data: dict) -> None:
+        self.conn.execute(
+            "INSERT INTO listing_enrichment"
+            " (uid, document_url, source_hash, data_json, updated_at)"
+            " VALUES (?, ?, ?, ?, ?)"
+            " ON CONFLICT(uid) DO UPDATE SET"
+            " document_url=excluded.document_url,"
+            " source_hash=excluded.source_hash,"
+            " data_json=excluded.data_json,"
+            " updated_at=excluded.updated_at",
+            (uid, document_url, source_hash,
+             json.dumps(data, ensure_ascii=False), self.now()),
+        )
         self.conn.commit()
 
     def upsert(self, ls: Listing) -> Diff:

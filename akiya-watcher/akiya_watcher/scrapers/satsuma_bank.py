@@ -21,16 +21,115 @@ robots.txt は存在しない(404)ことを確認済み。巡回は BaseScraper 
 """
 from __future__ import annotations
 
+from io import BytesIO
 import re
+import unicodedata
+from urllib.parse import urlsplit
 
 from bs4 import BeautifulSoup
+from pypdf import PdfReader
 
-from ..criteria import parse_price_yen
+from ..criteria import parse_area_sqm, parse_parking_slots, parse_price_yen
 from ..models import Listing
 from .base import BaseScraper
 
 _HEAD = re.compile(r"N[Oo]\.?\s*(\d+)")
 _PREV_PRICE = re.compile(r"([0-9,]+(?:\.[0-9]+)?)\s*万円?\s*から(?:変更|値下げ)")
+_LAYOUT = re.compile(r"間取り\s*[:：]?\s*([0-9]+\s*(?:S?LDK|DK|K|R)(?:\s*\+\s*S)?)",
+                     re.IGNORECASE)
+_CHECKED = r"[☑✓✔■●\uf052]"
+_MAX_PDF_BYTES = 10 * 1024 * 1024
+
+
+def _normalize_pdf_text(text: str) -> str:
+    text = unicodedata.normalize("NFKC", text or "")
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def _labeled_area(text: str, labels: tuple[str, ...]) -> float | None:
+    for label in labels:
+        match = re.search(
+            rf"(?:{re.escape(label)})\s*[:：]?\s*([0-9,]+(?:\.[0-9]+)?)"
+            r"\s*(?:㎡|m2|平米|平方メートル)",
+            text, re.IGNORECASE,
+        )
+        if match:
+            return parse_area_sqm(match.group(0))
+    return None
+
+
+def _pdf_layout(text: str, compact: str) -> str:
+    standard = _LAYOUT.search(compact)
+    if standard:
+        return re.sub(r"\s+", "", standard.group(1)).upper()
+    # さつま町のPDFは「和室6帖×2、4.5帖×1」のような部屋明細型もある。
+    section = re.search(
+        r"間取り(.{0,500}?)(?:建築面積|延床面積|建築時期)", compact)
+    if section is None:
+        return ""
+    # PDF抽出では「6帖×2 4.5帖」が「6帖×24.5帖」と連結されることがある。
+    # 次の畳数・チェック欄・階数を境界にして、×の直後だけを部屋数として読む。
+    count_pattern = (
+        r"帖×([0-9]+?)(?=(?:[0-9]+(?:\.[0-9]+)?帖|"
+        + _CHECKED + r"|☐|[0-9]+階|$))"
+    )
+    counts = [int(count) for count in re.findall(
+        count_pattern, section.group(1))]
+    if not counts:
+        return ""
+    suffix = "+台所" if re.search(_CHECKED + r"台所", section.group(1)) else ""
+    return f"{sum(counts)}室{suffix}"
+
+
+def _pdf_parking_slots(text: str) -> int | None:
+    section = re.search(r"駐車場(.{0,80}?)(?:庭|物置|その他)", text)
+    if section:
+        value = section.group(1)
+        if re.search(_CHECKED + r"無", value):
+            return 0
+        if re.search(_CHECKED + r"有", value):
+            return parse_parking_slots("駐車場" + value) or 1
+    return parse_parking_slots(text)
+
+
+def parse_pdf_details(text: str) -> dict:
+    """物件PDFの抽出文字列から、判断に必要な項目だけを読む。"""
+    normalized = _normalize_pdf_text(text)
+    compact = re.sub(r"\s+", "", normalized)
+    return {
+        "layout": _pdf_layout(normalized, compact),
+        "parking_slots": _pdf_parking_slots(compact),
+        "land_area_sqm": _labeled_area(
+            compact, ("土地面積", "敷地面積", "宅地面積")),
+        "floor_area_sqm": _labeled_area(
+            compact, ("建築面積(延床面積)", "延床面積", "建物面積", "床面積")),
+    }
+
+
+def _extract_pdf_text(content: bytes) -> str:
+    if len(content) > _MAX_PDF_BYTES:
+        raise ValueError("PDFが10MBを超えています")
+    reader = PdfReader(BytesIO(content))
+    chunks: list[str] = []
+    for page in reader.pages:
+        try:
+            chunks.append(page.extract_text() or "")
+        except Exception:
+            continue
+    return "\n".join(chunks)
+
+
+def _detail_summary(data: dict) -> str:
+    parts: list[str] = []
+    if data.get("layout"):
+        parts.append(f"間取り {data['layout']}")
+    if data.get("parking_slots") is not None:
+        parts.append(f"駐車 {data['parking_slots']}台")
+    if data.get("land_area_sqm") is not None:
+        parts.append(f"土地 {data['land_area_sqm']:g}㎡")
+    if data.get("floor_area_sqm") is not None:
+        parts.append(f"建物 {data['floor_area_sqm']:g}㎡")
+    return "PDF詳細: " + " / ".join(parts) if parts else ""
 
 
 class SatsumaBankScraper(BaseScraper):
@@ -45,6 +144,31 @@ class SatsumaBankScraper(BaseScraper):
         res = self.get(self.list_url)
         res.encoding = res.apparent_encoding
         return self.parse(res.text)
+
+    def enrich_listing(self, listing: Listing) -> Listing:
+        """新着・掲載変更時だけ呼ばれ、リンク先PDFの判断材料を追加する。"""
+        if not urlsplit(listing.url).path.lower().endswith(".pdf"):
+            return listing
+        response = self.get(listing.url)
+        details = parse_pdf_details(_extract_pdf_text(response.content))
+        return self.apply_enrichment(listing, details)
+
+    @staticmethod
+    def export_enrichment(listing: Listing) -> dict:
+        return dict(listing.raw.get("pdf_details", {}))
+
+    @staticmethod
+    def apply_enrichment(listing: Listing, data: dict) -> Listing:
+        for name in ("layout", "parking_slots", "land_area_sqm", "floor_area_sqm"):
+            value = data.get(name)
+            if value not in (None, ""):
+                setattr(listing, name, value)
+        summary = _detail_summary(data)
+        if summary and summary not in listing.description:
+            listing.description = " / ".join(
+                part for part in (listing.description, summary) if part)
+        listing.raw["pdf_details"] = dict(data)
+        return listing
 
     def parse(self, html: str) -> list[Listing]:
         soup = BeautifulSoup(html, "html.parser")
