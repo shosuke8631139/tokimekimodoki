@@ -27,6 +27,13 @@ def main() -> None:
     linked = [item for item in listings if item.raw.get("official_number")]
     print(f"統合結果: {len(listings)}件 / 300万円以下・準備中: {len(under_limit)}件")
     print(f"市公式との照合済み: {len(linked)}件 / 先行掲載: {len(previews)}件")
+    print("アットホーム側URL例:")
+    for item in [entry for entry in listings
+                 if not entry.listing_id.startswith("city-")][:3]:
+        print(f"  {item.url}")
+    print("市公式側URL例:")
+    for item in previews[:3]:
+        print(f"  {item.url}")
     for item in previews:
         print(f"先行掲載: {item.listing_id} / {item.price_yen or '価格準備中'} / {item.title}")
 
