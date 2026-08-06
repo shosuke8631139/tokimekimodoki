@@ -69,7 +69,12 @@ class IchikikushikinoBankScraper(GenericHtmlScraper):
             if match is None or "売買" not in transaction:
                 continue
             status = " ".join(cells[5].get_text(" ", strip=True).split())
-            detail = cells[0].find("a", href=True)
+            # 先頭リンクは写真拡大の場合がある。物件詳細ドメインだけを選ぶ。
+            detail = next(
+                (anchor for anchor in cells[0].find_all("a", href=True)
+                 if "akiya-athome" in anchor["href"]),
+                None,
+            )
             pdf = cells[7].find("a", href=True)
             area_text = cells[3].get_text(" ", strip=True)
             records.append(OfficialListing(

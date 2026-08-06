@@ -6,7 +6,7 @@ OFFICIAL = """
 <table><tbody>
 <tr><th>タイトル</th><th>地区</th><th>建築年</th><th>建築面積</th><th>区分</th><th>金額</th><th>担当</th><th>PDF</th></tr>
 <tr><td><a href="https://ichikikushikino-c46219.akiya-athome.jp/bukken/detail/buy/135">空き家物件No.135</a></td><td>本浦</td><td>昭和40年</td><td>84</td><td>売買</td><td>準備中</td><td>業者 0996-00-0000</td><td><a href="/files/135.pdf">資料</a></td></tr>
-<tr><td><a href="https://ichikikushikino-c46219.akiya-athome.jp/bukken/detail/buy/134/">空き家物件No.134</a></td><td>中央</td><td>昭和49年</td><td>50</td><td>売買</td><td>250万円</td><td>業者 0996-00-0000</td><td><a href="/files/134.pdf">資料</a></td></tr>
+<tr><td><a href="/images/134.jpg">写真</a><a href="https://ichikikushikino-c46219.akiya-athome.jp/bukken/detail/buy/134/">空き家物件No.134</a></td><td>中央</td><td>昭和49年</td><td>50</td><td>売買</td><td>250万円</td><td>業者 0996-00-0000</td><td><a href="/files/134.pdf">資料</a></td></tr>
 <tr><td>空き家物件No.132</td><td>野平</td><td>平成5年</td><td>103</td><td>売買</td><td>成約</td><td>業者 0996-00-0000</td><td></td></tr>
 <tr><td>空き家物件No.140</td><td>羽島</td><td>昭和50年</td><td>90</td><td>売買</td><td>200万円</td><td>業者 0996-00-0000</td><td><a href="/files/140.pdf">資料</a></td></tr>
 <tr><td>空き家物件No.129</td><td>照島</td><td>平成18年</td><td>122</td><td>賃貸</td><td>月7.5万円</td><td>業者</td><td></td></tr>
@@ -29,6 +29,7 @@ def test_parse_official_table_ignores_rental_and_reads_status():
     assert [record.number for record in records] == ["135", "134", "132", "140"]
     assert records[0].price_yen is None and records[0].status == "準備中"
     assert records[1].price_yen == 2_500_000
+    assert records[1].detail_url.endswith("/bukken/detail/buy/134/")
     assert records[2].sold
     assert records[3].floor_area_sqm == 90.0
 
