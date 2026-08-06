@@ -37,7 +37,12 @@ class OfficialListing:
 
 def _url_key(url: str) -> str:
     parsed = urlsplit(url)
-    return f"{parsed.netloc.lower()}{parsed.path.rstrip('/')}"
+    path = parsed.path.rstrip("/")
+    # 市公式は /buy/47490、一覧は /buy/物件名-47490。末尾の物件番号で同一視する。
+    property_id = re.search(r"(?:-|/)(\d+)$", path)
+    if property_id:
+        return f"{parsed.netloc.lower()}:{property_id.group(1)}"
+    return f"{parsed.netloc.lower()}{path}"
 
 
 class IchikikushikinoBankScraper(GenericHtmlScraper):

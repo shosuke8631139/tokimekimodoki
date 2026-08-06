@@ -40,7 +40,8 @@ def test_merge_keeps_athome_item_and_adds_only_missing_official_items():
         source="ichikikushikino_akiya_bank",
         listing_id="existing-134",
         title="中央の家",
-        url="https://ichikikushikino-c46219.akiya-athome.jp/bukken/detail/buy/134",
+        url=("https://ichikikushikino-c46219.akiya-athome.jp/bukken/detail/buy/"
+             "%E5%A3%B2%E6%88%B8%E5%BB%BA%E4%BD%8F%E5%AE%85-134"),
         price_yen=2_600_000,
         address="鹿児島県いちき串木野市中央",
     )]
