@@ -1,47 +1,40 @@
-"""偵察: いちき串木野市の公式空き家一覧の表構造を最小アクセスで確認する。"""
+"""実地検証: いちき串木野市の公式一覧とアットホーム一覧を統合して読む。"""
 
 from __future__ import annotations
 
-import re
 import sys
 from pathlib import Path
 
-from bs4 import BeautifulSoup
+import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from akiya_watcher.scrapers.generic_html import GenericHtmlScraper  # noqa: E402
-
-URL = "https://www.city.ichikikushikino.lg.jp/seisaku1/akiyabank/akiya-bukkenn.html"
+from akiya_watcher.scrapers import build_scraper  # noqa: E402
 
 
 def main() -> None:
-    scraper = GenericHtmlScraper({
-        "id": "ichikikushikino_city_preview",
-        "list_url": URL,
-        "item_selector": "table tr",
-        "fields": {},
-    })
-    print(f"robots.txt判定: {'許可' if scraper._allowed_by_robots(URL) else '禁止'}")
-    response = scraper.get(URL)
-    response.encoding = response.apparent_encoding
-    soup = BeautifulSoup(response.text, "html.parser")
+    config = yaml.safe_load(Path("config.yaml").read_text(encoding="utf-8"))
+    source = next(item for item in config["sources"]
+                  if item["id"] == "ichikikushikino_akiya_bank")
+    scraper = build_scraper(source)
+    official_url = source["official_url"]
+    print(f"robots.txt判定: {'許可' if scraper._allowed_by_robots(official_url) else '禁止'}")
 
-    rows: list[list[str]] = []
-    for tr in soup.select("table tr"):
-        cells = [" ".join(cell.get_text(" ", strip=True).split())
-                 for cell in tr.find_all(["th", "td"])]
-        joined = " | ".join(cells)
-        if re.search(r"N[Oo]\.?.*?\d+", joined) and ("売買" in joined or "成約" in joined):
-            rows.append(cells)
+    listings = scraper.fetch_listings()
+    previews = [item for item in listings if item.listing_id.startswith("city-")]
+    under_limit = [item for item in listings
+                   if item.price_yen is None or item.price_yen <= 3_000_000]
+    linked = [item for item in listings if item.raw.get("official_number")]
+    print(f"統合結果: {len(listings)}件 / 300万円以下・準備中: {len(under_limit)}件")
+    print(f"市公式との照合済み: {len(linked)}件 / 先行掲載: {len(previews)}件")
+    for item in previews:
+        print(f"先行掲載: {item.listing_id} / {item.price_yen or '価格準備中'} / {item.title}")
 
-    print(f"売買・成約を含む物件行: {len(rows)}件")
-    for cells in rows[:5]:
-        safe = [re.sub(r"\d{2,4}-\d{2,4}-\d{3,4}", "[電話番号]", cell)
-                for cell in cells]
-        print(f"列数={len(cells)}: {safe}")
-    if len(rows) < 10:
-        raise SystemExit("物件表を十分に読めませんでした")
+    if len(listings) < 20:
+        raise SystemExit("通常掲載を20件以上取得できませんでした")
+    if len(linked) < 10:
+        raise SystemExit("市公式一覧とアットホーム一覧を十分に照合できませんでした")
+    print("判定: OK")
 
 
 if __name__ == "__main__":
