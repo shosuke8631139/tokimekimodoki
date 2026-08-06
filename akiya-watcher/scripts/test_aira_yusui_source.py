@@ -1,77 +1,41 @@
-"""実地検証: さつま町の一覧1回と、300万円以下のPDF1件だけを読む。
-
-本番DB・Gmailには触れない。BaseScraperの10秒間隔とrobots.txt確認を通し、
-PDFから駐車台数・間取り・土地面積・建物面積のどれかを読めるか確認する。
-"""
+"""実地検証: いちき串木野市の公式一覧とアットホーム一覧を統合して読む。"""
 
 from __future__ import annotations
 
-import re
 import sys
-import unicodedata
 from pathlib import Path
+
+import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from akiya_watcher.scrapers.satsuma_bank import (  # noqa: E402
-    SatsumaBankScraper,
-    _extract_pdf_text,
-    parse_pdf_details,
-)
-
-
-def show_keyword_windows(text: str) -> None:
-    """読み取り失敗時だけ、個人の連絡先を除いた周辺文字を診断表示する。"""
-    compact = re.sub(r"\s+", "", unicodedata.normalize("NFKC", text))
-    windows: list[str] = []
-    for keyword in ("間取", "駐車", "車庫", "土地", "敷地", "建物", "床面積"):
-        pos = compact.find(keyword)
-        if pos >= 0:
-            sample = compact[max(0, pos - 15):pos + 55]
-            sample = re.sub(r"\d{2,4}-\d{2,4}-\d{3,4}", "[電話番号]", sample)
-            windows.append(f"{keyword}: {sample}")
-    print("診断用の項目周辺文字:")
-    for window in dict.fromkeys(windows):
-        print(f"  {window}")
+from akiya_watcher.scrapers import build_scraper  # noqa: E402
 
 
 def main() -> None:
-    scraper = SatsumaBankScraper({
-        "id": "satsuma_akiya_bank",
-        "list_url": "https://www.satsuma-net.jp/teiju/akiya/1/5623.html",
-    })
-    listings = scraper.fetch_listings()
-    candidates = [
-        listing for listing in listings
-        if listing.price_yen is not None
-        and listing.price_yen <= 3_000_000
-        and listing.url.lower().endswith(".pdf")
-    ]
-    print(f"一覧取得: {len(listings)}件 / 300万円以下PDF: {len(candidates)}件")
-    if not candidates:
-        raise SystemExit("確認できる300万円以下のPDF物件がありません")
+    config = yaml.safe_load(Path("config.yaml").read_text(encoding="utf-8"))
+    source = next(item for item in config["sources"]
+                  if item["id"] == "ichikikushikino_akiya_bank")
+    scraper = build_scraper(source)
+    official_url = source["official_url"]
+    print(f"robots.txt判定: {'許可' if scraper._allowed_by_robots(official_url) else '禁止'}")
 
-    # アクセスを増やさないためPDFは先頭1件だけ読む。
-    listing = candidates[0]
-    response = scraper.get(listing.url)
-    pdf_text = _extract_pdf_text(response.content)
-    listing = scraper.apply_enrichment(listing, parse_pdf_details(pdf_text))
-    print(f"確認対象: {listing.listing_id} / {listing.price_yen:,}円")
-    print(
-        "PDF読取: "
-        f"間取り={listing.layout or '不明'} / "
-        f"駐車={listing.parking_slots if listing.parking_slots is not None else '不明'} / "
-        f"土地={listing.land_area_sqm if listing.land_area_sqm is not None else '不明'} / "
-        f"建物={listing.floor_area_sqm if listing.floor_area_sqm is not None else '不明'}"
-    )
-    if not any((listing.layout, listing.parking_slots is not None,
-                listing.land_area_sqm is not None,
-                listing.floor_area_sqm is not None)):
-        show_keyword_windows(pdf_text)
-        raise SystemExit("PDFから4項目を1つも読み取れませんでした")
-    if not all((listing.layout, listing.parking_slots is not None,
-                listing.floor_area_sqm is not None)):
-        show_keyword_windows(pdf_text)
+    listings = scraper.fetch_listings()
+    previews = [item for item in listings if item.listing_id.startswith("city-")]
+    under_limit = [item for item in listings
+                   if item.price_yen is None or item.price_yen <= 3_000_000]
+    linked = [item for item in listings if item.raw.get("official_number")]
+    print(f"統合結果: {len(listings)}件 / 300万円以下・準備中: {len(under_limit)}件")
+    print(f"市公式との照合済み: {len(linked)}件 / 先行掲載: {len(previews)}件")
+    for item in previews:
+        print(f"先行掲載: {item.listing_id} / {item.price_yen or '価格準備中'} / {item.title}")
+
+    if len(listings) < 20:
+        raise SystemExit("通常掲載を20件以上取得できませんでした")
+    if len(listings) > 25 or len(previews) > 5:
+        raise SystemExit("公式一覧とアットホーム一覧が重複している可能性があります")
+    if len(linked) < 10:
+        raise SystemExit("市公式一覧とアットホーム一覧を十分に照合できませんでした")
     print("判定: OK")
 
 

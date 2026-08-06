@@ -64,6 +64,26 @@ def test_new_listing_needs_min_score():
     assert not decide(diff_of(ls), score_of(5), min_score=8).notify
 
 
+def test_注力市の新着は低得点でも通知する():
+    """一木串木野市のように明示した市は、新着を見逃さない。"""
+    ls = make(price_yen=2_500_000, layout="3K")
+    decision = decide(diff_of(ls), score_of(1), min_score=8,
+                      always_notify=True)
+    assert decision.notify and decision.kind == "new"
+    assert decision.reason == "注力市の新着"
+
+
+def test_注力市の倒壊級物件の値下げも通知する():
+    """注力市では値下げの瞬間を損壊記載だけで止めない。"""
+    ls = make(price_yen=1_000_000, layout="4DK", description="倒壊の恐れあり")
+    decision = decide(
+        diff_of(ls, kind="changed", is_new=False, price_changed=True,
+                previous_price_yen=3_000_000),
+        score_of(1), min_score=8, ruin_extra=5, always_notify=True,
+    )
+    assert decision.notify and decision.kind == "drop"
+
+
 def test_land_only_never_notifies():
     ls = make(title="山林 売地", description="更地")
     d = diff_of(ls, kind="changed", is_new=False, price_changed=True,
