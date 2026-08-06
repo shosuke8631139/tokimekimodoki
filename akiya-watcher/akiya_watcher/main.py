@@ -386,6 +386,14 @@ def build_patrol_summary(to_send: list[tuple[Diff, Score]],
                  else f"新着(注目度低め){len(quiet_new)}件")
         parts.append(label)
     subject = "🏠 巡回まとめ: " + "・".join(parts)
+    subject_items = to_send + quiet_new
+    has_ichikikushikino = any(
+        d.listing.source == "ichikikushikino_akiya_bank"
+        or "いちき串木野市" in d.listing.address
+        for d, _ in subject_items
+    )
+    if has_ichikikushikino:
+        subject = "【一木串木野あり】" + subject
 
     blocks = [subject]
     blocks.extend(keep_added_texts)
@@ -498,6 +506,10 @@ def run(config_path: str, dry_run: bool = False, report_path: str | None = None,
     notify_cfg = config.get("notify", {})
     min_score = notify_cfg.get("min_score", 8)
     ruin_extra = notify_cfg.get("ruin_extra_score", 5)
+    always_notify_sources = {
+        source["id"] for source in config.get("sources", [])
+        if source.get("always_notify", False)
+    }
     offer_age = config.get("offer_list", {}).get("min_age_days", 90)
 
     (items, delisted, deals, deal_history, keep_gone,
@@ -556,7 +568,10 @@ def run(config_path: str, dry_run: bool = False, report_path: str | None = None,
         to_send: list[tuple[Diff, Score]] = []
         quiet_new: list[tuple[Diff, Score]] = []
         for diff, score in items:
-            d = decide(diff, score, min_score=min_score, ruin_extra=ruin_extra)
+            d = decide(
+                diff, score, min_score=min_score, ruin_extra=ruin_extra,
+                always_notify=diff.listing.source in always_notify_sources,
+            )
             # 指名追跡物件 (source="watch") はスコアに関わらずキープ扱い
             keep = is_keep(score) or diff.listing.source == "watch"
             # ⭐キープ物件は通常なら沈黙する「記載変更」でも知らせる

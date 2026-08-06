@@ -31,6 +31,21 @@ def test_件名行に件数と最大値下げ率が入る():
     assert "巡回まとめ" in subject
     assert "値下げ2件(最大▼75%)" in subject
     assert "新着1件" in subject
+    assert not subject.startswith("【一木串木野あり】")
+
+
+def test_一木串木野の物件がある時だけ件名に目印が付く():
+    ichiki = _item("一木串木野の新着", "new")
+    ichiki[0].listing.source = "ichikikushikino_akiya_bank"
+    subject = build_patrol_summary([ichiki]).splitlines()[0]
+    assert subject.startswith("【一木串木野あり】🏠 巡回まとめ:")
+
+
+def test_別ソースでも所在地が一木串木野市なら件名に目印が付く():
+    ichiki = _item("集約サイトの新着", "new")
+    ichiki[0].listing.address = "鹿児島県いちき串木野市"
+    subject = build_patrol_summary([], quiet_new=[ichiki]).splitlines()[0]
+    assert subject.startswith("【一木串木野あり】🏠 巡回まとめ:")
 
 
 def test_値下げが下げ幅順で新着より先に並ぶ():
