@@ -240,6 +240,8 @@ sources:
   # ── 日置市 空き家バンク(市直営・地域別4ページ) (2026-08-03 実地確認) ──
   # 値下げ表記・蔵付き・納屋の文言が一覧に載る宝の山。円建て価格。
   # 市に家財処分支援・入居者申請可のDIY改修補助あり(設計書の補助金マップ参照)。
+  # ユーザー指名の228・254は、残置物と追加値下げを詳細ページでも直接追う。
+  # 一覧との価格差は同じ物件番号へ統合し、メールへ二重に載せない。
   - id: hioki_akiya_bank
     type: hioki_bank
     enabled: true
@@ -248,6 +250,13 @@ sources:
       - "https://www.city.hioki.kagoshima.jp/teiju/ijuteju/akiya/akiyabank/akiyabank_ijuin.html"
       - "https://www.city.hioki.kagoshima.jp/teiju/ijuteju/akiya/akiyabank/akiyabank_hiyoshi.html"
       - "https://www.city.hioki.kagoshima.jp/teiju/ijuteju/akiya/akiyabank/akiyabank_fukiage.html"
+    detail_watches:
+      - number: "228"
+        url: "https://www.city.hioki.kagoshima.jp/teiju/bukken228.html"
+        note: "ユーザー指名 2026-08-06。写真に残置物あり。ある程度片付け済みの可能性もあるが、追加値下げを追跡"
+      - number: "254"
+        url: "https://www.city.hioki.kagoshima.jp/teiju/bukken254.html"
+        note: "ユーザー指名 2026-08-06。写真に残置物あり。ある程度片付け済みの可能性もあるが、追加値下げを追跡"
 
   # ── いちき串木野市 空き家バンク(売買・戸建) (2026-08 構造確認済み) ──
   # 市公式一覧(準備中・成約・価格・建物面積)とアットホーム2頁を統合して読む。

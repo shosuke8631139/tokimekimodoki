@@ -8,6 +8,8 @@
   詳細URLは bukkenNNN.html / bukkennNNN.html の表記ゆれあり
 - 価格は円建て (例: 3,000,000円)。売却価格が読めた物件のみ採用
   (賃貸のみは対象外)。そのため prices_reliable=True
+- ユーザー指名物件は詳細ページも直接読む。一覧と詳細の更新がずれている時は
+  安い方を現在価格として採用し、同じ物件番号へ統合して二重登録しない
 - 市の制度メモ: 「空き家の家財道具処分を支援」補助あり。
   入居者(テナント)自身が申請できるDIY改修補助も設計書の補助金マップ参照
 """
@@ -32,6 +34,8 @@ _REGION_TOWN = {"東市来": "東市来町", "伊集院": "伊集院町",
                 "日吉": "日吉町", "吹上": "吹上町"}
 # 売却価格とみなす下限。これ未満の円額は賃料(月額)とみなす
 _MIN_SALE_YEN = 200_000
+_DETAIL_PRICE_BLOCK = re.compile(
+    r"希望価格\s*((?:[0-9][0-9,]{4,}\s*円\s*){1,3})")
 
 
 class HiokiBankScraper(BaseScraper):
@@ -44,6 +48,7 @@ class HiokiBankScraper(BaseScraper):
         self.source_id = config.get("id", self.source_id)
         urls = config.get("list_urls") or [config["list_url"]]
         self.list_urls = urls
+        self.detail_watches = config.get("detail_watches", [])
 
     def fetch_listings(self) -> list[Listing]:
         listings: list[Listing] = []
@@ -54,7 +59,56 @@ class HiokiBankScraper(BaseScraper):
         uniq: dict[str, Listing] = {}
         for ls in listings:
             uniq.setdefault(ls.listing_id, ls)
+        for watch in self.detail_watches:
+            number = str(watch.get("number", ""))
+            listing = uniq.get(f"hioki-{number}")
+            url = watch.get("url", "")
+            if listing is None or not url:
+                continue
+            listing.raw["detail_watch_url"] = url
+            note = watch.get("note", "")
+            if note and f"追跡理由: {note}" not in listing.description:
+                listing.description = f"{listing.description} / 追跡理由: {note}"[:1500]
+            try:
+                res = self.get(url)
+                res.encoding = res.apparent_encoding
+                current, previous = self.parse_detail_price(res.text)
+                self.merge_detail_price(listing, current, previous)
+            except Exception as exc:
+                print(f"[warn] 日置市No.{number} 詳細取得失敗 "
+                      f"({type(exc).__name__}: {exc})")
         return list(uniq.values())
+
+    @staticmethod
+    def parse_detail_price(html: str) -> tuple[int | None, int | None]:
+        """詳細ページの「希望価格」欄から現在価格と旧価格を読む。"""
+        soup = BeautifulSoup(html, "html.parser")
+        text = unicodedata.normalize("NFKC", soup.get_text(" ", strip=True))
+        match = _DETAIL_PRICE_BLOCK.search(text)
+        if match is None:
+            return None, None
+        prices = [int(value.replace(",", ""))
+                  for value in _ANY_YEN.findall(match.group(1))]
+        if not prices:
+            return None, None
+        current = min(prices)
+        previous = max(prices) if max(prices) > current else None
+        return current, previous
+
+    @staticmethod
+    def merge_detail_price(listing: Listing, current: int | None,
+                           previous: int | None) -> None:
+        """一覧と詳細の更新差を吸収し、値下げ履歴を壊さず同じ物件へ統合する。"""
+        if current is None:
+            return
+        list_price = listing.price_yen
+        listing.price_yen = min(
+            price for price in (list_price, current) if price is not None)
+        existing_previous = listing.advertised_previous_price_yen
+        if existing_previous is None or existing_previous <= listing.price_yen:
+            if previous is not None and previous > listing.price_yen:
+                listing.advertised_previous_price_yen = previous
+        listing.raw["detail_watch_price_yen"] = current
 
     @staticmethod
     def parse_page(html: str, base_url: str) -> list[Listing]:
