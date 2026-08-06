@@ -56,3 +56,28 @@ def test_parse_page():
 def test_design_flags():
     assert HiokiBankScraper.prices_reliable is True
     assert HiokiBankScraper.full_snapshot is True
+
+
+def test_parse_detail_price_reads_current_and_previous_yen_prices():
+    html = """
+    <main><h2>希望価格</h2><p>2,000,000円<br>5,000,000円</p>
+    <h2>建築時期</h2><p>昭和55年</p></main>
+    """
+    assert HiokiBankScraper.parse_detail_price(html) == (2_000_000, 5_000_000)
+
+
+def test_detail_price_fills_stale_list_but_does_not_undo_newer_list_drop():
+    items = HiokiBankScraper.parse_page(HTML, BASE)
+    listing = items[1]
+
+    # 詳細の方が新しい例: 一覧300万円、詳細200万円→500万円
+    HiokiBankScraper.merge_detail_price(listing, 2_000_000, 5_000_000)
+    assert listing.price_yen == 2_000_000
+    assert listing.advertised_previous_price_yen == 5_000_000
+
+    # 一覧の方がさらに新しい例: 一覧100万円→旧150万円、詳細は150万円→旧450万円
+    listing.price_yen = 1_000_000
+    listing.advertised_previous_price_yen = 1_500_000
+    HiokiBankScraper.merge_detail_price(listing, 1_500_000, 4_500_000)
+    assert listing.price_yen == 1_000_000
+    assert listing.advertised_previous_price_yen == 1_500_000
