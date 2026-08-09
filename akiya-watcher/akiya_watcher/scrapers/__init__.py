@@ -6,9 +6,12 @@ from .demo import DemoScraper
 from .generic_html import GenericHtmlScraper
 from .hioki_bank import HiokiBankScraper
 from .ichikikushikino_bank import IchikikushikinoBankScraper
+from .ksi_auction import KsiAuctionScraper
 from .mailbox import GmailImapScraper
 from .miyakonojo_bank import MiyakonojoBankScraper
 from .kirishima_bank import KirishimaBankScraper
+from .nta_koubai import NtaKoubaiScraper
+from .pref_kagoshima_sale import PrefKagoshimaSaleScraper
 from .rss_feed import RssScraper
 from .satsuma_bank import SatsumaBankScraper
 from .satsumasendai_city import SatsumasendaiCityScraper
@@ -23,7 +26,10 @@ REGISTRY: dict[str, type[BaseScraper]] = {
     "hioki_bank": HiokiBankScraper,
     "ichikikushikino_bank": IchikikushikinoBankScraper,
     "kirishima_bank": KirishimaBankScraper,
+    "ksi_auction": KsiAuctionScraper,
     "miyakonojo_bank": MiyakonojoBankScraper,
+    "nta_koubai": NtaKoubaiScraper,
+    "pref_kagoshima_sale": PrefKagoshimaSaleScraper,
     "rss": RssScraper,
     "satsuma_bank": SatsumaBankScraper,
     "satsumasendai_city": SatsumasendaiCityScraper,
