@@ -20,4 +20,4 @@ jobs:
         run: pip install -r akiya-watcher/requirements.txt
       - name: 公売・競売ソース候補の偵察 (robots.txt と構造確認)
         working-directory: akiya-watcher
-        run: python scripts/recon_koubai_sources2.py
+        run: python scripts/recon_koubai_sources3.py
