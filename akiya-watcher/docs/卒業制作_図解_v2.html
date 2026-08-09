@@ -1,0 +1,255 @@
+<title>卒業制作図解｜空き家ウォッチャー</title>
+<style>
+  :root {
+    --paper: #F7F8F6;
+    --card: #FFFFFF;
+    --ink: #24312C;
+    --ink-2: #5A6B63;
+    --ink-3: #8A978F;
+    --line: #DDE4DF;
+    --accent: #2E6E52;
+    --accent-soft: #E4EFE8;
+    --alert: #B9651F;
+    --alert-soft: #F6E8DA;
+    --mail-bg: #F2F5F1;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #161C19;
+      --card: #1F2723;
+      --ink: #E6ECE8;
+      --ink-2: #A8B5AD;
+      --ink-3: #77857C;
+      --line: #35403A;
+      --accent: #6FBE97;
+      --accent-soft: #24382E;
+      --alert: #E0995C;
+      --alert-soft: #3A2E22;
+      --mail-bg: #1A211D;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #161C19; --card: #1F2723; --ink: #E6ECE8; --ink-2: #A8B5AD;
+    --ink-3: #77857C; --line: #35403A; --accent: #6FBE97; --accent-soft: #24382E;
+    --alert: #E0995C; --alert-soft: #3A2E22; --mail-bg: #1A211D;
+  }
+  :root[data-theme="light"] {
+    --paper: #F7F8F6; --card: #FFFFFF; --ink: #24312C; --ink-2: #5A6B63;
+    --ink-3: #8A978F; --line: #DDE4DF; --accent: #2E6E52; --accent-soft: #E4EFE8;
+    --alert: #B9651F; --alert-soft: #F6E8DA; --mail-bg: #F2F5F1;
+  }
+  body {
+    background: var(--paper); color: var(--ink);
+    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", "Noto Sans JP", sans-serif;
+    line-height: 1.85; margin: 0; font-size: 15.5px;
+  }
+  main { max-width: 860px; margin: 0 auto; padding: 48px 20px 80px; }
+  .eyebrow {
+    font-size: 12px; letter-spacing: .18em; color: var(--accent);
+    font-weight: 700; margin: 0 0 6px;
+  }
+  header.hero { padding: 24px 0 8px; }
+  h1 {
+    font-size: clamp(26px, 4.6vw, 38px); line-height: 1.35; margin: 0 0 10px;
+    text-wrap: balance; letter-spacing: .01em;
+  }
+  .hero-sub { color: var(--ink-2); margin: 0; max-width: 40em; }
+  .thesis {
+    font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+    font-size: clamp(18px, 2.8vw, 23px); line-height: 2;
+    border-left: 3px solid var(--accent); padding: 6px 0 6px 20px;
+    margin: 30px 0 8px; text-wrap: balance;
+  }
+  .kpi-row {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 10px; margin: 30px 0 0;
+  }
+  .kpi {
+    background: var(--card); border: 1px solid var(--line); border-radius: 6px;
+    padding: 14px 14px 12px;
+  }
+  .kpi b {
+    display: block; font-size: 26px; line-height: 1.2; letter-spacing: .01em;
+    font-variant-numeric: tabular-nums;
+  }
+  .kpi span { font-size: 12px; color: var(--ink-2); }
+  section { margin-top: 56px; }
+  .sec-head { display: flex; align-items: baseline; gap: 12px; border-bottom: 2px solid var(--ink); padding-bottom: 8px; margin-bottom: 22px; }
+  .sec-no {
+    font-size: 12px; font-weight: 700; letter-spacing: .14em; color: var(--paper);
+    background: var(--ink); padding: 3px 9px; border-radius: 3px; white-space: nowrap;
+  }
+  h2 { font-size: 21px; margin: 0; letter-spacing: .02em; }
+  h3 { font-size: 16px; margin: 26px 0 8px; }
+  p { margin: 10px 0; max-width: 44em; }
+  .muted { color: var(--ink-2); font-size: 13.5px; }
+
+  /* システムの流れ図 */
+  .flow { display: grid; gap: 8px; margin: 20px 0; }
+  .flow-step {
+    background: var(--card); border: 1px solid var(--line); border-radius: 6px;
+    padding: 14px 16px; display: grid; grid-template-columns: 118px 1fr; gap: 14px;
+  }
+  .flow-step .tag { font-size: 12px; font-weight: 700; color: var(--accent); letter-spacing: .06em; padding-top: 2px; }
+  .flow-step .body { font-size: 14px; color: var(--ink-2); }
+  .flow-step .body b { color: var(--ink); }
+  .flow-arrow { text-align: center; color: var(--ink-3); font-size: 13px; line-height: 1; }
+  @media (max-width: 560px) { .flow-step { grid-template-columns: 1fr; gap: 4px; } }
+
+  /* メールのモック */
+  .mail {
+    background: var(--mail-bg); border: 1px solid var(--line); border-radius: 8px;
+    padding: 18px 20px; margin: 20px 0 6px; font-size: 13.5px;
+    box-shadow: 0 1px 0 var(--line);
+  }
+  .mail .subject { font-weight: 700; font-size: 14.5px; border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-bottom: 12px; }
+  .mail .row { padding: 7px 0; border-bottom: 1px dashed var(--line); }
+  .mail .row:last-child { border-bottom: none; }
+  .mail .price-drop { color: var(--alert); font-weight: 700; }
+  .mail .new-mark { background: var(--accent-soft); color: var(--accent); font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 3px; margin-right: 4px; }
+  .mail .seen { color: var(--ink-3); }
+  .mail .meta { color: var(--ink-2); }
+  .mail-caption { font-size: 12.5px; color: var(--ink-3); margin-top: 6px; }
+
+  /* 面倒 before/after */
+  .pain-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 18px; }
+  @media (max-width: 620px) { .pain-grid { grid-template-columns: 1fr; } }
+  .pain, .gain {
+    border-radius: 6px; padding: 16px 18px; font-size: 14px;
+  }
+  .pain { background: var(--card); border: 1px solid var(--line); }
+  .gain { background: var(--accent-soft); border: 1px solid var(--accent); }
+  .pain h4, .gain h4 { margin: 0 0 8px; font-size: 13px; letter-spacing: .1em; }
+  .pain h4 { color: var(--ink-3); }
+  .gain h4 { color: var(--accent); }
+  .pain ul, .gain ul { margin: 0; padding-left: 1.2em; }
+  .pain li, .gain li { margin: 6px 0; }
+
+  /* 工夫と苦戦 */
+  .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 18px; }
+  @media (max-width: 680px) { .duo { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 6px;
+    padding: 16px 18px; font-size: 14px;
+  }
+  .card h4 { margin: 0 0 4px; font-size: 15px; }
+  .card p { margin: 4px 0 0; color: var(--ink-2); font-size: 13.5px; }
+  .card .lbl { font-size: 11px; font-weight: 700; letter-spacing: .12em; }
+  .card.win .lbl { color: var(--accent); }
+  .card.hard .lbl { color: var(--alert); }
+
+  .closing {
+    margin-top: 60px; border-top: 2px solid var(--ink); padding-top: 26px;
+  }
+  .closing p { max-width: 44em; }
+  footer { margin-top: 48px; font-size: 12px; color: var(--ink-3); border-top: 1px solid var(--line); padding-top: 14px; }
+</style>
+
+<main>
+  <header class="hero">
+    <p class="eyebrow">AIドリブンスクール 卒業制作｜自分の武器を作る</p>
+    <h1>空き家ウォッチャー<br>——「誰よりも早く知る」を自動化した、一人大家の武器</h1>
+    <p class="hero-sub">鹿児島で古い空き家を買い、直して貸す事業を一人で営んでいます。この事業の勝敗は、物件の目利きの前に「いい物件の情報に、誰よりも早くたどり着けるか」で決まります。その見張り役を、AIと一緒に作りました。</p>
+    <p class="thesis">AIは家を買わない。買うのは私。<br>AIには「誰よりも早く知る」だけを任せた。</p>
+    <div class="kpi-row">
+      <div class="kpi"><b>22</b><span>監視する情報源(空き家バンク・RSS・メール・行政の売却情報)</span></div>
+      <div class="kpi"><b>4〜6回<span style="font-size:14px">/日</span></b><span>自動巡回の回数</span></div>
+      <div class="kpi"><b>90件超</b><span>いま追跡中の物件</span></div>
+      <div class="kpi"><b>226件</b><span>自動テスト(全部green)</span></div>
+      <div class="kpi"><b>月0円</b><span>運用費(無料枠だけで稼働)</span></div>
+    </div>
+  </header>
+
+  <section>
+    <div class="sec-head"><span class="sec-no">1 作ったもの</span><h2>毎朝1通のメールに、県内の動きが全部入っている</h2></div>
+    <p>鹿児島・宮崎の14市町の空き家バンクに加え、国や自治体が物件を売りに出す行政の売却情報までを毎日自動で巡回し、<b>値下げの瞬間</b>と<b>新着物件</b>を検知して、1通のメールにまとめて届けるシステムです。半年前から本番稼働していて、今朝も私のスマホにメールが届いています。</p>
+
+    <div class="flow">
+      <div class="flow-step"><span class="tag">① 集める</span><span class="body"><b>22の情報源を自動巡回。</b>市町村ごとにサイトの作りが全部違うので、1つずつ構造を解析してアダプタを実装(コードを書かず設定だけで繋がる共通の型も用意)。空き家バンクだけでなく、国や自治体が物件を売りに出す「行政の売却情報」も同じ網で見張る</span></div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-step"><span class="tag">② 比べる</span><span class="body"><b>前回の巡回と差分をとる。</b>新着か、値下げか、掲載終了(売れた?)かを判定。価格の履歴はデータベースに蓄積</span></div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-step"><span class="tag">③ 評価する</span><span class="body"><b>物件を10点満点でスコア化し、自宅から車で何分かも自動計算。</b>条件で捨てずに全物件を台帳に残し、並べ替えて人間が決める設計</span></div>
+      <div class="flow-arrow">▼</div>
+      <div class="flow-step"><span class="tag">④ 届ける</span><span class="body"><b>1回の巡回=最大1通のまとめメール。</b>重要な順に並び、初登場には🆕、前に見たものには（既出）の印。動きがない巡回は沈黙する</span></div>
+    </div>
+
+    <div class="mail">
+      <div class="subject">🏠 巡回まとめ: 値下げ1件(最大▼75%)・新着2件・ほか新着3件</div>
+      <div class="row"><span class="price-drop">🔻 値下げ検知 (▼75%)</span>　A町空き家バンク No.○○<br>
+        <span class="meta">価格: 800,000円 → 200,000円　／　立地: 自宅から車およそ60分 ○60分圏</span></div>
+      <div class="row"><span class="new-mark">🆕</span> 新着 [評価 8/10]　B市 中古戸建 150万円<br>
+        <span class="meta">シグナル: 現状渡し・駐車場あり　／　🚗45分 ◎30分圏</span></div>
+      <div class="row seen">・5/10 C町 No.○○ 250万円 🚗80分△（既出）</div>
+      <div class="row meta">📮 本日の定期便 ── 注目上位5件は前回と同じ顔ぶれ(新顔なし)。詳細は添付の台帳で。</div>
+    </div>
+    <p class="mail-caption">※ 実際に届くメールを一般化したイメージ(物件名は伏せています)</p>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-no">2 解決する面倒</span><h2>「毎朝の目視パトロール」と「気づけない値下げ」</h2></div>
+    <p>安くて良い空き家は早い者勝ちです。でも情報は9つ以上のバラバラなサイトに散らばっていて、値下げされても誰も教えてくれません。私は毎朝それを目でパトロールしていました。</p>
+    <div class="pain-grid">
+      <div class="pain">
+        <h4>BEFORE ── 人力の見張り</h4>
+        <ul>
+          <li>毎朝、複数サイトを目視で巡回(約30分)</li>
+          <li>値下げの瞬間に気づけない。気づいた時には商談中</li>
+          <li>物件の場所を毎回地図で調べる</li>
+          <li>「これ前に見たっけ?」が積もって判断がにぶる</li>
+        </ul>
+      </div>
+      <div class="gain">
+        <h4>AFTER ── メール1通</h4>
+        <ul>
+          <li>巡回は機械が1日4〜6回。私は届いた1通を見るだけ</li>
+          <li>値下げは最大▼75%まで検知した実績。その日のうちに動ける</li>
+          <li>全物件に「自宅から車で何分」が自動でつく</li>
+          <li>🆕と（既出）の印で、目を通すべきものが3秒でわかる</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-no">3 作りたいと思った理由</span><h2>人は雇えない。でも「見張り」は24時間必要だった</h2></div>
+    <p>私の事業は完全に一人です。物件を見に行き、電話をかけ、契約をして、直して、貸す——全部自分でやります。その中で唯一、体が足りなくても諦めてはいけないのが「情報を見張ること」でした。見張りを怠った日に限って、良い物件は消えます。</p>
+    <p>人を雇う代わりに、AIに見張りを任せる。そう決めてから、講義で学んだ「小さく作って直す」をそのまま実践しました。最初はRSSを1本読むだけ。そこから市町村を1つずつ偵察して繋ぎ、メールの形を使いながら直し、半年でいまの形になりました。</p>
+    <p><b>ツールが完成したから使うのではなく、使いながら作った</b>——これがこの武器の一番の特徴です。</p>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-no">4 工夫と苦戦</span><h2>作ってみて分かったこと</h2></div>
+    <h3>工夫したポイント</h3>
+    <div class="duo">
+      <div class="card win"><span class="lbl">工夫 1</span><h4>通知の三層設計</h4><p>「鳴ったら必ず見る価値がある通知」「1行で流し見できる新着」「全量が残る台帳」の三層に分けた。全部知らせると読まなくなり、絞りすぎると見落とす。その間を設計した。</p></div>
+      <div class="card win"><span class="lbl">工夫 2</span><h4>既視感への対策</h4><p>同じ物件が何度も届くと「あれ、これどうだったかな」と判断がリセットされる。前回紹介した物件を記憶させ、🆕/（既出）で見分けられるようにした。全員が既出の日は一覧ごと畳んで1行に。</p></div>
+      <div class="card win"><span class="lbl">工夫 3</span><h4>距離ではなく「車で何分」</h4><p>田舎の物件選びは移動時間が命。住所の地名から自宅までの運転時間を概算し(外部サービス不要・費用0円)、行動圏ルール「◎30分圏/○60分圏/△圏外」で表示。</p></div>
+      <div class="card win"><span class="lbl">工夫 4</span><h4>自動化しない場所を決めた</h4><p>自動取得が禁止されている情報源は、機械はリンク生成まで・確認は人間が毎日30秒、と線を引いた。相手サイトへのアクセスも最小限に。自動化の腕より「やらない設計」に頭を使った。</p></div>
+    </div>
+    <h3>苦戦したポイント</h3>
+    <div class="duo">
+      <div class="card hard"><span class="lbl">苦戦 1</span><h4>市町村ごとにサイトが全部違う</h4><p>9市町を繋ぐのに、実サイトの構造偵察をのべ10回以上。表形式・カード形式・全角数字・「応相談」…… 表記ゆれを一つずつテストで潰した(自動テスト162件はこの積み重ね)。</p></div>
+      <div class="card hard"><span class="lbl">苦戦 2</span><h4>「読めない」の原因を突き止める</h4><p>ある市のサイトが0件しか返さず「技術的に読めない」と思い込みかけた。仮説を立てて実験したら、真実は「その市は掲載が本当に0件」。思い込みを実験で潰す大切さを体で覚えた。</p></div>
+      <div class="card hard"><span class="lbl">苦戦 3</span><h4>メール洪水事件</h4><p>新しい市を繋いだ日、通知が16通連続で届いて自分でうんざりした。「1回の巡回=最大1通」に作り直し。便利なはずの通知が邪魔になる瞬間を、自分がユーザーだから気づけた。</p></div>
+      <div class="card hard"><span class="lbl">苦戦 4</span><h4>作る前に「調べる」が要る</h4><p>AIはコードを書くのは速いが、相手サイトの実物を確かめないと正しく書けない。「偵察→実装→実地検証」の型を作ってからは、新しい市の追加が数十分でできるようになった。</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-no">5 v2での進化</span><h2>見張り網を「空き家バンクの外」へ広げた</h2></div>
+    <p>卒業制作の提出後も武器は育っています。v2の一番大きな進化は、監視対象を空き家バンクの世界の外へ広げたことです。国や自治体は、使わなくなった建物や土地を一般向けに売りに出しています。この情報は空き家バンク以上にバラバラの場所に散らばっていて、定期的に見に行く人はほとんどいません。<b>「散らばっていて誰も見ていない情報ほど、自動化の価値が高い」</b>——このシステムの原理そのままの拡張でした。</p>
+    <div class="duo">
+      <div class="card win"><span class="lbl">進化 1</span><h4>行政の売却情報を3系統追加(19→22)</h4><p>国の機関・全国の自治体・鹿児島県の3系統。それぞれサイトの作りが全く違うが、確立した「偵察→実装→実地検証」の型のおかげで、3系統まとめて1日で本番投入できた。</p></div>
+      <div class="card win"><span class="lbl">進化 2</span><h4>サイトの「ここだけ読んでいい」を尊重する</h4><p>あるサイトの利用ルール(robots.txt)は「この一覧ページだけ読んでよい」という珍しい書き方で、しかもプログラミング言語の標準機能はこの書き方を誤読して「全部ダメ」と判定してしまう。ルールの原文を確かめてから読む安全装置を自作し、相手の意図に正確に従うようにした。</p></div>
+    </div>
+  </section>
+
+  <section class="closing">
+    <p class="eyebrow">おわりに</p>
+    <p>この武器の価値は、コードの行数ではなく<b>「提出日の翌朝も、私がこれで物件を選んでいる」</b>ことだと思っています。何を面倒だと感じ、なぜ消したかったのか——それは私の毎日そのものでした。</p>
+    <p>そして見張りはこれからも賢くなります。次の計画は、物件の説明文をAIが読んで「売主が手放したがっている気配」を点数化する機能。武器は、使いながら育てていきます。</p>
+  </section>
+
+  <footer>制作: 第1期 土曜クラス卒業制作／Claude Code(AI)と対話しながら 設計→偵察→実装→本番運用。個人情報・物件の特定につながる情報は一般化しています。<br>v2 (2026-08): 見張り網を22系統へ拡大。</footer>
+</main>
