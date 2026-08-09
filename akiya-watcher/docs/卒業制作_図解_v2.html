@@ -1,255 +1,831 @@
-<title>卒業制作図解｜空き家ウォッチャー</title>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>卒業制作図解｜空き家ウォッチャー × 仕入れ点エンジン</title>
 <style>
   :root {
-    --paper: #F7F8F6;
+    --paper: #F3F5F2;
+    --paper-deep: #E8EDE8;
     --card: #FFFFFF;
-    --ink: #24312C;
-    --ink-2: #5A6B63;
-    --ink-3: #8A978F;
-    --line: #DDE4DF;
-    --accent: #2E6E52;
-    --accent-soft: #E4EFE8;
-    --alert: #B9651F;
-    --alert-soft: #F6E8DA;
-    --mail-bg: #F2F5F1;
+    --ink: #1A221F;
+    --ink-2: #4A5852;
+    --ink-3: #7A8A82;
+    --line: #D0D9D3;
+    --accent: #1E5C45;
+    --accent-mid: #2A7A5A;
+    --accent-soft: #DCECE4;
+    --alert: #B85A1A;
+    --alert-soft: #F4E6D8;
+    --mail-bg: #EEF2EF;
+    --mail-chrome: #E2E8E4;
+    --thesis-fg: #F7FAF8;
+    --thesis-muted: #B8C8C0;
+    --thesis-label: #8FCBAD;
+    --shadow: 0 10px 32px rgba(26, 34, 31, 0.07);
+    --water: rgba(26, 34, 31, 0.05);
+    --serif: "Hiragino Mincho ProN", "Yu Mincho", "MS PMincho", serif;
+    --sans: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --paper: #161C19;
-      --card: #1F2723;
-      --ink: #E6ECE8;
-      --ink-2: #A8B5AD;
-      --ink-3: #77857C;
-      --line: #35403A;
-      --accent: #6FBE97;
-      --accent-soft: #24382E;
-      --alert: #E0995C;
-      --alert-soft: #3A2E22;
-      --mail-bg: #1A211D;
+      --paper: #161C19; --paper-deep: #1A211D; --card: #1F2723;
+      --ink: #E6ECE8; --ink-2: #A8B5AD; --ink-3: #77857C;
+      --line: #35403A; --accent: #6FBE97; --accent-mid: #5AAD86;
+      --accent-soft: #24382E; --alert: #E0995C; --alert-soft: #3A2E22;
+      --mail-bg: #1A211D; --mail-chrome: #24302A;
+      --thesis-fg: #F3F5F2; --thesis-muted: #A8B5AD; --thesis-label: #8FCBAD;
+      --shadow: 0 10px 32px rgba(0,0,0,0.28);
+      --water: rgba(230,236,232,0.05);
     }
   }
   :root[data-theme="dark"] {
-    --paper: #161C19; --card: #1F2723; --ink: #E6ECE8; --ink-2: #A8B5AD;
-    --ink-3: #77857C; --line: #35403A; --accent: #6FBE97; --accent-soft: #24382E;
-    --alert: #E0995C; --alert-soft: #3A2E22; --mail-bg: #1A211D;
+    --paper: #161C19; --paper-deep: #1A211D; --card: #1F2723;
+    --ink: #E6ECE8; --ink-2: #A8B5AD; --ink-3: #77857C;
+    --line: #35403A; --accent: #6FBE97; --accent-mid: #5AAD86;
+    --accent-soft: #24382E; --alert: #E0995C; --alert-soft: #3A2E22;
+    --mail-bg: #1A211D; --mail-chrome: #24302A;
+    --thesis-fg: #F3F5F2; --thesis-muted: #A8B5AD; --thesis-label: #8FCBAD;
+    --shadow: 0 10px 32px rgba(0,0,0,0.28);
+    --water: rgba(230,236,232,0.05);
   }
   :root[data-theme="light"] {
-    --paper: #F7F8F6; --card: #FFFFFF; --ink: #24312C; --ink-2: #5A6B63;
-    --ink-3: #8A978F; --line: #DDE4DF; --accent: #2E6E52; --accent-soft: #E4EFE8;
-    --alert: #B9651F; --alert-soft: #F6E8DA; --mail-bg: #F2F5F1;
+    --paper: #F3F5F2; --paper-deep: #E8EDE8; --card: #FFFFFF;
+    --ink: #1A221F; --ink-2: #4A5852; --ink-3: #7A8A82;
+    --line: #D0D9D3; --accent: #1E5C45; --accent-mid: #2A7A5A;
+    --accent-soft: #DCECE4; --alert: #B85A1A; --alert-soft: #F4E6D8;
+    --mail-bg: #EEF2EF; --mail-chrome: #E2E8E4;
+    --thesis-fg: #F7FAF8; --thesis-muted: #B8C8C0; --thesis-label: #8FCBAD;
+    --shadow: 0 10px 32px rgba(26,34,31,0.07);
+    --water: rgba(26,34,31,0.05);
   }
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
   body {
-    background: var(--paper); color: var(--ink);
-    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", "Noto Sans JP", sans-serif;
-    line-height: 1.85; margin: 0; font-size: 15.5px;
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: var(--sans); font-size: 15.5px; line-height: 1.8;
+    overflow-x: hidden; -webkit-font-smoothing: antialiased;
   }
-  main { max-width: 860px; margin: 0 auto; padding: 48px 20px 80px; }
+  .page { max-width: 880px; margin: 0 auto; padding: 28px 16px 80px; }
+
   .eyebrow {
-    font-size: 12px; letter-spacing: .18em; color: var(--accent);
-    font-weight: 700; margin: 0 0 6px;
+    font-size: 11px; letter-spacing: .2em; color: var(--accent);
+    font-weight: 700; margin: 0 0 12px;
   }
-  header.hero { padding: 24px 0 8px; }
   h1 {
-    font-size: clamp(26px, 4.6vw, 38px); line-height: 1.35; margin: 0 0 10px;
-    text-wrap: balance; letter-spacing: .01em;
+    font-family: var(--serif); font-size: clamp(24px, 5vw, 36px);
+    font-weight: 600; line-height: 1.4; margin: 0 0 14px; text-wrap: balance;
   }
-  .hero-sub { color: var(--ink-2); margin: 0; max-width: 40em; }
+  h2 {
+    font-family: var(--serif); font-size: clamp(19px, 3.2vw, 25px);
+    margin: 0; font-weight: 600; line-height: 1.4; text-wrap: balance;
+  }
+  h3 { font-family: var(--serif); font-size: 16px; margin: 28px 0 10px; }
+  p { margin: 10px 0; max-width: 42em; }
+  .lead { color: var(--ink-2); max-width: 40em; }
+
+  .works-nav {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 22px 0 0;
+  }
+  .works-nav a {
+    text-decoration: none; color: var(--ink); background: var(--card);
+    border: 1px solid var(--line); padding: 14px; box-shadow: var(--shadow);
+    border-top: 3px solid var(--accent); min-width: 0;
+  }
+  .works-nav a.w2 { border-top-color: var(--alert); }
+  .works-nav .n {
+    display: block; font-size: 10px; font-weight: 800; letter-spacing: .16em;
+    color: var(--accent); margin-bottom: 4px;
+  }
+  .works-nav a.w2 .n { color: var(--alert); }
+  .works-nav .t {
+    display: block; font-family: var(--serif); font-size: 17px; font-weight: 700; margin-bottom: 4px;
+  }
+  .works-nav .s { display: block; font-size: 12.5px; color: var(--ink-2); line-height: 1.5; }
+
   .thesis {
-    font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
-    font-size: clamp(18px, 2.8vw, 23px); line-height: 2;
-    border-left: 3px solid var(--accent); padding: 6px 0 6px 20px;
-    margin: 30px 0 8px; text-wrap: balance;
+    margin: 28px 0 0; padding: 22px 18px; background: var(--ink); color: var(--thesis-fg);
+    border-left: 5px solid var(--accent-mid);
   }
+  .thesis .lbl {
+    font-size: 10px; letter-spacing: .24em; font-weight: 700;
+    color: var(--thesis-label); margin: 0 0 10px;
+  }
+  .thesis p {
+    font-family: var(--serif); font-size: clamp(20px, 4vw, 28px);
+    line-height: 1.65; margin: 0; font-weight: 700; max-width: none;
+  }
+  .thesis .sub {
+    display: block; margin-top: .45em; font-size: .68em;
+    font-weight: 500; color: var(--thesis-muted);
+  }
+
   .kpi-row {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-    gap: 10px; margin: 30px 0 0;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 24px 0 0;
   }
   .kpi {
-    background: var(--card); border: 1px solid var(--line); border-radius: 6px;
-    padding: 14px 14px 12px;
+    background: var(--card); border: 1px solid var(--line);
+    border-top: 3px solid var(--accent); padding: 14px 12px; min-width: 0;
   }
   .kpi b {
-    display: block; font-size: 26px; line-height: 1.2; letter-spacing: .01em;
-    font-variant-numeric: tabular-nums;
+    display: block; font-size: clamp(22px, 4vw, 28px); font-weight: 800;
+    font-variant-numeric: tabular-nums; line-height: 1.15;
   }
-  .kpi span { font-size: 12px; color: var(--ink-2); }
-  section { margin-top: 56px; }
-  .sec-head { display: flex; align-items: baseline; gap: 12px; border-bottom: 2px solid var(--ink); padding-bottom: 8px; margin-bottom: 22px; }
+  .kpi span { display: block; margin-top: 6px; font-size: 11px; color: var(--ink-2); line-height: 1.4; }
+  .as-of { font-size: 12px; color: var(--ink-3); margin: 10px 0 0; }
+
+  .toc {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+    margin: 22px 0 0; padding: 12px; background: var(--card); border: 1px solid var(--line);
+  }
+  .toc a {
+    text-decoration: none; color: var(--ink); padding: 8px;
+    border: 1px dashed var(--line); background: var(--paper); min-width: 0;
+  }
+  .toc .n { display: block; font-size: 10px; font-weight: 800; letter-spacing: .12em; color: var(--accent); }
+  .toc .t { display: block; font-family: var(--serif); font-size: 12px; font-weight: 600; margin-top: 2px; line-height: 1.35; }
+
+  .path {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 18px 0 0;
+  }
+  .path div {
+    background: var(--accent-soft); border: 1px solid var(--line); padding: 10px 8px; min-width: 0;
+  }
+  .path .n { font-size: 10px; font-weight: 800; letter-spacing: .1em; color: var(--accent); }
+  .path p { margin: 4px 0 0; font-family: var(--serif); font-size: 13px; font-weight: 600; max-width: none; line-height: 1.35; }
+
+  section.chapter { margin-top: 64px; scroll-margin-top: 16px; }
+  .sec-head {
+    display: grid; gap: 10px; margin-bottom: 18px; padding-bottom: 12px;
+    border-bottom: 2px solid var(--ink);
+  }
   .sec-no {
-    font-size: 12px; font-weight: 700; letter-spacing: .14em; color: var(--paper);
-    background: var(--ink); padding: 3px 9px; border-radius: 3px; white-space: nowrap;
+    display: inline-block; width: fit-content;
+    font-size: 11px; font-weight: 800; letter-spacing: .14em;
+    color: #fff; background: var(--ink); padding: 6px 10px;
   }
-  h2 { font-size: 21px; margin: 0; letter-spacing: .02em; }
-  h3 { font-size: 16px; margin: 26px 0 8px; }
-  p { margin: 10px 0; max-width: 44em; }
-  .muted { color: var(--ink-2); font-size: 13.5px; }
+  .sec-no.alt { background: var(--alert); }
+  .fig {
+    margin: 22px 0 8px; font-size: 11px; font-weight: 800;
+    letter-spacing: .14em; color: var(--ink-3);
+  }
 
-  /* システムの流れ図 */
-  .flow { display: grid; gap: 8px; margin: 20px 0; }
-  .flow-step {
-    background: var(--card); border: 1px solid var(--line); border-radius: 6px;
-    padding: 14px 16px; display: grid; grid-template-columns: 118px 1fr; gap: 14px;
-  }
-  .flow-step .tag { font-size: 12px; font-weight: 700; color: var(--accent); letter-spacing: .06em; padding-top: 2px; }
-  .flow-step .body { font-size: 14px; color: var(--ink-2); }
-  .flow-step .body b { color: var(--ink); }
-  .flow-arrow { text-align: center; color: var(--ink-3); font-size: 13px; line-height: 1; }
-  @media (max-width: 560px) { .flow-step { grid-template-columns: 1fr; gap: 4px; } }
-
-  /* メールのモック */
-  .mail {
-    background: var(--mail-bg); border: 1px solid var(--line); border-radius: 8px;
-    padding: 18px 20px; margin: 20px 0 6px; font-size: 13.5px;
-    box-shadow: 0 1px 0 var(--line);
-  }
-  .mail .subject { font-weight: 700; font-size: 14.5px; border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-bottom: 12px; }
-  .mail .row { padding: 7px 0; border-bottom: 1px dashed var(--line); }
-  .mail .row:last-child { border-bottom: none; }
-  .mail .price-drop { color: var(--alert); font-weight: 700; }
-  .mail .new-mark { background: var(--accent-soft); color: var(--accent); font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 3px; margin-right: 4px; }
-  .mail .seen { color: var(--ink-3); }
-  .mail .meta { color: var(--ink-2); }
-  .mail-caption { font-size: 12.5px; color: var(--ink-3); margin-top: 6px; }
-
-  /* 面倒 before/after */
-  .pain-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 18px; }
-  @media (max-width: 620px) { .pain-grid { grid-template-columns: 1fr; } }
-  .pain, .gain {
-    border-radius: 6px; padding: 16px 18px; font-size: 14px;
-  }
+  .pain-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
+  .pain, .gain { padding: 16px; font-size: 14px; min-width: 0; }
   .pain { background: var(--card); border: 1px solid var(--line); }
-  .gain { background: var(--accent-soft); border: 1px solid var(--accent); }
-  .pain h4, .gain h4 { margin: 0 0 8px; font-size: 13px; letter-spacing: .1em; }
+  .gain { background: var(--accent-soft); border: 1px solid var(--accent-mid); }
+  .pain h4, .gain h4 {
+    margin: 0 0 8px; font-size: 12px; letter-spacing: .12em; font-weight: 800;
+  }
   .pain h4 { color: var(--ink-3); }
   .gain h4 { color: var(--accent); }
-  .pain ul, .gain ul { margin: 0; padding-left: 1.2em; }
+  .pain ul, .gain ul { margin: 0; padding-left: 1.15em; }
   .pain li, .gain li { margin: 6px 0; }
 
-  /* 工夫と苦戦 */
-  .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 18px; }
-  @media (max-width: 680px) { .duo { grid-template-columns: 1fr; } }
-  .card {
-    background: var(--card); border: 1px solid var(--line); border-radius: 6px;
-    padding: 16px 18px; font-size: 14px;
+  .work-banner {
+    margin-top: 56px; padding: 18px 16px; background: var(--ink); color: var(--thesis-fg);
+    scroll-margin-top: 16px;
   }
-  .card h4 { margin: 0 0 4px; font-size: 15px; }
-  .card p { margin: 4px 0 0; color: var(--ink-2); font-size: 13.5px; }
-  .card .lbl { font-size: 11px; font-weight: 700; letter-spacing: .12em; }
-  .card.win .lbl { color: var(--accent); }
-  .card.hard .lbl { color: var(--alert); }
+  .work-banner.w2 { background: linear-gradient(135deg, #2A241C 0%, #1A221F 100%); }
+  .work-banner .n {
+    font-size: 11px; font-weight: 800; letter-spacing: .18em;
+    color: var(--thesis-label); margin: 0 0 6px;
+  }
+  .work-banner.w2 .n { color: #E0995C; }
+  .work-banner h2 { color: var(--thesis-fg); margin-bottom: 6px; }
+  .work-banner p { margin: 0; color: var(--thesis-muted); font-size: 14px; max-width: 40em; }
 
+  .flow { margin: 18px 0; position: relative; }
+  .flow::before {
+    content: ""; position: absolute; left: 18px; top: 18px; bottom: 18px;
+    width: 2px; background: linear-gradient(180deg, var(--accent), var(--line));
+  }
+  .flow-step {
+    position: relative; display: grid; grid-template-columns: 38px 1fr;
+    gap: 12px; margin-bottom: 12px;
+  }
+  .flow-num {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: var(--card); border: 2px solid var(--accent); color: var(--accent);
+    font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center;
+    z-index: 1; box-shadow: 0 0 0 5px var(--paper);
+  }
+  .flow-body {
+    background: var(--card); border: 1px solid var(--line); padding: 12px 14px; min-width: 0;
+  }
+  .flow-body .tag {
+    font-size: 11px; font-weight: 800; letter-spacing: .12em; color: var(--accent);
+  }
+  .flow-body p { margin: 4px 0 0; font-size: 13.5px; color: var(--ink-2); max-width: none; }
+  .flow-body b { color: var(--ink); }
+
+  .mail-envelope {
+    background: var(--card); border: 1px solid var(--line);
+    box-shadow: var(--shadow); overflow: hidden; position: relative;
+  }
+  .mail-envelope::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+    background: linear-gradient(180deg, var(--accent), var(--alert));
+  }
+  .mail-chrome {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 14px 10px 16px; background: var(--mail-chrome); border-bottom: 1px solid var(--line);
+  }
+  .mail-dot { width: 9px; height: 9px; border-radius: 50%; background: #C5CEC8; }
+  .mail-dot:nth-child(1) { background: #D4A59A; }
+  .mail-dot:nth-child(2) { background: #D4C48A; }
+  .mail-dot:nth-child(3) { background: #A8C4B0; }
+  .mail-chrome span:last-child {
+    margin-left: 6px; font-size: 11px; font-weight: 700; letter-spacing: .08em; color: var(--ink-3);
+  }
+  .mail-meta {
+    padding: 8px 14px 8px 16px; background: var(--paper-deep);
+    border-bottom: 1px solid var(--line); font-size: 11.5px; color: var(--ink-3);
+  }
+  .mail-meta b { color: var(--ink-2); margin-right: 6px; }
+  .mail .subject {
+    font-weight: 700; font-size: 14px; line-height: 1.5;
+    padding: 12px 14px 12px 16px; background: var(--card); border-bottom: 2px solid var(--ink);
+  }
+  .mail-body {
+    overflow-wrap: anywhere;
+    padding: 12px; background: var(--mail-bg);
+    font-family: "Yu Gothic", "Hiragino Kaku Gothic ProN", "Meiryo", Consolas, monospace;
+    font-size: 12.5px; line-height: 1.6;
+  }
+  .listing {
+    background: var(--card); border: 1px solid var(--line);
+    border-left: 3px solid var(--alert); padding: 12px; margin-bottom: 10px;
+  }
+  .listing.fresh { border-left-color: var(--accent); }
+  .listing-head { font-weight: 800; margin-bottom: 6px; font-size: 13px; }
+  .listing-head .drop { color: var(--alert); }
+  .kv { display: grid; grid-template-columns: 4.8em 1fr; gap: 2px 8px; margin: 0; }
+  .kv dt { color: var(--ink-3); font-weight: 700; margin: 0; }
+  .kv dd { margin: 0; word-break: break-all; }
+  .kv dd.em { font-weight: 700; }
+  .score-line {
+    margin: 8px 0; padding: 8px 10px; background: var(--accent-soft);
+    border: 1px solid var(--accent); border-left: 4px solid var(--accent);
+    font-weight: 800; color: var(--accent); font-size: 12.5px;
+  }
+  .score-line .why { font-weight: 600; color: var(--ink); }
+  .keep-line {
+    margin-top: 8px; padding: 8px 10px; background: var(--alert-soft);
+    border: 1px dashed var(--alert); color: var(--alert); font-weight: 800; font-size: 12.5px;
+  }
+  .fake-link { color: #2B6CB0; text-decoration: underline; text-underline-offset: 2px; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .fake-link { color: #7EB6E8; }
+  }
+  :root[data-theme="dark"] .fake-link { color: #7EB6E8; }
+  .compact {
+    padding: 8px 10px; border: 1px dashed var(--line); background: var(--paper);
+    color: var(--ink-3); margin-bottom: 8px;
+  }
+  .footer-note {
+    padding-top: 8px; border-top: 1px dashed var(--line); color: var(--ink-2); font-size: 12px;
+  }
+  .caption { font-size: 12px; color: var(--ink-3); margin: 10px 0 0; }
+
+  .scorecard {
+    margin: 14px 0; padding: 14px; background: var(--card); border: 1px solid var(--line);
+  }
+  .score-row {
+    display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center;
+    margin-bottom: 8px;
+  }
+  .score-row:last-child { margin-bottom: 0; }
+  .score-label { font-size: 13px; line-height: 1.35; }
+  .score-pts { font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .score-pts.plus { color: var(--accent); }
+  .score-pts.minus { color: var(--alert); }
+  .bar {
+    grid-column: 1 / -1; height: 7px; background: var(--paper-deep);
+    border: 1px solid var(--line); margin-top: -2px; margin-bottom: 2px;
+  }
+  .bar i { display: block; height: 100%; }
+  .bar.plus i { background: var(--accent); }
+  .bar.minus i { background: var(--alert); }
+  .w25 i { width: 100%; } .w20 i { width: 80%; } .w15 i { width: 60%; }
+  .w10 i { width: 40%; }
+
+  .story { display: grid; gap: 8px; margin: 14px 0; }
+  .story-step {
+    display: grid; grid-template-columns: 72px 1fr; gap: 10px;
+    background: var(--card); border: 1px solid var(--line); padding: 12px;
+  }
+  .story-step .tag { font-size: 11px; font-weight: 800; letter-spacing: .1em; color: var(--accent); }
+  .story-step.warn .tag { color: var(--alert); }
+  .story-step p { margin: 0; font-size: 13.5px; color: var(--ink-2); max-width: none; }
+  .story-step b { color: var(--ink); }
+
+  .pivot {
+    margin: 16px 0; padding: 16px; border: 2px solid var(--ink); background: var(--card);
+  }
+  .pivot .punch {
+    font-family: var(--serif); font-size: clamp(16px, 2.8vw, 20px);
+    font-weight: 700; line-height: 1.65; margin: 0;
+  }
+
+  .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+  .note {
+    background: var(--card); border: 1px solid var(--line); border-left: 3px solid var(--accent);
+    padding: 14px; min-width: 0;
+  }
+  .note.hard { border-left-color: var(--alert); }
+  .note .lbl {
+    font-size: 10px; font-weight: 800; letter-spacing: .14em; color: var(--accent);
+  }
+  .note.hard .lbl { color: var(--alert); }
+  .note h4 { font-family: var(--serif); margin: 4px 0 6px; font-size: 15px; }
+  .note p { margin: 0; font-size: 13px; color: var(--ink-2); max-width: none; }
+
+  .keep-box {
+    margin: 16px 0; padding: 16px; background: var(--card);
+    border: 1px solid var(--line); border-top: 3px solid var(--alert);
+  }
+  .keep-box h4 { font-family: var(--serif); margin: 0 0 8px; font-size: 16px; }
+  .keep-steps {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 12px 0;
+  }
+  .keep-steps div {
+    background: var(--paper); border: 1px solid var(--line); padding: 10px; min-width: 0;
+  }
+  .keep-steps .n { font-size: 10px; font-weight: 800; color: var(--alert); letter-spacing: .1em; }
+  .keep-steps p {
+    margin: 4px 0 0; font-size: 12.5px; font-family: var(--serif); font-weight: 600;
+    max-width: none; line-height: 1.4;
+  }
+
+  .team-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 14px 0; }
+  .team-card {
+    background: var(--card); border: 1px solid var(--line); border-top: 3px solid var(--accent);
+    padding: 12px; min-width: 0;
+  }
+  .team-card.human { border-top-color: var(--ink); grid-column: 1 / -1; }
+  .team-card .r { font-size: 10px; font-weight: 800; letter-spacing: .12em; color: var(--accent); }
+  .team-card.human .r { color: var(--ink-2); }
+  .team-card h4 { font-family: var(--serif); margin: 4px 0 4px; font-size: 16px; }
+  .team-card p { margin: 0; font-size: 12.5px; color: var(--ink-2); max-width: none; }
+  .ref {
+    padding: 12px 14px; background: var(--ink); color: var(--thesis-muted); margin-bottom: 12px;
+    font-size: 13.5px; line-height: 1.6;
+  }
+  .ref b { color: var(--thesis-fg); }
+  .ref .ok { color: #8FCBAD; }
+  .ref .ng { color: #E0995C; }
+  .tools { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0; }
+  .tool {
+    background: var(--paper); border: 1px dashed var(--line); padding: 12px; min-width: 0;
+  }
+  .tool .name { font-family: var(--serif); font-weight: 700; font-size: 14px; margin: 0 0 4px; }
+  .tool p { margin: 0; font-size: 12px; color: var(--ink-2); max-width: none; }
+  .episode {
+    margin: 16px 0; padding: 16px; background: var(--card);
+    border: 1px solid var(--line); border-left: 4px solid var(--alert);
+  }
+  .episode .lbl {
+    font-size: 10px; font-weight: 800; letter-spacing: .14em; color: var(--alert); margin: 0 0 8px;
+  }
+  .episode p { margin: 0 0 8px; font-size: 14px; max-width: 44em; }
+  .episode .lesson {
+    margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line);
+    font-family: var(--serif); font-weight: 700; font-size: 15px; line-height: 1.65;
+  }
+  .safety {
+    margin: 14px 0 0; padding: 14px; background: var(--accent-soft);
+    border: 1px solid var(--accent); font-size: 13.5px; color: var(--ink-2); line-height: 1.7;
+  }
+  .safety b { color: var(--ink); }
+  .safety ul { margin: 8px 0 0; padding-left: 1.15em; }
+  .safety li { margin: 4px 0; }
+
+
+  .evo { display: grid; gap: 12px; margin: 14px 0; }
+  .evo-card {
+    background: var(--card); border: 1px solid var(--line);
+    border-left: 4px solid var(--accent); padding: 16px; min-width: 0;
+  }
+  .evo-card .lbl {
+    font-size: 10px; font-weight: 800; letter-spacing: .14em;
+    color: var(--accent); margin: 0 0 6px;
+  }
+  .evo-card h4 { font-family: var(--serif); margin: 0 0 8px; font-size: 16px; }
+  .evo-card p { margin: 0 0 8px; font-size: 13.5px; color: var(--ink-2); max-width: 44em; }
+  .evo-card p:last-child { margin-bottom: 0; }
+  .evo-card .punch {
+    margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line);
+    font-family: var(--serif); font-weight: 700; font-size: 15px;
+    color: var(--ink); line-height: 1.65;
+  }
   .closing {
-    margin-top: 60px; border-top: 2px solid var(--ink); padding-top: 26px;
+    margin-top: 72px; padding-top: 28px; border-top: 2px solid var(--ink);
   }
-  .closing p { max-width: 44em; }
-  footer { margin-top: 48px; font-size: 12px; color: var(--ink-3); border-top: 1px solid var(--line); padding-top: 14px; }
-</style>
+  .closing p { max-width: 42em; }
+  footer {
+    margin-top: 40px; padding-top: 14px; border-top: 1px solid var(--line);
+    font-size: 11.5px; color: var(--ink-3); line-height: 1.7;
+  }
 
-<main>
-  <header class="hero">
+  @media (max-width: 720px) {
+    .works-nav, .pain-grid, .duo, .team-grid, .tools { grid-template-columns: 1fr; }
+    .team-card.human { grid-column: auto; }
+    .toc { grid-template-columns: 1fr 1fr; }
+    .path { grid-template-columns: 1fr 1fr; }
+    .keep-steps { grid-template-columns: 1fr 1fr; }
+    .kpi-row { grid-template-columns: 1fr 1fr; }
+    .story-step { grid-template-columns: 1fr; gap: 4px; }
+  }
+  @media (max-width: 420px) {
+    .page { padding: 20px 12px 64px; }
+    .kpi-row, .path, .keep-steps, .toc { grid-template-columns: 1fr; }
+    .kv { grid-template-columns: 4.2em 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
     <p class="eyebrow">AIドリブンスクール 卒業制作｜自分の武器を作る</p>
-    <h1>空き家ウォッチャー<br>——「誰よりも早く知る」を自動化した、一人大家の武器</h1>
-    <p class="hero-sub">鹿児島で古い空き家を買い、直して貸す事業を一人で営んでいます。この事業の勝敗は、物件の目利きの前に「いい物件の情報に、誰よりも早くたどり着けるか」で決まります。その見張り役を、AIと一緒に作りました。</p>
-    <p class="thesis">AIは家を買わない。買うのは私。<br>AIには「誰よりも早く知る」だけを任せた。</p>
-    <div class="kpi-row">
-      <div class="kpi"><b>22</b><span>監視する情報源(空き家バンク・RSS・メール・行政の売却情報)</span></div>
-      <div class="kpi"><b>4〜6回<span style="font-size:14px">/日</span></b><span>自動巡回の回数</span></div>
-      <div class="kpi"><b>121件</b><span>いま追跡中の物件</span></div>
-      <div class="kpi"><b>226件</b><span>自動テスト(全部green)</span></div>
-      <div class="kpi"><b>月0円</b><span>運用費(無料枠だけで稼働)</span></div>
+    <h1>空き家ウォッチャー × 仕入れ点エンジン<br>——一人大家の「見張り」と「気配読み」</h1>
+    <p class="lead">鹿児島で古い空き家を買い、直して貸す事業を一人で営んでいます。勝敗は、いい情報に早くたどり着けるか、そして売主の事情を読めるかで決まります。その両方を、AIと一緒に作りました。</p>
+
+    <nav class="works-nav" aria-label="作品一覧">
+      <a class="w1" href="#work1">
+        <span class="n">WORK 01</span>
+        <span class="t">空き家ウォッチャー</span>
+        <span class="s">県内外の空き家情報を自動巡回し、値下げと新着を1通のメールにまとめる</span>
+      </a>
+      <a class="w2" href="#work2">
+        <span class="n">WORK 02</span>
+        <span class="t">仕入れ点エンジン</span>
+        <span class="s">紹介文と履歴から「売主の手放したい気配」を0〜100点で採点する（本番稼働中）</span>
+      </a>
+    </nav>
+
+    <div class="thesis">
+      <p class="lbl">THESIS</p>
+      <p>AIは家を買わない。買うのは私。<span class="sub">AIには「早く知る」と「気配を採点する」だけを任せた。</span></p>
     </div>
+
+    <div class="kpi-row" aria-label="最新実績">
+      <div class="kpi"><b>22</b><span>監視する情報源（空き家バンク・RSS・メール・行政の売却情報）</span></div>
+      <div class="kpi"><b>121件</b><span>いま追跡中の物件</span></div>
+      <div class="kpi"><b>226件</b><span>自動テスト（全部green）</span></div>
+      <div class="kpi"><b>4〜6回/日</b><span>自動巡回</span></div>
+      <div class="kpi"><b>24</b><span>リサーチ範囲（市町村）</span></div>
+    </div>
+    <p class="as-of">数字は本番ログで確認済み（情報源22系統・追跡121件・テスト226件）。1巡回のメールは最大1通。運用費は月0円。</p>
+
+    <p class="fig">FIGURE · 6分で追う読み順</p>
+    <div class="path" aria-label="読み順">
+      <div><div class="n">01</div><p>困りごと</p></div>
+      <div><div class="n">02</div><p>作品1で見張る</p></div>
+      <div><div class="n">03</div><p>作品2で読む</p></div>
+      <div><div class="n">04</div><p>メールで判断</p></div>
+      <div><div class="n">05</div><p>育て続ける</p></div>
+    </div>
+
+    <nav class="toc" aria-label="章一覧">
+      <a href="#ch2"><span class="n">01</span><span class="t">解決する面倒</span></a>
+      <a href="#work1"><span class="n">02</span><span class="t">空き家ウォッチャー</span></a>
+      <a href="#work2"><span class="n">03</span><span class="t">仕入れ点</span></a>
+      <a href="#ch4"><span class="n">04</span><span class="t">工夫と苦戦</span></a>
+      <a href="#ch6"><span class="n">05</span><span class="t">AIチーム</span></a>
+      <a href="#evo"><span class="n">06</span><span class="t">v2の進化</span></a>
+      <a href="#closing"><span class="n">07</span><span class="t">おわりに</span></a>
+      <a href="#mail"><span class="n">MAIL</span><span class="t">通知モック</span></a>
+      <a href="#keep"><span class="n">KEEP</span><span class="t">⭐キープ</span></a>
+    </nav>
   </header>
 
-  <section>
-    <div class="sec-head"><span class="sec-no">1 作ったもの</span><h2>毎朝1通のメールに、県内の動きが全部入っている</h2></div>
-    <p>鹿児島・宮崎の14市町の空き家バンクに加え、国や自治体が物件を売りに出す行政の売却情報までを毎日自動で巡回し、<b>値下げの瞬間</b>と<b>新着物件</b>を検知して、1通のメールにまとめて届けるシステムです。半年前から本番稼働していて、今朝も私のスマホにメールが届いています。</p>
-
-    <div class="flow">
-      <div class="flow-step"><span class="tag">① 集める</span><span class="body"><b>22の情報源を自動巡回。</b>市町村ごとにサイトの作りが全部違うので、1つずつ構造を解析してアダプタを実装(コードを書かず設定だけで繋がる共通の型も用意)。空き家バンクだけでなく、国や自治体が物件を売りに出す「行政の売却情報」も同じ網で見張る</span></div>
-      <div class="flow-arrow">▼</div>
-      <div class="flow-step"><span class="tag">② 比べる</span><span class="body"><b>前回の巡回と差分をとる。</b>新着か、値下げか、掲載終了(売れた?)かを判定。価格の履歴はデータベースに蓄積</span></div>
-      <div class="flow-arrow">▼</div>
-      <div class="flow-step"><span class="tag">③ 評価する</span><span class="body"><b>物件を10点満点でスコア化し、自宅から車で何分かも自動計算。</b>条件で捨てずに全物件を台帳に残し、並べ替えて人間が決める設計</span></div>
-      <div class="flow-arrow">▼</div>
-      <div class="flow-step"><span class="tag">④ 届ける</span><span class="body"><b>1回の巡回=最大1通のまとめメール。</b>重要な順に並び、初登場には🆕、前に見たものには（既出）の印。動きがない巡回は沈黙する</span></div>
+  <section class="chapter" id="ch2">
+    <div class="sec-head">
+      <span class="sec-no">1 解決する面倒</span>
+      <h2>毎朝の目視巡回と、気づけない値下げ</h2>
     </div>
-
-    <div class="mail">
-      <div class="subject">🏠 巡回まとめ: 値下げ1件(最大▼75%)・新着2件・ほか新着3件</div>
-      <div class="row"><span class="price-drop">🔻 値下げ検知 (▼75%)</span>　A町空き家バンク No.○○<br>
-        <span class="meta">価格: 800,000円 → 200,000円　／　立地: 自宅から車およそ60分 ○60分圏</span></div>
-      <div class="row"><span class="new-mark">🆕</span> 新着 [評価 8/10]　B市 中古戸建 150万円<br>
-        <span class="meta">シグナル: 現状渡し・駐車場あり　／　🚗45分 ◎30分圏</span></div>
-      <div class="row seen">・5/10 C町 No.○○ 250万円 🚗80分△（既出）</div>
-      <div class="row meta">📮 本日の定期便 ── 注目上位5件は前回と同じ顔ぶれ(新顔なし)。詳細は添付の台帳で。</div>
-    </div>
-    <p class="mail-caption">※ 実際に届くメールを一般化したイメージ(物件名は伏せています)</p>
-  </section>
-
-  <section>
-    <div class="sec-head"><span class="sec-no">2 解決する面倒</span><h2>「毎朝の目視パトロール」と「気づけない値下げ」</h2></div>
-    <p>安くて良い空き家は早い者勝ちです。でも情報は9つ以上のバラバラなサイトに散らばっていて、値下げされても誰も教えてくれません。私は毎朝それを目でパトロールしていました。</p>
+    <p>安くて良い空き家は早い者勝ちです。情報はバラバラなサイトに散らばり、値下げされても誰も教えてくれません。私は毎朝それを目で見ていました。</p>
     <div class="pain-grid">
       <div class="pain">
-        <h4>BEFORE ── 人力の見張り</h4>
+        <h4>BEFORE</h4>
         <ul>
-          <li>毎朝、複数サイトを目視で巡回(約30分)</li>
-          <li>値下げの瞬間に気づけない。気づいた時には商談中</li>
-          <li>物件の場所を毎回地図で調べる</li>
-          <li>「これ前に見たっけ?」が積もって判断がにぶる</li>
+          <li>複数サイトを目視巡回（約30分）</li>
+          <li>値下げに気づけず、気づいた時には商談中</li>
+          <li>場所を毎回地図で調べ直す</li>
+          <li>「これ前に見たっけ？」で判断が鈍る</li>
         </ul>
       </div>
       <div class="gain">
-        <h4>AFTER ── メール1通</h4>
+        <h4>AFTER</h4>
         <ul>
-          <li>巡回は機械が1日4〜6回。私は届いた1通を見るだけ</li>
-          <li>値下げは最大▼75%まで検知した実績。その日のうちに動ける</li>
-          <li>全物件に「自宅から車で何分」が自動でつく</li>
-          <li>🆕と（既出）の印で、目を通すべきものが3秒でわかる</li>
+          <li>機械が1日4〜6回巡回。私は届いた1通を見る</li>
+          <li>値下げと新着がまとまって届く</li>
+          <li>「自宅から車で何分」が自動で付く</li>
+          <li>🆕と（既出）で、見るべきものがすぐ分かる</li>
         </ul>
       </div>
     </div>
   </section>
 
-  <section>
-    <div class="sec-head"><span class="sec-no">3 作りたいと思った理由</span><h2>人は雇えない。でも「見張り」は24時間必要だった</h2></div>
-    <p>私の事業は完全に一人です。物件を見に行き、電話をかけ、契約をして、直して、貸す——全部自分でやります。その中で唯一、体が足りなくても諦めてはいけないのが「情報を見張ること」でした。見張りを怠った日に限って、良い物件は消えます。</p>
-    <p>人を雇う代わりに、AIに見張りを任せる。そう決めてから、講義で学んだ「小さく作って直す」をそのまま実践しました。最初はRSSを1本読むだけ。そこから市町村を1つずつ偵察して繋ぎ、メールの形を使いながら直し、半年でいまの形になりました。</p>
-    <p><b>ツールが完成したから使うのではなく、使いながら作った</b>——これがこの武器の一番の特徴です。</p>
+  <div class="work-banner w1" id="work1">
+    <p class="n">WORK 01</p>
+    <h2>空き家ウォッチャー</h2>
+    <p>自治体の空き家バンク、RSS、公式通知メール、行政の売却情報をクラウドで巡回し、変化を1通にまとめる見張り役。本番稼働中です。</p>
+  </div>
+
+  <section class="chapter" id="ch1">
+    <div class="sec-head">
+      <span class="sec-no">2 作ったもの</span>
+      <h2>集める → 比べる → 評価する → 届ける</h2>
+    </div>
+    <p>条件だけで機械が合否を決めません。台帳に残し、最後に選ぶのは私です。</p>
+    <div class="flow">
+      <div class="flow-step">
+        <div class="flow-num">①</div>
+        <div class="flow-body">
+          <div class="tag">集める</div>
+          <p><b>22系統の情報源</b>を自動巡回。市町村ごとにサイトの作りが違うので、1つずつ接続しています。</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">②</div>
+        <div class="flow-body">
+          <div class="tag">比べる</div>
+          <p><b>前回との差分</b>から、新着・値下げ・掲載終了を判定。価格の履歴も残します。</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">③</div>
+        <div class="flow-body">
+          <div class="tag">評価する</div>
+          <p>特徴・立地・<b>仕入れ点</b>を付けます。捨てずに並べ替えて、人間が決めます。</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">④</div>
+        <div class="flow-body">
+          <div class="tag">届ける</div>
+          <p><b>1巡回＝最大1通</b>。重要な順に並べ、台帳レポートも添付。動きがない巡回は沈黙します。</p>
+        </div>
+      </div>
+    </div>
   </section>
 
-  <section>
-    <div class="sec-head"><span class="sec-no">4 工夫と苦戦</span><h2>作ってみて分かったこと</h2></div>
+  <section class="chapter" id="mail">
+    <div class="sec-head">
+      <span class="sec-no">MAIL</span>
+      <h2>実際の通知と同じ行構成（架空データ）</h2>
+    </div>
+    <p class="caption" style="margin-top:0"><b>※以下はすべて架空データです</b>（実在物件名・番号・番地・URLは使っていません）</p>
+
+    <div class="mail-envelope" style="margin-top:12px">
+      <div class="mail-chrome" aria-hidden="true">
+        <span class="mail-dot"></span><span class="mail-dot"></span><span class="mail-dot"></span>
+        <span>MAIL · 巡回まとめ</span>
+      </div>
+      <div class="mail-meta"><b>From</b>空き家ウォッチャー &lt;notify@example.invalid&gt;</div>
+      <div class="mail">
+        <div class="subject">🏠 巡回まとめ: 値下げ1件(最大▼50%)・新着1件</div>
+        <div class="mail-body">
+          <div class="listing">
+            <div class="listing-head"><span class="drop">🔻 値下げ検知 (▼50%)</span> [評価 8/10]</div>
+            <dl class="kv">
+              <dt>物件名:</dt><dd class="em">【架空】みどり野市 空き家バンク No.F-012</dd>
+              <dt>価格:</dt><dd class="em">2,400,000円 → 1,200,000円</dd>
+              <dt>所在地:</dt><dd>鹿児島県みどり野市山あい町（架空）</dd>
+              <dt>立地:</dt><dd>自宅から車およそ45分 ○60分圏</dd>
+              <dt>周辺:</dt><dd>架空小学校まで1.2km・架空スーパーまで2.0km</dd>
+            </dl>
+            <div class="score-line">仕入れ点: 75/100 <span class="why">(残置物・現状渡しの文言、相続の気配、遠方管理の気配)</span></div>
+            <dl class="kv">
+              <dt>地図:</dt><dd><span class="fake-link">https://www.google.com/maps/search/?api=1&amp;query=架空住所</span></dd>
+              <dt>シグナル:</dt><dd>🪑残置物 🏺蔵・旧家 🚗2台</dd>
+              <dt>要確認:</dt><dd>トイレ形式、接道</dd>
+              <dt>URL:</dt><dd><span class="fake-link">https://example.invalid/fictional-property</span></dd>
+            </dl>
+            <div class="keep-line">⭐この物件をキープ（タップ→開いたメールをそのまま送信）</div>
+          </div>
+
+          <div class="listing fresh">
+            <div class="listing-head">🆕 新着物件 [評価 7/10]</div>
+            <dl class="kv">
+              <dt>物件名:</dt><dd class="em">【架空】ひなた町 中古戸建 納屋つき</dd>
+              <dt>価格:</dt><dd class="em">1,500,000円</dd>
+              <dt>所在地:</dt><dd>鹿児島県ひなた町（架空）</dd>
+              <dt>立地:</dt><dd>自宅から車およそ25分 ◎30分圏</dd>
+              <dt>周辺:</dt><dd>架空診療所まで900m（説明文より）</dd>
+            </dl>
+            <div class="score-line">仕入れ点: 55/100 <span class="why">(付属建物あり、遠方管理の気配)</span></div>
+            <dl class="kv">
+              <dt>地図:</dt><dd><span class="fake-link">https://www.google.com/maps/search/?api=1&amp;query=架空住所2</span></dd>
+              <dt>シグナル:</dt><dd>納屋 庭</dd>
+              <dt>要確認:</dt><dd>残置物の量</dd>
+              <dt>URL:</dt><dd><span class="fake-link">https://example.invalid/fictional-property-2</span></dd>
+            </dl>
+            <div class="keep-line">⭐この物件をキープ（タップ→開いたメールをそのまま送信）</div>
+          </div>
+
+          <div class="compact">
+            <div>・4/10 【架空】こすもす町 No.F-055 2,500,000円 🚗80分△（既出）</div>
+          </div>
+          <div class="footer-note">📮 本日の定期便 ── 注目上位は前回と同じ顔ぶれ(新顔なし)。詳細は添付の台帳で。</div>
+        </div>
+      </div>
+    </div>
+    <p class="caption">※以下はすべて架空データです。実際のメールの行構成を再現したモックです。</p>
+  </section>
+
+  <div class="work-banner w2" id="work2">
+    <p class="n">WORK 02 · 完成・本番稼働中</p>
+    <h2>仕入れ点エンジン</h2>
+    <p>物件の説明文と履歴から、「売主が手放したがっている気配」を0〜100点で採点する装置。家の良し悪しではなく、売主の事情を見ます。</p>
+  </div>
+
+  <section class="chapter" id="ch5">
+    <div class="sec-head">
+      <span class="sec-no alt">作品2</span>
+      <h2>気配を採点し、判断材料として届ける</h2>
+    </div>
+    <p>高得点ほど「残置物ごと、安く買いたい」交渉が通りやすい可能性がある、という材料です。売主の事情を断定する点数ではありません。判断はいつも私がします。</p>
+
+    <p class="fig">FIGURE · 採点表（加点＝緑／減点＝橙）</p>
+    <div class="scorecard">
+      <div class="score-row"><div class="score-label">残置物・家財・現状渡し</div><div class="score-pts plus">+25</div><div class="bar plus w25"><i></i></div></div>
+      <div class="score-row"><div class="score-label">相続の気配</div><div class="score-pts plus">+15</div><div class="bar plus w15"><i></i></div></div>
+      <div class="score-row"><div class="score-label">遠方管理の気配</div><div class="score-pts plus">+15</div><div class="bar plus w15"><i></i></div></div>
+      <div class="score-row"><div class="score-label">売り急ぎ・処分の表現</div><div class="score-pts plus">+10</div><div class="bar plus w10"><i></i></div></div>
+      <div class="score-row"><div class="score-label">蔵・納屋・倉庫などの付属建物</div><div class="score-pts plus">+10</div><div class="bar plus w10"><i></i></div></div>
+      <div class="score-row"><div class="score-label">値下げ履歴</div><div class="score-pts plus">最大+20</div><div class="bar plus w20"><i></i></div></div>
+      <div class="score-row"><div class="score-label">長期掲載90日以上</div><div class="score-pts plus">+10</div><div class="bar plus w10"><i></i></div></div>
+      <div class="score-row"><div class="score-label">長期掲載180日以上</div><div class="score-pts plus">+15</div><div class="bar plus w15"><i></i></div></div>
+      <div class="score-row"><div class="score-label">リフォーム・改装・清掃済み</div><div class="score-pts minus">−15</div><div class="bar minus w15"><i></i></div></div>
+    </div>
+
+    <p class="fig">FIGURE · 採点例（架空）</p>
+    <div class="mail-envelope" style="max-width:560px">
+      <div class="mail-body">
+        <div class="listing">
+          <div class="listing-head">架空物件の説明文に「残置物あり・現状渡し・相続物件・遠方在住」</div>
+          <div class="score-line">仕入れ点: 75/100 <span class="why">(残置物・現状渡し +25、相続 +15、遠方管理 +15 → 強い理由を最大3つ表示)</span></div>
+          <p style="margin:8px 0 0;font-size:12px;color:var(--ink-2);max-width:none">点数は0〜100に収めます。LLMが毎回読んでいるのではなく、焼き付けたルールで採点します。</p>
+        </div>
+      </div>
+    </div>
+
+    <p class="fig">FIGURE · 方針転換の物語</p>
+    <div class="story">
+      <div class="story-step">
+        <div class="tag">当初</div>
+        <p><b>LLM APIで説明文を採点する</b>計画でした。</p>
+      </div>
+      <div class="story-step warn">
+        <div class="tag">実地確認</div>
+        <p>無料のGitHub Modelsを試したら、<b>HTTP 410（廃止進行）</b>。依存するとある日止まります。</p>
+      </div>
+      <div class="story-step">
+        <div class="tag">転換</div>
+        <p><b>AIとの対話と実戦で得た判断基準を、Pythonのルールとして焼き付けた。</b>無料・同じ入力には同じ答え・テスト可能・外部依存ゼロ。</p>
+      </div>
+    </div>
+    <div class="pivot">
+      <p class="punch">「AIに毎回聞く」のではなく、「AIと一緒に決めたルールを、自分の道具に残す」。</p>
+    </div>
+  </section>
+
+  <section class="chapter" id="ch4">
+    <div class="sec-head">
+      <span class="sec-no">3 工夫と苦戦</span>
+      <h2>作ってみて分かったこと</h2>
+    </div>
+
+    <div class="keep-box" id="keep">
+      <h4>工夫 · メール1タップ⭐キープ</h4>
+      <p>通知は読むだけの出口ではなく、操作の入口にもなりました。</p>
+      <div class="keep-steps">
+        <div><div class="n">1</div><p>⭐キープをタップ</p></div>
+        <div><div class="n">2</div><p>件名 keep の自分宛てメールが開く</p></div>
+        <div><div class="n">3</div><p>私が送信すると次の巡回から追跡</p></div>
+        <div><div class="n">4</div><p>Gmailのkeepが正本。消えても365日分から復元</p></div>
+      </div>
+      <p style="margin:0;font-size:13.5px;color:var(--ink-2);max-width:none">AIがGmailへログイン・送信する仕組みではありません。送るかどうかは、いつも私が決めます。</p>
+    </div>
+
     <h3>工夫したポイント</h3>
     <div class="duo">
-      <div class="card win"><span class="lbl">工夫 1</span><h4>通知の三層設計</h4><p>「鳴ったら必ず見る価値がある通知」「1行で流し見できる新着」「全量が残る台帳」の三層に分けた。全部知らせると読まなくなり、絞りすぎると見落とす。その間を設計した。</p></div>
-      <div class="card win"><span class="lbl">工夫 2</span><h4>既視感への対策</h4><p>同じ物件が何度も届くと「あれ、これどうだったかな」と判断がリセットされる。前回紹介した物件を記憶させ、🆕/（既出）で見分けられるようにした。全員が既出の日は一覧ごと畳んで1行に。</p></div>
-      <div class="card win"><span class="lbl">工夫 3</span><h4>距離ではなく「車で何分」</h4><p>田舎の物件選びは移動時間が命。住所の地名から自宅までの運転時間を概算し(外部サービス不要・費用0円)、行動圏ルール「◎30分圏/○60分圏/△圏外」で表示。</p></div>
-      <div class="card win"><span class="lbl">工夫 4</span><h4>自動化しない場所を決めた</h4><p>自動取得が禁止されている情報源は、機械はリンク生成まで・確認は人間が毎日30秒、と線を引いた。相手サイトへのアクセスも最小限に。自動化の腕より「やらない設計」に頭を使った。</p></div>
+      <div class="note"><span class="lbl">工夫 1</span><h4>通知の三層設計</h4><p>重要通知、低評価新着の1行表示、全量台帳。全部鳴らすと読まなくなり、絞りすぎると見落とす。その間を設計した。</p></div>
+      <div class="note"><span class="lbl">工夫 2</span><h4>🆕 /（既出）</h4><p>同じ物件の繰り返しで判断がリセットされないよう、前回見た印を付けた。全員既出の日は一覧を畳む。</p></div>
+      <div class="note"><span class="lbl">工夫 3</span><h4>車で何分</h4><p>自宅から車およそ何分かを無料で概算し、◎30分圏 / ○60分圏 / △圏外で表示。</p></div>
+      <div class="note"><span class="lbl">工夫 4</span><h4>自動化しない線</h4><p>自動取得が禁止の官報は、リンク生成までに留める。確認は人間が短い時間で行う。</p></div>
     </div>
+
     <h3>苦戦したポイント</h3>
     <div class="duo">
-      <div class="card hard"><span class="lbl">苦戦 1</span><h4>市町村ごとにサイトが全部違う</h4><p>9市町を繋ぐのに、実サイトの構造偵察をのべ10回以上。表形式・カード形式・全角数字・「応相談」…… 表記ゆれを一つずつテストで潰した(自動テスト162件はこの積み重ね)。</p></div>
-      <div class="card hard"><span class="lbl">苦戦 2</span><h4>「読めない」の原因を突き止める</h4><p>ある市のサイトが0件しか返さず「技術的に読めない」と思い込みかけた。仮説を立てて実験したら、真実は「その市は掲載が本当に0件」。思い込みを実験で潰す大切さを体で覚えた。</p></div>
-      <div class="card hard"><span class="lbl">苦戦 3</span><h4>メール洪水事件</h4><p>新しい市を繋いだ日、通知が16通連続で届いて自分でうんざりした。「1回の巡回=最大1通」に作り直し。便利なはずの通知が邪魔になる瞬間を、自分がユーザーだから気づけた。</p></div>
-      <div class="card hard"><span class="lbl">苦戦 4</span><h4>作る前に「調べる」が要る</h4><p>AIはコードを書くのは速いが、相手サイトの実物を確かめないと正しく書けない。「偵察→実装→実地検証」の型を作ってからは、新しい市の追加が数十分でできるようになった。</p></div>
+      <div class="note hard"><span class="lbl">苦戦 1</span><h4>サイトが全部違う</h4><p>市町村ごとに構造が違う。表記ゆれを一つずつテストで潰した（自動テスト226件はこの積み重ね）。</p></div>
+      <div class="note hard"><span class="lbl">苦戦 2</span><h4>思い込みを実験で潰す</h4><p>「技術的に読めない」と思い込みかけた市が、実は掲載0件だった。偵察→実装→実地検証の順を守る。</p></div>
+      <div class="note hard"><span class="lbl">苦戦 3</span><h4>メール洪水</h4><p>市を増やした日に通知が連続して届き、自分でうんざりした。「1巡回＝最大1通」に作り直した。</p></div>
+      <div class="note hard"><span class="lbl">苦戦 4</span><h4>作る前に調べる</h4><p>AIはコードが速いが、相手サイトの実物を確かめないと正しく書けない。型ができてから追加が速くなった。</p></div>
     </div>
   </section>
 
-  <section>
-    <div class="sec-head"><span class="sec-no">5 v2での進化</span><h2>見張り網を「空き家バンクの外」へ広げた</h2></div>
-    <p>卒業制作の提出後も武器は育っています。v2の一番大きな進化は、監視対象を空き家バンクの世界の外へ広げたことです。国や自治体は、使わなくなった建物や土地を一般向けに売りに出しています。この情報は空き家バンク以上にバラバラの場所に散らばっていて、定期的に見に行く人はほとんどいません。<b>「散らばっていて誰も見ていない情報ほど、自動化の価値が高い」</b>——このシステムの原理そのままの拡張でした。</p>
-    <div class="duo">
-      <div class="card win"><span class="lbl">進化 1</span><h4>行政の売却情報を3系統追加(19→22)</h4><p>国の機関・全国の自治体・鹿児島県の3系統。それぞれサイトの作りが全く違うが、確立した「偵察→実装→実地検証」の型のおかげで、3系統まとめて1日で本番投入できた。</p></div>
-      <div class="card win"><span class="lbl">進化 2</span><h4>サイトの「ここだけ読んでいい」を尊重する</h4><p>あるサイトの利用ルール(robots.txt)は「この一覧ページだけ読んでよい」という珍しい書き方で、しかもプログラミング言語の標準機能はこの書き方を誤読して「全部ダメ」と判定してしまう。ルールの原文を確かめてから読む安全装置を自作し、相手の意図に正確に従うようにした。</p></div>
+  <section class="chapter" id="ch6">
+    <div class="sec-head">
+      <span class="sec-no">4 AIチーム</span>
+      <h2>武器を磨き続ける仕組み — 1人+AIチームの運営</h2>
+    </div>
+    <p>完成しても、直し続けられなければ武器は錆びます。人は雇えないので、「育てる仕事」自体を仕組みにしました。</p>
+
+    <p class="fig">FIGURE · 体制</p>
+    <div class="team-grid">
+      <div class="team-card">
+        <div class="r">MAIN / 番人</div>
+        <h4>Codex</h4>
+        <p>メイン開発者、本番の番人。実装と本番反映の検品。</p>
+      </div>
+      <div class="team-card">
+        <div class="r">ADVISOR</div>
+        <h4>Claude</h4>
+        <p>相談役、元・本番の番人。戦略相談と特命タスク。</p>
+      </div>
+      <div class="team-card">
+        <div class="r">DESIGN</div>
+        <h4>Cursor</h4>
+        <p>デザイン担当。この図解ページを作っているのがまさにあなた。</p>
+      </div>
+      <div class="team-card human">
+        <div class="r">HUMAN</div>
+        <h4>私（人間のユーザー）</h4>
+        <p>方針、物件選択、本番反映の最終判断。AI同士だけで本番を変える体制ではありません。</p>
+      </div>
+    </div>
+    <div class="ref">
+      <b>機械の番人（GitHub Actions）</b> —— 全pushで自動テストが走る。<span class="ok">緑✅</span> / <span class="ng">赤❌</span>。<b>赤い変更は本番に入れない。</b>
+    </div>
+
+    <p class="fig">FIGURE · 支える三つの文書</p>
+    <div class="tools">
+      <div class="tool"><p class="name">AGENTS.md</p><p>全AIが守る共通ルールブック。</p></div>
+      <div class="tool"><p class="name">NEXT.md</p><p>経緯・判断・次の仕事を残す共有の記憶。</p></div>
+      <div class="tool"><p class="name">本番反映手順書.md</p><p>検品・テスト・反映・巻き戻しの手順。</p></div>
+    </div>
+
+    <div class="episode">
+      <p class="lbl">実話 · 美化しない失敗</p>
+      <p>Codexの初仕事では、コードとテストを完成させたあと、<b>pushせずに完了報告を2回</b>しました。成果はローカルPCにしかなく、GitHubには存在しませんでした。</p>
+      <p>そこでルールを追加しました。<b>完了 = commit + push + コミットハッシュの報告</b>。さらに全pushで自動テストを動かし、人間が確認できる形にしました。</p>
+      <p class="lesson">AIに任せるとは、AIを信じ切ることではない。人間が確認できる仕組みを作ること。</p>
+    </div>
+
+    <div class="safety">
+      <b>本番の安全網</b>
+      <ul>
+        <li>巡回はGitHub Actions上で自走し、どのAIが閉じていても止まらない</li>
+        <li>赤いテストの変更は本番へ入れない</li>
+        <li>定期便は1日1通。<b>メールが来ない日＝壊れた日</b></li>
+        <li>壊れた場合は、本番反映手順書どおりに巻き戻す</li>
+      </ul>
     </div>
   </section>
 
-  <section class="closing">
+
+  <section class="chapter" id="evo">
+    <div class="sec-head">
+      <span class="sec-no">5 v2での進化</span>
+      <h2>見張り網を広げ、礼儀も自動化した</h2>
+    </div>
+    <p>使いながら育てた結果、見張りは空き家バンクの外へ広がり、相手サイトの利用ルールをより正確に守れるようになりました。</p>
+
+    <p class="fig">FIGURE · 最近の進化（2本）</p>
+    <div class="evo">
+      <div class="evo-card">
+        <p class="lbl">進化 1</p>
+        <h4>空き家バンクの「外」へ網を広げた</h4>
+        <p>国や自治体は、使わなくなった建物や土地を一般向けに売りに出しています。この情報は空き家バンク以上にバラバラの場所に散らばっていて、定期的に見に行く人がほとんどいません。</p>
+        <p>そこで行政の売却情報を3系統つなぎ、見張り網を22系統まで広げました。確立していた「偵察→実装→実地検証」の型のおかげで、3系統を1日で本番投入できました。</p>
+        <p class="punch">散らばっていて誰も見ていない情報ほど、自動化の価値が高い——このシステムの原理を、そのまま実証する拡張になりました。</p>
+      </div>
+      <div class="evo-card">
+        <p class="lbl">進化 2</p>
+        <h4>利用ルールを誤読しない「礼儀の自動化」</h4>
+        <p>あるサイトの利用ルール(robots.txt)は、「この一覧ページだけ読んでよい」という珍しい書き方でした。ところがプログラミング言語の標準機能は、これを誤読して「全部禁止」と判定してしまいます。</p>
+        <p>そこでルールの原文を確認してから読む安全装置を自作し、相手サイトの意図に正確に従うようにしました。速く取る腕より、正しく遠慮する仕組みです。</p>
+        <p class="punch">自動化とは、相手の都合を無視して取りに行くことではない。礼儀まで含めて機械に任せる、という話でした。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="closing" id="closing">
     <p class="eyebrow">おわりに</p>
-    <p>この武器の価値は、コードの行数ではなく<b>「提出日の翌朝も、私がこれで物件を選んでいる」</b>ことだと思っています。何を面倒だと感じ、なぜ消したかったのか——それは私の毎日そのものでした。</p>
-    <p>そして見張りはこれからも賢くなります。次の計画は、物件の説明文をAIが読んで「売主が手放したがっている気配」を点数化する機能。武器は、使いながら育てていきます。</p>
+    <p>この武器の価値は、コードの行数ではなく、<b>いまも私がこれで物件を選んでいる</b>ことです。何が面倒で、なぜ消したかったのか——それは私の毎日そのものでした。</p>
+    <p>作品1と作品2は、どちらも日々の運用に入っています。見張りが集め、気配を採点し、私が決める。見張り網は行政の売却情報へも広がり、礼儀の自動化も進みました。</p>
+    <p>ツールは入れ替わっても、ルールと記憶はリポジトリに残ります。私は指揮に集中する。<b>「AIを使う」から「AIチームを運営する」へ</b>——それがこの卒業制作でたどり着いた場所です。</p>
   </section>
 
-  <footer>制作: 第1期 土曜クラス卒業制作／Claude Code(AI)と対話しながら 設計→偵察→実装→本番運用。個人情報・物件の特定につながる情報は一般化しています。<br>v2 (2026-08): 見張り網を22系統へ拡大。</footer>
-</main>
+  <footer>
+    制作: AIドリブンスクール 卒業制作／設計→偵察→実装→本番運用。個人情報・実在物件を特定できる情報は入れていません。数字は本番ログで確認済み。
+  </footer>
+</div>
+</body>
+</html>
