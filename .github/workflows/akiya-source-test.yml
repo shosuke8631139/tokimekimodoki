@@ -18,6 +18,6 @@ jobs:
           python-version: '3.12'
       - name: 依存インストール
         run: pip install -r akiya-watcher/requirements.txt
-      - name: 公売・県有財産の新3ソース接続テスト
+      - name: 図解v2公開ページの取得・監査
         working-directory: akiya-watcher
-        run: python scripts/test_koubai_sources.py
+        run: python scripts/fetch_zukai_v2.py
