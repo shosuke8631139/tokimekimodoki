@@ -16,7 +16,6 @@
 from __future__ import annotations
 
 import hashlib
-import re
 from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
@@ -52,13 +51,20 @@ class PrefKagoshimaSaleScraper(BaseScraper):
             text = a.get_text(" ", strip=True)
             if "bukenholder" not in a["href"] and "物件明細" not in text:
                 continue
+            # 「売却中の物件明細」「今後売却予定の物件明細」等の案内ページは
+            # 物件ではないので拾わない (2026-08-09 実地確認)
+            if a["href"].rstrip("/").endswith("index.html"):
+                continue
             url = urljoin(base_url, a["href"])
             if url in seen or not text:
                 continue
             seen.add(url)
-            # 「物件明細（旧大成寮）」→ 物件名部分を取り出す
-            m = re.search(r"[（(]([^（）()]+)[）)]", text)
-            name = m.group(1) if m else text
+            # 「物件明細（旧姶良警察署（庁舎）跡地）」→ 外側の括弧だけ剥がす
+            # (入れ子括弧があるため正規表現の最短一致では名前が欠ける)
+            name = text.replace("物件明細", "").strip()
+            if name.startswith("（") and name.endswith("）"):
+                name = name[1:-1]
+            name = name or text
             listings.append(Listing(
                 source=source_id,
                 listing_id=hashlib.sha256(url.encode("utf-8")).hexdigest()[:16],

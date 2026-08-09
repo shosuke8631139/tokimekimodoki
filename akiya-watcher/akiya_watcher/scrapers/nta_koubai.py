@@ -79,10 +79,13 @@ class NtaKoubaiScraper(BaseScraper):
             title = a.get_text(" ", strip=True)
             row = cls._row_of(a)
             row_text = row.get_text(" ", strip=True) if row is not None else ""
-            if not title:
-                title = row_text[:60] or "(無題)"
             price = cls._parse_price(row_text)
             address = cls._parse_address(f"{title} {row_text}")
+            # リンク文字が「詳細を見る」等のボタン文言の場合は行から組み立てる
+            # (2026-08-09 実地確認: 一覧のリンクはすべてボタン文言だった)
+            if not title or title in ("詳細を見る", "詳細"):
+                title = (f"公売物件 {address}" if address
+                         else row_text[:60] or "(無題)")
             listings.append(Listing(
                 source=source_id,
                 listing_id=cls._listing_id(href),

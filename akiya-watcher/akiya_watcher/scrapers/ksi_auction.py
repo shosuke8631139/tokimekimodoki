@@ -32,8 +32,9 @@ from .base import BaseScraper
 LIST_URL = "https://kankocho.jp/search/real-estate/"
 ALLOW_LINE = "Allow: /search/real-estate/$"
 
-# 物件カードに出る状態ラベル
-STATUS_LABELS = ("入札終了", "受付終了", "入札中", "受付中", "入札予定", "公開中")
+# 物件カードに出る状態ラベル (2026-08-09 実地確認: 入札開始待ちも存在)
+STATUS_LABELS = ("入札終了", "受付終了", "入札開始待ち", "入札中", "受付中",
+                 "入札予定", "公開中")
 CLOSED_LABELS = ("入札終了", "受付終了")
 
 
