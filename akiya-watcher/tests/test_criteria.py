@@ -3,6 +3,7 @@ import pytest
 
 from akiya_watcher.criteria import (
     Scorer,
+    assess_zanchi,
     is_flush_toilet,
     parse_area_sqm,
     parse_layout_rooms,
@@ -132,6 +133,42 @@ def test_zanchibutsu_outweighs_bad_toilet():
     assert "🪑残置物" in s.badges
     assert "⚠️汲み取り" in s.badges
     assert s.total > 0
+
+
+@pytest.mark.parametrize("description,status", [
+    ("残置物は現況のまま引渡し", "confirmed"),
+    ("残置物有り。買主にて処分してください", "confirmed"),
+    ("買主にて残置物を処分してください", "confirmed"),
+    ("家財道具が残っています", "present"),
+    ("現状有姿での引渡し", "as_is"),
+    ("残置物は売主負担で処分", "removal"),
+    ("売主にて残置物を撤去します", "removal"),
+    ("家財・キッチン設備撤去済み", "removal"),
+    ("残置物なし", "removal"),
+    ("残置物無。", "removal"),
+    ("きれいな空き家です", "none"),
+])
+def test_残置物と引渡し条件を意味で分類する(description, status):
+    assert assess_zanchi(make(description=description)).status == status
+
+
+def test_売主撤去は残置物候補として加点しない():
+    s = Scorer(CRITERIA).score(
+        make(price_yen=1_500_000, description="残置物は売主負担で処分します"),
+        ListingContext(is_new=False),
+    )
+    assert "🪑残置物" not in s.badges
+    assert "🧹残置物撤去" in s.badges
+
+
+def test_現状有姿だけなら残置物確定にしない():
+    s = Scorer(CRITERIA).score(
+        make(price_yen=1_500_000, description="現状有姿で引渡します"),
+        ListingContext(is_new=False),
+    )
+    assert "📦現状有姿" in s.badges
+    assert "🪑残置物" not in s.badges
+    assert "残置物の有無・処分条件" in s.unknowns
 
 
 def test_motive_keywords_detected():

@@ -48,6 +48,20 @@ def test_別ソースでも所在地が一木串木野市なら件名に目印�
     assert subject.startswith("【一木串木野あり】🏠 巡回まとめ:")
 
 
+def test_残置物候補がある巡回は件名だけで分かる():
+    candidate = _item("片付け不要の家", "new")
+    candidate[0].listing.description = "残置物あり。現状渡し。"
+    subject = build_patrol_summary([candidate]).splitlines()[0]
+    assert subject.startswith("【残置物候補あり】🏠 巡回まとめ:")
+
+
+def test_売主撤去物件には残置物候補の件名を付けない():
+    removal = _item("売主が片付ける家", "new")
+    removal[0].listing.description = "残置物は売主負担で処分します。"
+    subject = build_patrol_summary([removal]).splitlines()[0]
+    assert not subject.startswith("【残置物候補あり】")
+
+
 def test_値下げが下げ幅順で新着より先に並ぶ():
     items = [_item("新着の家", "new", total=99),
              _item("小さい値下げ", "changed", price=400_000, prev=500_000),

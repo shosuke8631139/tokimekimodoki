@@ -21,6 +21,10 @@ def make(**kw) -> Listing:
 def test_disposal_cost_only_for_zanchi_listings():
     assert estimate_disposal_cost_yen(make(description="残置物あり", layout="4DK")) == 340_000
     assert estimate_disposal_cost_yen(make(description="きれいな家", layout="4DK")) is None
+    assert estimate_disposal_cost_yen(
+        make(description="残置物は売主負担で処分", layout="4DK")) is None
+    assert estimate_disposal_cost_yen(
+        make(description="現状有姿で引渡し", layout="4DK")) is None
 
 
 def test_disposal_cost_from_floor_area():
@@ -105,3 +109,5 @@ def test_report_contains_inquiry_and_map_and_real_price(tmp_path):
     assert "google.com/maps" in html
     assert "実質 約" in html          # 150万 + 片付け費34万 = 実質約184万
     assert "184万円" in html
+    assert "残置物・現状有姿候補" in html
+    assert "残置物判定: A 確定" in html

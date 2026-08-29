@@ -4,9 +4,11 @@ from akiya_watcher.models import Listing, ListingContext, Score
 from akiya_watcher.storage import Diff, Store
 
 
-def _item(title: str, total: int, price: int | None = 1_000_000):
+def _item(title: str, total: int, price: int | None = 1_000_000,
+          description: str = ""):
     ls = Listing(source="demo", listing_id=title, title=title,
-                 url=f"https://example.com/{title}", price_yen=price)
+                 url=f"https://example.com/{title}", price_yen=price,
+                 description=description)
     score = Score(total=total)
     return Diff(kind="new", listing=ls,
                 context=ListingContext(current_price_yen=price)), score
@@ -29,6 +31,20 @@ def test_生存報告は上位5件まで():
 def test_監視ゼロ件でも壊れず注意を促す():
     text = build_heartbeat([])
     assert "0件" in text
+
+
+def test_日次便に残置物の確度別件数が入る():
+    items = [
+        _item("確定", 10, description="残置物あり・現状渡し"),
+        _item("存在のみ", 9, description="家財道具が残っています"),
+        _item("現状有姿", 8, description="現状有姿で引渡し"),
+        _item("撤去", 7, description="残置物は売主負担で処分"),
+    ]
+    text = build_heartbeat(items, kanpo_enabled=False)
+    assert "A確定 1件" in text
+    assert "B残置物あり 1件" in text
+    assert "C現状有姿のみ 1件" in text
+    assert "売主撤去・撤去済み 1件" in text
 
 
 def test_メタ記録で1日1回を判定できる(tmp_path):

@@ -19,6 +19,7 @@ import urllib.parse
 import urllib.request
 from email.message import EmailMessage
 
+from .criteria import assess_zanchi
 from .models import Score
 from .storage import Diff
 from .travel import location_line, map_link, nearby_line
@@ -88,6 +89,7 @@ def format_message(diff: Diff, score: Score) -> str:
     near = nearby_line(f"{ls.title} {ls.description}")
     if near:
         lines.append(near)
+    lines.append(assess_zanchi(ls).line)
     from .ai_reader import read_listing
     lines.append(read_listing(ls, ctx).line)
     gmap = map_link(ls.address)
