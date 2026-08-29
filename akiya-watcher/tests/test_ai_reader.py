@@ -16,7 +16,7 @@ def test_困り気配が濃い物件は高得点で理由つき():
     r = read_listing(_ls("相続のため売却。家財道具が残ったままの現状渡し。"
                          "遠方在住のため管理できず、早めに手放したいです。"))
     assert r.score >= 60
-    assert "残置物・現状渡しの文言" in r.reasons
+    assert "残置物ごと引渡しが明確" in r.reasons
     assert "相続の気配" in r.reasons
     assert "遠方管理の気配" in r.reasons
 
@@ -48,7 +48,7 @@ def test_点数は0から100に収まる():
 
 def test_理由は強い順に並ぶ():
     r = read_listing(_ls("残置物あり。蔵つき。"))
-    assert r.reasons[0] == "残置物・現状渡しの文言"   # 25点が10点より先
+    assert r.reasons[0] == "残置物あり(処分条件要確認)"   # 20点が10点より先
 
 
 def test_通知メールに仕入れ点の行が入る():
@@ -58,7 +58,15 @@ def test_通知メールに仕入れ点の行が入る():
              context=ListingContext(current_price_yen=1_000_000)),
         Score(total=10))
     assert "仕入れ点: " in text
-    assert "残置物・現状渡しの文言" in text
+    assert "残置物ごと引渡しが明確" in text
+    assert "残置物判定: A 確定" in text
+
+
+def test_売主撤去は残置物加点にならない():
+    r = read_listing(_ls("残置物は売主負担で処分します。"))
+    assert "残置物ごと引渡しが明確" not in r.reasons
+    assert "残置物あり(処分条件要確認)" not in r.reasons
+    assert any("売主撤去" in reason for reason in r.reasons)
 
 
 def test_気配ゼロでも壊れない():

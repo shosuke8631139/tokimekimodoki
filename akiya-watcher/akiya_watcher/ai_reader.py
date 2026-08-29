@@ -20,13 +20,13 @@ import re
 import unicodedata
 from dataclasses import dataclass
 
+from .criteria import assess_zanchi
 from .models import Listing, ListingContext
 
 # (名前, 正規表現, 加点, 理由ラベル)
-# 重みは実戦の学び順: 残置物・現状渡し > 相続・遠方 > 売り急ぎ > 付属建物
+# 重みは実戦の学び順: 相続・遠方 > 売り急ぎ > 付属建物。
+# 残置物は assess_zanchi で「売主撤去」と区別して別途加点する。
 _SIGNALS: list[tuple[str, re.Pattern, int, str]] = [
-    ("zanchi", re.compile(r"残置物|家財|現状渡し|現状有姿|そのまま|残った(まま|状態)"),
-     25, "残置物・現状渡しの文言"),
     ("souzoku", re.compile(r"相続|実家|父|母|両親|故人|遺品"),
      15, "相続の気配"),
     ("enpou", re.compile(r"遠方|県外|管理でき|帰省|帰れ|住んでい(ない|ません)"),
@@ -61,6 +61,20 @@ def read_listing(ls: Listing, ctx: ListingContext | None = None) -> Reading:
     blob = unicodedata.normalize("NFKC", f"{ls.title} {ls.description}")
     score = 0
     hits: list[tuple[int, str]] = []
+
+    zanchi = assess_zanchi(ls)
+    if zanchi.status == "confirmed":
+        score += 25
+        hits.append((25, "残置物ごと引渡しが明確"))
+    elif zanchi.status == "present":
+        score += 20
+        hits.append((20, "残置物あり(処分条件要確認)"))
+    elif zanchi.status == "as_is":
+        score += 8
+        hits.append((8, "現状有姿(残置物は要確認)"))
+    elif zanchi.status == "removal":
+        score -= 10
+        hits.append((10, "減点: 残置物は売主撤去・撤去済み"))
 
     for _, pat, points, label in _SIGNALS:
         if pat.search(blob):

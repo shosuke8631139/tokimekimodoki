@@ -20,7 +20,7 @@ from pathlib import Path
 import yaml
 
 from .alerts import decide, offer_candidate_reason
-from .criteria import Scorer, is_keep
+from .criteria import Scorer, assess_zanchi, is_keep
 from .kanpo import digest_lines as kanpo_digest_lines
 from .models import ListingContext, Score
 from .notify import Notifier
@@ -254,6 +254,29 @@ def _keep_lines(d: Diff) -> list[str]:
     return [f"  {kl}"] if kl else []
 
 
+def _zanchi_candidates(items: list[tuple[Diff, Score]]) -> list[tuple[Diff, Score]]:
+    """残置物確定→存在明示→現状有姿のみ、の順で候補を返す。"""
+    confidence = {"confirmed": 3, "present": 2, "as_is": 1}
+    candidates = [
+        (d, s) for d, s in items if assess_zanchi(d.listing).is_candidate
+    ]
+    return sorted(
+        candidates,
+        key=lambda x: (confidence[assess_zanchi(x[0].listing).status], x[1].total),
+        reverse=True,
+    )
+
+
+def _zanchi_summary(items: list[tuple[Diff, Score]]) -> str:
+    """日次メール用の短い残置物集計。"""
+    statuses = [assess_zanchi(d.listing).status for d, _ in items]
+    return ("🪑 残置物判定: "
+            f"A確定 {statuses.count('confirmed')}件 / "
+            f"B残置物あり {statuses.count('present')}件 / "
+            f"C現状有姿のみ {statuses.count('as_is')}件 / "
+            f"売主撤去・撤去済み {statuses.count('removal')}件")
+
+
 def build_digest(items: list[tuple[Diff, Score]], offer_min_age_days: int,
                  kanpo_enabled: bool = True) -> str:
     """週次ダイジェスト: 上位物件と指値候補のまとめ + 官報チェック便。"""
@@ -270,6 +293,19 @@ def build_digest(items: list[tuple[Diff, Score]], offer_min_age_days: int,
         lines.append(f"・{d.listing.title} {price} ({r})")
         lines.append(f"  {d.listing.url}")
         lines.extend(_keep_lines(d))
+    lines.append("")
+
+    zanchi = _zanchi_candidates(ranked)
+    lines.append(f"🪑 残置物・現状有姿候補 {len(zanchi)}件:")
+    for d, _ in zanchi[:5]:
+        assessment = assess_zanchi(d.listing)
+        price = (f"{d.listing.price_yen:,}円" if d.listing.price_yen is not None
+                 else "価格応談")
+        lines.append(f"・{assessment.label} | {d.listing.title} {price}")
+        lines.append(f"  {d.listing.url}")
+        lines.extend(_keep_lines(d))
+    if not zanchi:
+        lines.append("・現在、掲載文から拾える候補なし")
     lines.append("")
 
     lines.append("🏆 評価上位 (10点満点):")
@@ -315,6 +351,9 @@ def build_heartbeat(items: list[tuple[Diff, Score]], top_n: int = 5,
         from .kanpo import daily_lines
         lines += daily_lines(datetime.date.fromisoformat(jst_today()))
         lines.append("")
+    lines.append(_zanchi_summary(items))
+    lines.append("詳細は添付台帳の「残置物・現状有姿候補」で確認できます。")
+    lines.append("")
     if ranked:
         top = ranked[:top_n]
         all_seen = prev_uids and all(d.listing.uid in prev_uids for d, _ in top)
@@ -387,6 +426,12 @@ def build_patrol_summary(to_send: list[tuple[Diff, Score]],
         parts.append(label)
     subject = "🏠 巡回まとめ: " + "・".join(parts)
     subject_items = to_send + quiet_new
+    has_zanchi_candidate = any(
+        assess_zanchi(d.listing).status in {"confirmed", "present"}
+        for d, _ in subject_items
+    )
+    if has_zanchi_candidate:
+        subject = "【残置物候補あり】" + subject
     has_ichikikushikino = any(
         d.listing.source == "ichikikushikino_akiya_bank"
         or "いちき串木野市" in d.listing.address

@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import re
 import unicodedata
+from dataclasses import dataclass
 
 from .models import Listing, ListingContext, Score
 
@@ -115,8 +116,125 @@ def is_flush_toilet(text: str) -> bool | None:
 # 残置物系: 最重要。買い手に敬遠され交渉しやすく、処分権が引き継がれれば
 # 価値ある品が残っている可能性もある。
 ZANCHI_KEYWORDS = [
-    "残置物", "家財", "家具", "未片付け", "現状渡し", "現状引き渡し", "現状有姿",
+    "残置物", "家財", "未片付け", "現状渡し", "現状引き渡し", "現状有姿",
 ]
+
+
+@dataclass(frozen=True)
+class ZanchiAssessment:
+    """残置物と引渡し条件の判定結果。
+
+    単に「残置物」という語があるだけでは、売主撤去の物件まで候補に入る。
+    そこで、残ることが確定・存在のみ明示・現状有姿のみ・撤去の4段階に分ける。
+    """
+
+    status: str
+    evidence: tuple[str, ...] = ()
+
+    @property
+    def is_candidate(self) -> bool:
+        return self.status in {"confirmed", "present", "as_is"}
+
+    @property
+    def label(self) -> str:
+        return {
+            "confirmed": "A 確定（残置物ごと引渡し）",
+            "present": "B 残置物あり（処分条件を要確認）",
+            "as_is": "C 現状有姿のみ（残置物の有無を要確認）",
+            "removal": "対象外（売主撤去・撤去済み）",
+            "none": "記載なし",
+        }[self.status]
+
+    @property
+    def line(self) -> str:
+        why = f" / 根拠: {'、'.join(self.evidence)}" if self.evidence else ""
+        return f"残置物判定: {self.label}{why}"
+
+
+# 掲載文で実際に使われる表現を、意味ごとに分離する。
+# 判定順は「撤去」優先。例:「残置物あり。売主負担で撤去」は候補にしない。
+_ZANCHI_REMOVAL_PATTERNS = [
+    ("売主側で撤去", re.compile(
+        r"(?:残置物|家財|家具).{0,16}(?:売主|所有者|貸主|家主).{0,10}"
+        r"(?:負担|撤去|処分|片付|整理)")),
+    ("売主側で撤去", re.compile(
+        r"(?:売主|所有者|貸主|家主).{0,10}(?:負担|撤去|処分|片付|整理)"
+        r".{0,16}(?:残置物|家財|家具)")),
+    ("売主側で撤去", re.compile(
+        r"(?:売主|所有者|貸主|家主).{0,10}(?:残置物|家財|家具).{0,10}"
+        r"(?:負担|撤去|処分|片付|整理)")),
+    ("撤去・処分予定", re.compile(
+        r"(?:残置物|家財|家具).{0,12}(?:撤去|処分|片付|整理)(?:の)?(?:予定|見込)")),
+    ("撤去・処分済み", re.compile(
+        r"(?:残置物|家財|家具).{0,12}(?:撤去|処分|片付|整理)(?:済み?|完了)")),
+    ("残置物なし", re.compile(
+        r"(?:残置物|家財|家具)(?:は)?(?:なし|無し|無い|無(?=$|[。、・,/]))")),
+    ("引渡し前に撤去", re.compile(
+        r"引(?:き)?渡しまでに.{0,16}(?:残置物|家財|家具).{0,12}"
+        r"(?:撤去|処分|片付|整理)")),
+]
+
+_ZANCHI_PRESENCE_PATTERNS = [
+    ("残置物", re.compile(r"残置物")),
+    ("家財", re.compile(
+        r"家財(?:道具)?(?:あり|有り|有|残置|が残|一式|込み|付き?|そのまま)")),
+    ("家具・日用品", re.compile(
+        r"(?:家具|日用品|生活用品|荷物).{0,8}(?:あり|有り|有|残置|が残|込み|付き?|そのまま)")),
+    ("未片付け", re.compile(r"未片付け|片付け未了|整理未了")),
+]
+
+_AS_IS_PATTERNS = [
+    ("現状渡し", re.compile(r"現状(?:のまま)?(?:渡し|引(?:き)?渡し)")),
+    ("現況渡し", re.compile(r"現況(?:のまま)?(?:渡し|引(?:き)?渡し)")),
+    ("現状有姿", re.compile(r"現状有姿")),
+    ("現況有姿", re.compile(r"現況有姿")),
+    ("そのまま引渡し", re.compile(r"そのまま(?:で)?引(?:き)?渡し")),
+]
+
+_BUYER_TAKES_PATTERNS = [
+    ("買主負担", re.compile(
+        r"(?:残置物|家財|家具).{0,16}(?:買主|購入者|利用者).{0,10}"
+        r"(?:負担|撤去|処分|片付|整理)")),
+    ("買主負担", re.compile(
+        r"(?:買主|購入者|利用者).{0,10}(?:負担|撤去|処分|片付|整理)"
+        r".{0,16}(?:残置物|家財|家具)")),
+    ("買主負担", re.compile(
+        r"(?:買主|購入者|利用者).{0,10}(?:残置物|家財|家具).{0,10}"
+        r"(?:負担|撤去|処分|片付|整理)")),
+    ("残置物も譲渡", re.compile(
+        r"(?:残置物|家財|家具).{0,8}(?:も)?(?:譲渡|込み|含む|付ける)")),
+    ("片付け不要", re.compile(r"片付け不要|撤去不要|処分不要")),
+]
+
+
+def assess_zanchi(ls: Listing,
+                   extra_keywords: list[str] | None = None) -> ZanchiAssessment:
+    """物件文から残置物の有無と引渡し条件を4段階判定する。"""
+    raw_text = str(ls.raw.get("text", "") or "")
+    blob = _normalize(" ".join([ls.title, ls.description, raw_text]))
+
+    def hits(patterns: list[tuple[str, re.Pattern]]) -> list[str]:
+        return [label for label, pattern in patterns if pattern.search(blob)]
+
+    removal = hits(_ZANCHI_REMOVAL_PATTERNS)
+    if removal:
+        return ZanchiAssessment("removal", tuple(dict.fromkeys(removal)))
+
+    presence = hits(_ZANCHI_PRESENCE_PATTERNS)
+    if extra_keywords:
+        presence.extend(kw for kw in extra_keywords if _normalize(kw) in blob)
+    presence = list(dict.fromkeys(presence))
+    as_is = list(dict.fromkeys(hits(_AS_IS_PATTERNS)))
+    buyer_takes = list(dict.fromkeys(hits(_BUYER_TAKES_PATTERNS)))
+
+    if presence and (as_is or buyer_takes):
+        evidence = tuple(dict.fromkeys(presence + as_is + buyer_takes))
+        return ZanchiAssessment("confirmed", evidence)
+    if presence:
+        return ZanchiAssessment("present", tuple(presence))
+    if as_is:
+        return ZanchiAssessment("as_is", tuple(as_is))
+    return ZanchiAssessment("none")
 
 # 売主事情系: 相続・遠方・管理困難など「手放したい事情」がにじむ表現。
 # 公開された説明文の記載だけを対象にする(個人情報の収集・推測はしない)。
@@ -166,8 +284,7 @@ def estimate_disposal_cost_yen(ls: Listing) -> int | None:
     間取りベースの経験則 (1R:10-15万 〜 4LDK:25-50万) の中央付近を取る。
     表示価格に足して「実質価格」として判断材料にする。あくまで目安。
     """
-    blob = f"{ls.title} {ls.description}"
-    if not any(kw in blob for kw in ZANCHI_KEYWORDS):
+    if assess_zanchi(ls).status not in {"confirmed", "present"}:
         return None
     rooms = parse_layout_rooms(ls.layout)
     if rooms is None and ls.floor_area_sqm:
@@ -209,7 +326,8 @@ class Scorer:
     def __init__(self, criteria: dict | None = None):
         criteria = criteria or {}
         self.priority_cities = criteria.get("priority_cities", [])
-        self.zanchi_kw = criteria.get("zanchi_keywords", ZANCHI_KEYWORDS)
+        # 既定判定は意味解析を使う。設定に追加語がある場合だけ補助シグナルにする。
+        self.zanchi_kw = criteria.get("zanchi_keywords")
         self.wealth_kw = criteria.get("wealth_keywords", WEALTH_KEYWORDS)
         self.motive_kw = criteria.get("motive_keywords", MOTIVE_KEYWORDS)
         self.convenience_kw = criteria.get("convenience_keywords", CONVENIENCE_KEYWORDS)
@@ -239,10 +357,22 @@ class Scorer:
             s.add(2, f"長期掲載 {ctx.age_days}日", f"⏳{ctx.age_days}日")
 
         # --- 2. 残置物 (最重要シグナル) --------------------------------
-        zanchi = [kw for kw in self.zanchi_kw if kw in blob]
-        if zanchi:
-            s.matched_keywords += zanchi
-            s.add(4 + min(len(zanchi) - 1, 2), "残置物系: " + "、".join(zanchi), "🪑残置物")
+        # 「残置物は売主負担で撤去」のような逆条件を誤って加点しない。
+        zanchi = assess_zanchi(ls, self.zanchi_kw)
+        s.matched_keywords += list(zanchi.evidence)
+        if zanchi.status == "confirmed":
+            s.add(6, "残置物ごと引渡し: " + "、".join(zanchi.evidence), "🪑残置物")
+            s.badges.append("✅そのまま引渡し")
+        elif zanchi.status == "present":
+            s.add(5, "残置物あり: " + "、".join(zanchi.evidence), "🪑残置物")
+            s.badges.append("❓処分条件")
+        elif zanchi.status == "as_is":
+            s.add(2, "現状有姿: " + "、".join(zanchi.evidence), "📦現状有姿")
+            s.unknowns.append("残置物の有無・処分条件")
+        elif zanchi.status == "removal":
+            s.badges.append("🧹残置物撤去")
+            s.reasons.append("残置物は売主撤去・撤去済み: "
+                             + "、".join(zanchi.evidence) + " (±0)")
 
         # --- 2.5. 蔵・旧家 (裕福な家系 = 残置物の期待値が最も高い本丸) -----
         wealth = [kw for kw in self.wealth_kw if kw in blob]
@@ -252,6 +382,9 @@ class Scorer:
 
         # --- 3. 売主事情 ------------------------------------------------
         motive = [kw for kw in self.motive_kw if kw in blob]
+        if zanchi.status == "removal":
+            # 「残置物を処分する」の処分は売り急ぎの事情ではない。
+            motive = [kw for kw in motive if kw != "処分"]
         if motive:
             s.matched_keywords += motive
             s.add(3, "売主事情: " + "、".join(motive), "🏠売主事情")

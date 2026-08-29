@@ -12,7 +12,8 @@ from datetime import date
 from urllib.parse import quote
 
 from .alerts import offer_candidate_reason
-from .criteria import estimate_disposal_cost_yen, is_keep, suggest_offer_yen
+from .criteria import (assess_zanchi, estimate_disposal_cost_yen, is_keep,
+                       suggest_offer_yen)
 from .models import Listing, Score
 from .storage import Diff
 
@@ -65,6 +66,7 @@ a.link { display:inline-block; margin-top:8px; font-size:.85rem; color:#1a5276;
 footer { color:var(--sub); font-size:.75rem; margin:24px 0; text-align:center; }
 .offer-reason { color:var(--gold); font-size:.85rem; font-weight:700; margin:8px 0 -8px; }
 .real { color:var(--accent); font-size:.9rem; font-weight:700; margin-top:2px; }
+.zanchi-line { color:var(--gold); font-size:.86rem; font-weight:700; margin-top:6px; }
 .inq { width:100%; font-size:.8rem; margin-top:6px; border:1px solid var(--line);
        border-radius:6px; padding:8px; font-family:inherit; }
 .copy { margin-top:4px; padding:4px 14px; border:1px solid var(--gold);
@@ -107,6 +109,9 @@ def _inquiry_html(ls: Listing) -> str:
 def _card(rank: int, diff: Diff, score: Score, hot: bool = False,
           deal: dict | None = None) -> str:
     ls = diff.listing
+    zanchi = assess_zanchi(ls)
+    zanchi_line = (f'<div class="zanchi-line">{html.escape(zanchi.line)}</div>'
+                    if zanchi.status != "none" else "")
     deal_chip = ""
     if deal:
         offer = (f" {deal['offer_yen'] / 10_000:,.0f}万" if deal.get("offer_yen") else "")
@@ -139,6 +144,7 @@ def _card(rank: int, diff: Diff, score: Score, hot: bool = False,
   {_price_html(diff)}
   {real_price}
   <div class="addr">{html.escape(ls.address or '所在地不明')}</div>
+  {zanchi_line}
   <div class="badges">{deal_chip}{badges}</div>
   <div>{unknowns}</div>
   <details><summary>スコア内訳 (素点{score.total}点を10点満点に換算)</summary>
@@ -175,6 +181,23 @@ def render_report(items: list[tuple[Diff, Score]], report_date: date | None = No
     hot_html = "".join(_card(i + 1, d, s, hot=True, deal=deal_of(d))
                        for i, (d, s) in enumerate(hot)) \
         or '<p class="sub">本日は緊急案件なし。</p>'
+
+    # 残置物の専用コーナー: 確定→存在明示→現状有姿のみ、の順で並べる。
+    zanchi_rank = {"confirmed": 3, "present": 2, "as_is": 1}
+    zanchi_candidates = [
+        (d, s, assess_zanchi(d.listing)) for d, s in items
+        if assess_zanchi(d.listing).is_candidate
+    ]
+    zanchi_candidates.sort(
+        key=lambda x: (zanchi_rank[x[2].status], x[1].total), reverse=True)
+    zanchi_html = "".join(
+        _card(i + 1, d, s, deal=deal_of(d))
+        for i, (d, s, _) in enumerate(zanchi_candidates)
+    ) or '<p class="sub">現在、掲載文から拾える候補はありません。</p>'
+    zanchi_counts = {
+        status: sum(1 for d, _ in items if assess_zanchi(d.listing).status == status)
+        for status in ("confirmed", "present", "as_is", "removal")
+    }
 
     # ⭐キープ: 理想条件(残置物×立地)の常設コーナー
     keeps = [(d, s) for d, s in items if is_keep(s)]
@@ -240,6 +263,11 @@ def render_report(items: list[tuple[Diff, Score]], report_date: date | None = No
  if hot else '<div class="conclusion">きょうは大きな動きなし。指値候補だけ眺めてください。</div>'}
 <h2>🚨 今すぐ自分の目で見る ({len(hot)}件)</h2>
 {hot_html}
+<h2>🪑 残置物・現状有姿候補 ({len(zanchi_candidates)}件)</h2>
+<p class="sub">A確定 {zanchi_counts['confirmed']}件 / B残置物あり {zanchi_counts['present']}件 /
+C現状有姿のみ {zanchi_counts['as_is']}件 / 売主撤去・撤去済み {zanchi_counts['removal']}件。<br>
+「売主撤去」は候補から外し、確度の高い順に表示しています。</p>
+{zanchi_html}
 <h2>⭐ キープ — 理想条件: 残置物 × 立地 ({len(keeps)}件)</h2>
 <p class="sub">この条件の物件は常時ここに載ります。値下げ・記載変更・掲載終了が
 あれば、通常なら知らせない小さな変化でも即通知します。</p>
