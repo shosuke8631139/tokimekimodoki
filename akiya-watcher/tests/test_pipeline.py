@@ -299,3 +299,39 @@ def test_always_notify_source_sends_low_score_new_listing(tmp_path, capsys):
 
     run(str(cfg))
     assert "監視 1件 / 通知 1件 / 抑制 0件" in capsys.readouterr().out
+
+
+def test_mainland_and_island_area_filtering(tmp_path, capsys):
+    """鹿児島県本土(枕崎・指宿・南さつま・南九州)は収集され、離島(奄美・西之表等)は除外される。"""
+    from akiya_watcher.main import run
+    demo = tmp_path / "demo.json"
+    rows = [
+        {"id": "mainland-1", "title": "枕崎の家", "url": "https://example.com/m",
+         "price": "200万円", "address": "鹿児島県枕崎市汐見町"},
+        {"id": "mainland-2", "title": "指宿の家", "url": "https://example.com/i",
+         "price": "250万円", "address": "鹿児島県指宿市十二町"},
+        {"id": "island-1", "title": "奄美の家", "url": "https://example.com/a",
+         "price": "150万円", "address": "鹿児島県奄美市名瀬"},
+        {"id": "island-2", "title": "種子島の家", "url": "https://example.com/t",
+         "price": "180万円", "address": "鹿児島県西之表市西之表"},
+    ]
+    demo.write_text(json.dumps(rows, ensure_ascii=False), encoding="utf-8")
+    report = tmp_path / "report.html"
+    config = {
+        "db_path": str(tmp_path / "db.sqlite"),
+        "criteria": {
+            "target_areas": ["枕崎市", "指宿市", "南さつま市", "南九州市"],
+            "max_price_yen": 3_000_000,
+        },
+        "sources": [{"id": "demo", "type": "demo", "path": str(demo)}],
+    }
+    cfg = tmp_path / "config.yaml"
+    cfg.write_text(yaml.safe_dump(config, allow_unicode=True), encoding="utf-8")
+
+    run(str(cfg), report_path=str(report))
+    content = report.read_text(encoding="utf-8")
+    assert "枕崎の家" in content
+    assert "指宿の家" in content
+    assert "奄美の家" not in content
+    assert "種子島の家" not in content
+

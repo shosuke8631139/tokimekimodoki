@@ -8,6 +8,7 @@ from .hioki_bank import HiokiBankScraper
 from .ichikikushikino_bank import IchikikushikinoBankScraper
 from .ksi_auction import KsiAuctionScraper
 from .mailbox import GmailImapScraper
+from .minamisatsuma_bank import MinamisatsumaBankScraper
 from .miyakonojo_bank import MiyakonojoBankScraper
 from .kirishima_bank import KirishimaBankScraper
 from .nta_koubai import NtaKoubaiScraper
@@ -27,6 +28,7 @@ REGISTRY: dict[str, type[BaseScraper]] = {
     "ichikikushikino_bank": IchikikushikinoBankScraper,
     "kirishima_bank": KirishimaBankScraper,
     "ksi_auction": KsiAuctionScraper,
+    "minamisatsuma_bank": MinamisatsumaBankScraper,
     "miyakonojo_bank": MiyakonojoBankScraper,
     "nta_koubai": NtaKoubaiScraper,
     "pref_kagoshima_sale": PrefKagoshimaSaleScraper,

@@ -54,13 +54,16 @@ criteria:
   max_price_yen: 3000000        # これを超える物件は収集しない (2026-07: 500万→300万に変更)
   include_price_unknown: false  # 「価格応相談」(価格不明)は収集しない
 
-  # リサーチ範囲 (2026-07 ユーザー指定: アットホームのチェック地域と同じ)
-  # ここに無い市町村(離島・枕崎・阿久根・指宿など)の物件は収集時に外す。
+  # リサーチ範囲 (鹿児島県本土 + 宮崎隣接市。離島は除外)
+  # ここに無い市町村(種子島・屋久島・奄美群島等の離島)の物件は収集時に外す。
   # 住所が読み取れない物件は念のため残す(落としすぎ防止)。
   target_areas:
     - 鹿児島市
     - 鹿屋市
+    - 枕崎市
+    - 阿久根市
     - 出水市
+    - 指宿市
     - 垂水市
     - 薩摩川内市
     - 日置市
@@ -76,6 +79,7 @@ criteria:
     - 湧水町
     - 大崎町
     - 東串良町
+    - 錦江町
     - 南大隅町
     - 肝付町
     # 宮崎県側 (2026-07 アットホーム登録に合わせる)
@@ -271,6 +275,44 @@ sources:
     list_urls:
       - "https://ichikikushikino-c46219.akiya-athome.jp/buy/house/area/kagoshimaken/ichikikushikinoshi/list?gyosei_cd[]=46219"
       - "https://ichikikushikino-c46219.akiya-athome.jp/buy/house/area/kagoshimaken/ichikikushikinoshi/list?gyosei_cd[]=46219&page=2"
+    item_selector: "ul.property-list-one > li"
+    fields: *athome_new_fields
+
+  # ── 南さつま市 空き家バンク(市直営・地域別5ページ) (2026-09 構造確認済み・約33件) ──
+  # 加世田・笠沙・大浦・坊津・金峰の地域別一覧から売却物件を収集。
+  # 25万・50万・60万・100万など格安帯が多数。売買価格のみ抽出し家賃誤認を防止。
+  - id: minamisatsuma_akiya_bank
+    type: minamisatsuma_bank
+    enabled: true
+
+  # ── 南九州市 空き家バンク(売買・戸建) (2026-09 構造確認済み・約46件) ──
+  - id: minamikyushu_akiya_bank
+    type: generic_html
+    enabled: true
+    list_urls:
+      - "https://minamikyushu-c46223.akiya-athome.jp/buy/house/area/kagoshimaken/minamikyushushi/list?gyosei_cd[]=46223"
+      - "https://minamikyushu-c46223.akiya-athome.jp/buy/house/area/kagoshimaken/minamikyushushi/list?gyosei_cd[]=46223&page=2"
+      - "https://minamikyushu-c46223.akiya-athome.jp/buy/house/area/kagoshimaken/minamikyushushi/list?gyosei_cd[]=46223&page=3"
+    item_selector: "ul.property-list-one > li"
+    fields: *athome_new_fields
+
+  # ── 枕崎市 空き家バンク(売買・戸建) (2026-09 構造確認済み・約31件) ──
+  - id: makurazaki_akiya_bank
+    type: generic_html
+    enabled: true
+    list_urls:
+      - "https://makurazaki-c46204.akiya-athome.jp/buy/house/area/kagoshimaken/makurazakishi/list?gyosei_cd[]=46204"
+      - "https://makurazaki-c46204.akiya-athome.jp/buy/house/area/kagoshimaken/makurazakishi/list?gyosei_cd[]=46204&page=2"
+    item_selector: "ul.property-list-one > li"
+    fields: *athome_new_fields
+
+  # ── 指宿市 空き家バンク(売買・戸建) (2026-09 構造確認済み・約23件) ──
+  - id: ibusuki_akiya_bank
+    type: generic_html
+    enabled: true
+    list_urls:
+      - "https://ibusuki-c46210.akiya-athome.jp/buy/house/area/kagoshimaken/ibusukishi/list?gyosei_cd[]=46210"
+      - "https://ibusuki-c46210.akiya-athome.jp/buy/house/area/kagoshimaken/ibusukishi/list?gyosei_cd[]=46210&page=2"
     item_selector: "ul.property-list-one > li"
     fields: *athome_new_fields
 
