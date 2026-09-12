@@ -32,6 +32,9 @@ def fields(node) -> dict[str, str]:
 def price(value: str) -> int | None:
     """価格欄だけを渡す。複数価格の推測や家賃へのフォールバックはしない。"""
     value = unicodedata.normalize("NFKC", value)
+    # 市の明示表記「150万円(元売価:300万円)」のみ旧価格を除く。
+    # ラベルのない複数価格は推測しない。
+    value = re.sub(r"\((?:元売価|旧価格|旧売価)\s*[:：]\s*[\d,.]+\s*(?:万円?|円)\)", "", value)
     if re.search(r"応相談|要相談|相談|未定", value) and not re.search(r"\d", value):
         return None
     if "無償" in value:

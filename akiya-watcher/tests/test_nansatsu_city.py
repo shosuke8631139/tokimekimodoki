@@ -101,6 +101,11 @@ def test_ambiguous_price_fails():
         price('200万円 100万円')
 
 
+def test_explicit_previous_price():
+    assert price('150万円(元売価:300万円) ※価格を引き下げました。') == 1500000
+    assert price('１５０万円（元売価：３００万円）') == 1500000
+
+
 def test_price_drop_not_repeated_by_old_title(tmp_path):
     from akiya_watcher.storage import Store
     from akiya_watcher.criteria import Scorer
