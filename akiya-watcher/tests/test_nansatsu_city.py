@@ -155,3 +155,9 @@ def test_sale_rent_without_colon():
     obj = scraper('南九州市')
     item = obj.parse_minamikyushu(soup(card('21-2', '売買898万円 賃貸3.95万円', '賃貸,売買')), obj.list_url)
     assert item.price_yen == 8980000
+
+
+def test_dual_listing_consultation_is_unknown():
+    obj = scraper('南九州市')
+    item = obj.parse_minamikyushu(soup(card('317', '要相談', '賃貸,売買')), obj.list_url)
+    assert item.price_yen is None

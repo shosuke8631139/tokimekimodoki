@@ -138,7 +138,7 @@ class NansatsuCityScraper(BaseScraper):
             raise ValueError("南九州市の物件番号がありません")
         data = fields(node)
         value = data.get("価格", "")
-        if "賃貸" in tag:
+        if "賃貸" in tag and not re.fullmatch(r"(?:要相談|応相談|相談|価格未定)", value.strip()):
             sale = re.search(r"売買\s*[:：]?\s*(.*?)(?:賃貸|$)", value)
             if not sale:
                 raise ValueError(f"売買・賃貸併記価格を分離できません: No.{match.group(1)} / {value}")
