@@ -141,7 +141,7 @@ class NansatsuCityScraper(BaseScraper):
         if "賃貸" in tag:
             sale = re.search(r"売買\s*[:：]\s*(.*?)(?:賃貸|$)", value)
             if not sale:
-                raise ValueError("売買・賃貸併記価格を分離できません")
+                raise ValueError(f"売買・賃貸併記価格を分離できません: No.{match.group(1)} / {value}")
             value = sale.group(1)
         return self.make(match.group(1), text(a), urljoin(url, a["href"]), value,
                          data, data.get("所在地", ""), data.get("延床面積", ""),
