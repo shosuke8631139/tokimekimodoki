@@ -99,3 +99,37 @@ def test_price(value, expected):
 def test_ambiguous_price_fails():
     with pytest.raises(ValueError):
         price('200万円 100万円')
+
+
+def test_price_drop_not_repeated_by_old_title(tmp_path):
+    from akiya_watcher.storage import Store
+    from akiya_watcher.criteria import Scorer
+    from akiya_watcher.alerts import decide
+    obj = scraper('枕崎市')
+    store = Store(tmp_path / 'prices.db')
+    def record(value):
+        html = table({'登録番号': '124', '賃貸・売却の別': '売買', '希望価格': value,
+                      '物件所在地': '枕崎市', '建物': '65㎡'})
+        item = obj.parse_detail(soup(html), obj.list_url, '【値下げ】No.124')
+        diff = store.upsert(item)
+        return diff, decide(diff, Scorer({}).score(item, diff.context))
+    first, _ = record('100万円')
+    assert first.kind == 'new' and not first.context.price_changed
+    diff, decision = record('80万円')
+    assert diff.context.drop_pct == 20
+    assert decision.notify and decision.kind == 'drop'
+    diff, decision = record('80万円')
+    assert not diff.context.price_changed and not decision.notify
+    store.close()
+
+
+def test_deleted_price_and_custom_source_id(monkeypatch):
+    obj = MinamisatsumaBankScraper({'id': 'custom', 'list_urls': ['https://example.test']})
+    html = table({'登録番号': '1', '価格': '●売却：<s>200万円</s>100万円'})
+    monkeypatch.setattr(obj, 'get', lambda url: SimpleNamespace(text=html, apparent_encoding='utf-8'))
+    item, = obj.fetch_listings()
+    assert item.price_yen == 1000000 and item.source == 'custom'
+    monkeypatch.setattr(obj, 'get', lambda url: SimpleNamespace(text='<html>maintenance</html>', apparent_encoding='utf-8'))
+    with pytest.raises(ValueError):
+        obj.fetch_listings()
+    assert not obj.full_snapshot
