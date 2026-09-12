@@ -57,18 +57,29 @@ class MinamisatsumaBankScraper(BaseScraper):
 
     def fetch_listings(self) -> list[Listing]:
         listings: list[Listing] = []
+        self.full_snapshot = True
         for url in self.list_urls:
             try:
                 res = self.get(url)
                 res.encoding = res.apparent_encoding or "utf-8"
-                listings.extend(self.parse_page(res.text, url))
+                page = self.parse_page(res.text, url)
+                if not page:
+                    raise ValueError("物件テーブルがありません。掲載終了判定を保留します")
+                for item in page:
+                    item.source = self.source_id
+                listings.extend(page)
             except Exception as e:
+                self.full_snapshot = False
                 print(f"[warn] 南さつま市取得失敗: {url} ({type(e).__name__}: {e})")
+        if not listings:
+            raise ValueError("南さつま市の全ページを取得できませんでした")
         return listings
 
     @classmethod
     def parse_page(cls, html: str, page_url: str) -> list[Listing]:
         soup = BeautifulSoup(html, "html.parser")
+        for old in soup.select("del, s, strike, [style*=line-through]"):
+            old.decompose()
         title_tag = soup.find("title")
         page_title = title_tag.get_text(strip=True) if title_tag else ""
         region_match = re.search(r"（([^）]+)一覧）|([加笠大坊金][^\s（]+)", page_title)
@@ -123,7 +134,7 @@ class MinamisatsumaBankScraper(BaseScraper):
             land_area = parse_area_sqm(land_str)
 
             # 業者・連絡先
-            agent_str = data.get("不動産業者", "")
+            agent_str = data.get("仲介不動産業者", data.get("不動産業者", ""))
 
             # 詳細URL (なければ一覧のアンカー)
             listing_url = detail_url if detail_url else f"{page_url}#no-{number}"

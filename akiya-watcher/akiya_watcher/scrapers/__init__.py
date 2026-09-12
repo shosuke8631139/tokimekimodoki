@@ -20,7 +20,10 @@ from .sumai_akiya import SumaiAkiyaScraper
 from .watch import WatchScraper
 from .yusui_bank import YusuiBankScraper
 
+from .nansatsu_city import NansatsuCityScraper
+
 REGISTRY: dict[str, type[BaseScraper]] = {
+    "nansatsu_city": NansatsuCityScraper,
     "demo": DemoScraper,
     "generic_html": GenericHtmlScraper,
     "gmail_imap": GmailImapScraper,
