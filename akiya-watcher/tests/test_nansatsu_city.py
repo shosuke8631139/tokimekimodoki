@@ -149,3 +149,9 @@ def test_minamisatsuma_explicit_empty_is_success(monkeypatch):
     monkeypatch.setattr(obj, 'get', get)
     assert len(obj.fetch_listings()) == 1
     assert obj.full_snapshot
+
+
+def test_sale_rent_without_colon():
+    obj = scraper('南九州市')
+    item = obj.parse_minamikyushu(soup(card('21-2', '売買898万円 賃貸3.95万円', '賃貸,売買')), obj.list_url)
+    assert item.price_yen == 8980000
