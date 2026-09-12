@@ -9,6 +9,10 @@ on:
         type: choice
         default: koubai
         options: [koubai, nansatsu]
+      sources:
+        description: '南薩のみ: 情報源IDを空白区切り(空欄=4市全部)'
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -27,6 +31,8 @@ jobs:
       - name: 南薩4市の接続テスト（通知・本番DBなし）
         if: inputs.target == 'nansatsu'
         working-directory: akiya-watcher
+        env:
+          NANSATSU_SOURCES: ${{ inputs.sources }}
         run: python scripts/test_nansatsu_sources.py
       - name: 公売・県有財産の新3ソース接続テスト
         if: inputs.target != 'nansatsu'

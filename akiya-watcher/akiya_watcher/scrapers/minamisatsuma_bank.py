@@ -63,7 +63,8 @@ class MinamisatsumaBankScraper(BaseScraper):
                 res = self.get(url)
                 res.encoding = res.apparent_encoding or "utf-8"
                 page = self.parse_page(res.text, url)
-                if not page:
+                explicitly_empty = "現在、紹介中の物件はありません" in BeautifulSoup(res.text, "html.parser").get_text()
+                if not page and not explicitly_empty:
                     raise ValueError("物件テーブルがありません。掲載終了判定を保留します")
                 for item in page:
                     item.source = self.source_id

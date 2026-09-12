@@ -133,3 +133,14 @@ def test_deleted_price_and_custom_source_id(monkeypatch):
     with pytest.raises(ValueError):
         obj.fetch_listings()
     assert not obj.full_snapshot
+
+
+def test_minamisatsuma_explicit_empty_is_success(monkeypatch):
+    obj = MinamisatsumaBankScraper({'id': 'custom', 'list_urls': ['https://example.test/a', 'https://example.test/b']})
+    def get(url):
+        html = (table({'登録番号': '1', '価格': '●売却：100万円'}) if url.endswith('/a')
+                else '<h2>空き家情報（大浦一覧）</h2><p>※現在、紹介中の物件はありません。</p>')
+        return SimpleNamespace(text=html, apparent_encoding='utf-8')
+    monkeypatch.setattr(obj, 'get', get)
+    assert len(obj.fetch_listings()) == 1
+    assert obj.full_snapshot

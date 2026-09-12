@@ -1,7 +1,8 @@
 """GitHub Actions用。通知・本番DB・個人情報の出力を伴わない接続検証。"""
 import sys
+import os
 from pathlib import Path
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import yaml
 
@@ -25,6 +26,19 @@ if __name__ == '__main__':
     config = yaml.safe_load(Path('config.yaml').read_text(encoding='utf-8'))
     sources = [s for s in config['sources'] if s['type'] in {'nansatsu_city', 'minamisatsuma_bank'}]
     assert len(sources) == 4
+    selected = os.environ.get('NANSATSU_SOURCES', '').split()
+    if selected:
+        assert set(selected) <= {s['id'] for s in sources}, '未知の情報源'
+        sources = [s for s in sources if s['id'] in selected]
     # 別ホストだけ並行取得。同一ホストの10秒間隔はBaseScraperに従う。
     with ThreadPoolExecutor(max_workers=4) as pool:
-        list(pool.map(check, sources))
+        futures = {pool.submit(check, source): source['id'] for source in sources}
+        failures = []
+        for future in as_completed(futures):
+            try:
+                future.result()
+            except Exception as exc:
+                failures.append(futures[future])
+                print(f"FAIL {futures[future]}: {type(exc).__name__}: {exc}", flush=True)
+        if failures:
+            raise SystemExit('取得失敗: ' + ', '.join(failures))
