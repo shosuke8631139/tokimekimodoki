@@ -1,0 +1,6 @@
+# Python
+__pycache__/
+*.pyc
+
+# akiya-watcher の巡回データ
+akiya-watcher/data/
